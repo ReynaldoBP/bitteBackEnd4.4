@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManager;
 use App\Entity\AdmiTipoRol;
-
+use Doctrine\ORM\EntityManagerInterface;
 class AdmiTipoRolController extends AbstractController
 {
     /**
