@@ -499,7 +499,7 @@ class ApiMovilController extends FOSRestController
         $arrayRespuesta    = array();
         try
         {
-            $arrayCltEncuesta = $this->getDoctrine()
+            /*$arrayCltEncuesta = $this->getDoctrine()
                                      ->getRepository(InfoClienteEncuesta::class)
                                      ->getVigenciaEncuesta(array('intIdCliente'=>$intIdCliente,
                                                                  'intIdSucursal'=>$intidSucursal));
@@ -512,7 +512,7 @@ class ApiMovilController extends FOSRestController
             {
                 $boolError = true;
                 throw new \Exception("Estimado, ud. ya cuenta con una encuesta llena, solo es permitido una encuesta por día en el mismo restaurante.");
-            }
+            }*/
             $objController   = new DefaultController();
             $objParametro    = $this->getDoctrine()
                                     ->getRepository(AdmiParametro::class)
@@ -521,6 +521,7 @@ class ApiMovilController extends FOSRestController
             $arrayParametros = array('latitud' => $strLatitud,
                                     'longitud' => $strLongitud,
                                     'estado'   => $strEstado,
+                                    'intIdCliente'=>$intIdCliente,
                                     'metros'   => $objParametro->getVALOR2());
             $arraySucursal   = $this->getDoctrine()
                                     ->getRepository(InfoSucursal::class)

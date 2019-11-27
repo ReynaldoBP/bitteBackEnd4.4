@@ -137,8 +137,10 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         $strLongitud           = $arrayParametros['longitud'] ? $arrayParametros['longitud']:'';
         $strMetros             = $arrayParametros['metros'] ? $arrayParametros['metros']:5;
         $strEstado             = $arrayParametros['estado'] ? $arrayParametros['estado']:array('ACTIVO');
+        $intIdCliente          = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
         $arraySucursal         = array();
         $strMensajeError       = '';
+        $date                  = date('Y-m-d H:i:s');
         $objRsmBuilder         = new ResultSetMappingBuilder($this->_em);
         $objQuery              = $this->_em->createNativeQuery(null, $objRsmBuilder);
         $objRsmBuilderCount    = new ResultSetMappingBuilder($this->_em);
@@ -159,13 +161,18 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
                                 FROM INFO_SUCURSAL ISU
                                 INNER JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID
                                 WHERE ISU.ESTADO in (:ESTADO)
+                                AND ISU.ID_SUCURSAL NOT IN(SELECT ICE.SUCURSAL_ID
+                                                            FROM INFO_CLIENTE_ENCUESTA ICE
+                                                            TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') < 24 
+                                                            AND ICE.CLIENTE_ID  = :CLIENTE_ID
+                                                            AND ICE.SUCURSAL_ID = ISU.ID_SUCURSAL )
                                 ) T1 ";
             $strWhere       = "WHERE T1.DISTANCIA < (:METROS/1000) ORDER BY T1.DISTANCIA ASC ";
             $objQuery->setParameter("ESTADO", $strEstado);
             $objQuery->setParameter("LATITUD", $strLatitud);
             $objQuery->setParameter("LONGITUD", $strLongitud);
             $objQuery->setParameter("METROS", $strMetros);
-
+            $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
             $objRsmBuilder->addScalarResult('ID_SUCURSAL', 'ID_SUCURSAL', 'string');
             $objRsmBuilder->addScalarResult('RESTAURANTE_ID', 'RESTAURANTE_ID', 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
