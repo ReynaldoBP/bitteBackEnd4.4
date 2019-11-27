@@ -41,6 +41,7 @@ class ApiMovilController extends FOSRestController
    */
   public function postAction(Request $request)
   {
+    error_reporting( error_reporting() & ~E_NOTICE );
       $strOperacion = $request->get('op');
       $arrayRequest = json_decode($request->getContent(),true);
       $arrayData    = $arrayRequest['data'];
@@ -585,7 +586,10 @@ class ApiMovilController extends FOSRestController
      * @version 1.0 28-08-2019
      * 
      * @author Kevin Baque
-     * @version 1.1 17-1-2019 - Se agrega insert a la tabla InfovistaPublicidad.
+     * @version 1.1 17-11-2019 - Se agrega insert a la tabla InfovistaPublicidad.
+     *
+     * @author Kevin Baque
+     * @version 1.2 17-11-2019 - Se suprime las imagenes de publicidad.
      *
      * @return array  $objResponse
      */
@@ -634,7 +638,7 @@ class ApiMovilController extends FOSRestController
         {
             $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
-        if($conImagen == 'SI')
+        /*if($conImagen == 'SI')
         {
             foreach ($arrayRestaurante['resultados'] as &$item)
             {
@@ -662,11 +666,11 @@ class ApiMovilController extends FOSRestController
         if(!is_object($objParametro) || empty($objParametro))
         {
             throw new \Exception('No existe parametrizado el número de publicidad.');
-        }
+        }*/
         $arrayResultado = array();
         foreach($arrayRestaurante['resultados'] as &$arrayItemRestaurante)
         {
-            if($intContadorRes == $objParametro->getVALOR1())
+            /*if($intContadorRes == $objParametro->getVALOR1())
             {
                 $arrayPublicidad = (array) $this->getDoctrine()
                                                 ->getRepository(InfoPublicidad::class)
@@ -696,7 +700,7 @@ class ApiMovilController extends FOSRestController
                     }
                 }
             }
-            $intContadorRes ++;
+            $intContadorRes ++;*/
             $arrayResultado ['resultados'] []= array('ID_RESTAURANTE'          =>   $arrayItemRestaurante['ID_RESTAURANTE'],
                                                      'TIPO_IDENTIFICACION'     =>   $arrayItemRestaurante['TIPO_IDENTIFICACION'],
                                                      'IDENTIFICACION'          =>   $arrayItemRestaurante['IDENTIFICACION'],
@@ -1118,6 +1122,7 @@ class ApiMovilController extends FOSRestController
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $conImagen              = $arrayData['imagen'] ? $arrayData['imagen']:'NO';
+        $strOrientacion         = $arrayData['orientacion'] ? $arrayData['orientacion']:'';
         $arrayPublicidad        = array();
         $arrayCliente           = array();
         $strMensajeError        = '';
@@ -1166,7 +1171,8 @@ class ApiMovilController extends FOSRestController
                                      'PROVINCIA' => $arraySucursal['provincia'],
                                      'PARROQUIA' => $arraySucursal['parroquia'],
                                      'EDAD'      => $arrayCliente['edad'],
-                                     'GENERO'    => $arrayCliente['genero']);
+                                     'GENERO'    => $arrayCliente['genero'],
+                                    'ORIENTACION'=>strtoupper($strOrientacion));
             $arrayPublicidad = (array) $this->getDoctrine()
                                             ->getRepository(InfoPublicidad::class)
                                             ->getPublicidadCriterioMovil($arrayParametros);
@@ -1174,7 +1180,8 @@ class ApiMovilController extends FOSRestController
             {
                 $arrayPublicidad = (array) $this->getDoctrine()
                                                 ->getRepository(InfoPublicidad::class)
-                                                ->getPublicidadCriterioMovil(array('GENERO' => 'TODOS'));
+                                                ->getPublicidadCriterioMovil(array('GENERO' => 'TODOS',
+                                                                                   'ORIENTACION'=>strtoupper($strOrientacion)));
                 if(empty($arrayPublicidad))
                 {
                     $strStatus  = 404;

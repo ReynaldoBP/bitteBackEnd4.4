@@ -80,7 +80,7 @@ class DefaultController extends Controller
     public function getImgBase64($nameImg)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $img = file_get_contents("images/".$nameImg);
+        $img = @file_get_contents("images/".$nameImg);
         $ext   = explode('.', $nameImg)[1];
         $data = ("data:image/".$ext.";base64," . base64_encode($img));
         return $data;

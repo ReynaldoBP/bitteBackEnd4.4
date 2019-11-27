@@ -325,12 +325,14 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $objQuery->setParameter("ESTADO",$strEstado);
             if(!empty($intIdCliente))
             {
-                $strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS ";
+                $strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.ESTADO='ACTIVO' AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS ";
+                $strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.ESTADO='PENDIENTE' AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS_PENDIENTE ";
                 $strWhere .= " AND ICE.CLIENTE_ID= :CLIENTE_ID ";
                 $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
             }
 
             $objRsmBuilder->addScalarResult('CANT_PUNTOS', 'CANT_PUNTOS', 'string');
+            $objRsmBuilder->addScalarResult('CANT_PUNTOS_PENDIENTE', 'CANT_PUNTOS_PENDIENTE', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'RAZON_SOCIAL', 'string');
             $objRsmBuilder->addScalarResult('ICONO', 'ICONO', 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'IDRESTAURANTE', 'string');
