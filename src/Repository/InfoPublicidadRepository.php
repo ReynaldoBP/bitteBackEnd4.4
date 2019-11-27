@@ -117,6 +117,7 @@ class InfoPublicidadRepository extends \Doctrine\ORM\EntityRepository
         $strEdad            = $arrayParametros['EDAD'] ? $arrayParametros['EDAD']:'';
         $strGenero          = $arrayParametros['GENERO'] ? $arrayParametros['GENERO']:'';
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
+        $strHorizontal      = $arrayParametros['ORIENTACION'] ? $arrayParametros['ORIENTACION']:'';
         $arrayPublicidad    = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -157,6 +158,12 @@ class InfoPublicidadRepository extends \Doctrine\ORM\EntityRepository
                     $strWhere .= " AND PB.PARROQUIA =:PARROQUIA ";
                     $objQuery->setParameter("PARROQUIA", $intIdParroquia);
                     $objQueryCount->setParameter("PARROQUIA", $intIdParroquia);
+                }
+                if(!empty($strHorizontal))
+                {
+                    $strWhere .= " AND PB.ORIENTACION =:ORIENTACION ";
+                    $objQuery->setParameter("ORIENTACION", $strHorizontal);
+                    $objQueryCount->setParameter("ORIENTACION", $strHorizontal);
                 }
                 if(!empty($strEdad))
                 {

@@ -670,7 +670,8 @@ class ApiMovilController extends FOSRestController
             {
                 $arrayPublicidad = (array) $this->getDoctrine()
                                                 ->getRepository(InfoPublicidad::class)
-                                                ->getPublicidadCriterioMovil(array('GENERO' => 'TODOS'));
+                                                ->getPublicidadCriterioMovil(array('GENERO'      => 'TODOS',
+                                                                                   'ORIENTACION' => 'HORIZONTAL'));
                 if(empty($arrayPublicidad))
                 {
                     $arrayItemRestaurante['ES_PUBLICIDAD'] = 'N';
