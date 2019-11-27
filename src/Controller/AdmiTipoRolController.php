@@ -16,6 +16,7 @@ class AdmiTipoRolController extends AbstractController
      */
     public function getTipoRolAction(Request $request)
     {
+        error_reporting( error_reporting() & ~E_NOTICE );
         $strEstado             = $request->query->get("estado") ? $request->query->get("estado"):'';
         $strDescripcion        = $request->query->get("descripcion") ? $request->query->get("descripcion"):'';
         $intIdTipoRol          = $request->query->get("idTipoRol") ? $request->query->get("idTipoRol"):'';

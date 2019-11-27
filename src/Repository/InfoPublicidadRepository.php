@@ -183,7 +183,7 @@ class InfoPublicidadRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('ID_PUBLICIDAD', 'ID_PUBLICIDAD', 'string');
             $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
             $objRsmBuilder->addScalarResult('ORIENTACION', 'ORIENTACION', 'string');
-            $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION', 'NOMBRE_PUBLICIDAD', 'string');
             $objRsmBuilder->addScalarResult('EDAD_MAXIMA', 'EDAD_MAXIMA', 'string');
             $objRsmBuilder->addScalarResult('EDAD_MINIMA', 'EDAD_MINIMA', 'string');
             $objRsmBuilder->addScalarResult('GENERO', 'GENERO', 'string');
