@@ -147,7 +147,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSelect      = "SELECT T1.ID_SUCURSAL, T1.RESTAURANTE_ID, T1.DESCRIPCION, T1.PAIS, T1.PROVINCIA,
-                                T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.DISTANCIA.T1.VALOR  ";
+                                T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.DISTANCIA,T1.VALOR  ";
             $strFrom        ="FROM
                                 (SELECT ISU.ID_SUCURSAL, ISU.RESTAURANTE_ID,
                                     ISU.DESCRIPCION, ISU.PAIS,ISU.PROVINCIA,ISU.CIUDAD,ISU.PARROQUIA,
@@ -171,13 +171,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
                                     ) AS DISTANCIA
                                 FROM INFO_SUCURSAL ISU
                                 INNER JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID
-                                WHERE ISU.ESTADO in (:ESTADO)
-                                AND ISU.ID_SUCURSAL NOT IN(SELECT ICE.SUCURSAL_ID
-                                                        FROM INFO_CLIENTE_ENCUESTA ICE
-                                                        WHERE TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') < 24 
-                                                        AND ICE.CLIENTE_ID  = :CLIENTE_ID
-                                                        AND ICE.SUCURSAL_ID = ISU.ID_SUCURSAL )
-                                ) T1 ";
+                                WHERE ISU.ESTADO in (:ESTADO)) T1 ";
             $strWhere       = "WHERE T1.DISTANCIA < (:METROS/1000) ORDER BY T1.DISTANCIA ASC ";
             $objQuery->setParameter("ESTADO", $strEstado);
             $objQuery->setParameter("LATITUD", $strLatitud);
@@ -195,7 +189,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('DISTANCIA', 'DISTANCIA', 'string');
             $objRsmBuilder->addScalarResult('VALOR', 'VALOR', 'string');
 
-            $strSql       = $strSelect.$strFrom.$strFromAd.$strWhere;
+            $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arraySucursal['resultados'] = $objQuery->getResult();
         }
