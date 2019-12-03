@@ -146,26 +146,43 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         $objRsmBuilderCount    = new ResultSetMappingBuilder($this->_em);
         try
         {
+/*
+
+
+
+*/
+
             $strSelect      = "SELECT T1.ID_SUCURSAL, T1.RESTAURANTE_ID, T1.DESCRIPCION, T1.PAIS, T1.PROVINCIA,
-                                T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.DISTANCIA  ";
+                                T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.DISTANCIA.T1.VALOR  ";
             $strFrom        ="FROM
-                                    (SELECT ISU.ID_SUCURSAL, ISU.RESTAURANTE_ID,
-                                        ISU.DESCRIPCION, ISU.PAIS,ISU.PROVINCIA,ISU.CIUDAD,ISU.PARROQUIA,
-                                        IRE.NOMBRE_COMERCIAL,
-                                        (6371 * ACOS( 
-                                                    SIN(RADIANS(ISU.LATITUD)) * SIN(RADIANS(:LATITUD)) 
-                                                    + COS(RADIANS(ISU.LONGITUD - :LONGITUD)) * COS(RADIANS(ISU.LATITUD)) 
-                                                    * COS(RADIANS(:LATITUD))
-                                                    )
-                                        ) AS DISTANCIA
+                                (SELECT ISU.ID_SUCURSAL, ISU.RESTAURANTE_ID,
+                                    ISU.DESCRIPCION, ISU.PAIS,ISU.PROVINCIA,ISU.CIUDAD,ISU.PARROQUIA,
+                                    IRE.NOMBRE_COMERCIAL,
+                                    (CASE
+                                        WHEN 
+                                        (SELECT ICE.SUCURSAL_ID
+                                        FROM INFO_CLIENTE_ENCUESTA ICE
+                                        WHERE 
+                                        TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') < 24 
+                                        AND ICE.CLIENTE_ID  =  :CLIENTE_ID
+                                        AND ICE.SUCURSAL_ID = ISU.ID_SUCURSAL
+                                        LIMIT 1
+                                    ) IS NOT NULL THEN 1 ELSE 0
+                                    END ) AS VALOR,
+                                    (6371 * ACOS( 
+                                                SIN(RADIANS(ISU.LATITUD)) * SIN(RADIANS(:LATITUD)) 
+                                                + COS(RADIANS(ISU.LONGITUD - :LONGITUD)) * COS(RADIANS(ISU.LATITUD)) 
+                                                * COS(RADIANS(:LATITUD))
+                                                )
+                                    ) AS DISTANCIA
                                 FROM INFO_SUCURSAL ISU
                                 INNER JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID
                                 WHERE ISU.ESTADO in (:ESTADO)
                                 AND ISU.ID_SUCURSAL NOT IN(SELECT ICE.SUCURSAL_ID
-                                                            FROM INFO_CLIENTE_ENCUESTA ICE
-                                                            TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') < 24 
-                                                            AND ICE.CLIENTE_ID  = :CLIENTE_ID
-                                                            AND ICE.SUCURSAL_ID = ISU.ID_SUCURSAL )
+                                                        FROM INFO_CLIENTE_ENCUESTA ICE
+                                                        TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') < 24 
+                                                        AND ICE.CLIENTE_ID  = :CLIENTE_ID
+                                                        AND ICE.SUCURSAL_ID = ISU.ID_SUCURSAL )
                                 ) T1 ";
             $strWhere       = "WHERE T1.DISTANCIA < (:METROS/1000) ORDER BY T1.DISTANCIA ASC ";
             $objQuery->setParameter("ESTADO", $strEstado);
@@ -182,6 +199,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('PARROQUIA', 'PARROQUIA', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
             $objRsmBuilder->addScalarResult('DISTANCIA', 'DISTANCIA', 'string');
+            $objRsmBuilder->addScalarResult('VALOR', 'VALOR', 'string');
 
             $strSql       = $strSelect.$strFrom.$strFromAd.$strWhere;
             $objQuery->setSQL($strSql);
