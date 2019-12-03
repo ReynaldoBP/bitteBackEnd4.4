@@ -146,12 +146,6 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         $objRsmBuilderCount    = new ResultSetMappingBuilder($this->_em);
         try
         {
-/*
-
-
-
-*/
-
             $strSelect      = "SELECT T1.ID_SUCURSAL, T1.RESTAURANTE_ID, T1.DESCRIPCION, T1.PAIS, T1.PROVINCIA,
                                 T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.DISTANCIA.T1.VALOR  ";
             $strFrom        ="FROM
@@ -180,7 +174,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
                                 WHERE ISU.ESTADO in (:ESTADO)
                                 AND ISU.ID_SUCURSAL NOT IN(SELECT ICE.SUCURSAL_ID
                                                         FROM INFO_CLIENTE_ENCUESTA ICE
-                                                        TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') < 24 
+                                                        WHERE TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') < 24 
                                                         AND ICE.CLIENTE_ID  = :CLIENTE_ID
                                                         AND ICE.SUCURSAL_ID = ISU.ID_SUCURSAL )
                                 ) T1 ";
