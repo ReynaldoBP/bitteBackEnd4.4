@@ -26,6 +26,10 @@ class DefaultController extends Controller
      * @version 1.0 26-08-2019
      * 
      * @return array  $objResponse
+     * 
+     * @author Kevin Baque
+     * @version 1.1 03-12-2019 - Se cambia la manera de instanciar la librería de envio de correo.
+     *
      */
     public function enviaCorreo($arrayParametros)
     {
@@ -35,7 +39,8 @@ class DefaultController extends Controller
         $strRemitente     = $arrayParametros['strRemitente'] ? $arrayParametros['strRemitente']:'';
         $strDestinatario  = $arrayParametros['strDestinatario'] ? $arrayParametros['strDestinatario']:'';
         $strRespuesta     = '';
-        $objMessage = \Swift_Message::newInstance()
+        //$objMessage =  (new \Swift_Message('Hello Email'))
+        $objMessage =  (new \Swift_Message())
                                         ->setSubject($strAsunto)
                                         ->setFrom($strRemitente)
                                         ->setTo($strDestinatario)

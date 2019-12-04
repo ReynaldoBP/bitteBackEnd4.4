@@ -1281,6 +1281,10 @@ class ApiWebController extends FOSRestController
      * @version 1.0 30-09-2019
      * 
      * @return array  $objResponse
+     *
+     * @author Kevin Baque
+     * @version 1.1 03-12-2019 - Se agrega envío de correo notificando que canjio puntos.
+     *
      */
     public function editPromocionHistorial($arrayData)
     {
@@ -1332,6 +1336,36 @@ class ApiWebController extends FOSRestController
         }
         if ($em->getConnection()->isTransactionActive())
         {
+            // TODO: EDITAR ESTA INCOMPLETO
+            /*$strAsunto            = '¡CANJEASTE PUNTOS!';
+            $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+            $strMensajeCorreo = '
+            <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">FELICITACIONES!!!!&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;, has ganado un cup&oacute; para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Buen provecho,.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Bitte.&nbsp;</div>
+            <div class="">&nbsp;</div>';
+            $strRemitente     = 'notificaciones_bitte@massvision.tv';
+            $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                      'strMensajeCorreo' => $strMensajeCorreo,
+                                      'strRemitente'     => $strRemitente,
+                                      'strDestinatario'  => $objCliente->getCORREO());
+            $objController    = new DefaultController();
+            $objController->setContainer($this->container);
+            $objController->enviaCorreo($arrayParametros);*/
             $em->getConnection()->commit();
             $em->getConnection()->close();
         }
