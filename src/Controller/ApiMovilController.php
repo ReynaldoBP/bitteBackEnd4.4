@@ -1005,35 +1005,6 @@ class ApiMovilController extends FOSRestController
                     $entityRespuesta->setFECREACION($strDatetimeActual);
                     $em->persist($entityRespuesta);
                     $em->flush();
-                    $strAsunto            = '¡GANASTE PUNTOS!';
-                    $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-                    $strMensajeCorreo = '
-                    <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">FELICITACIONES!!!!&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;, has ganado un cup&oacute; para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Buen provecho,.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Bitte.&nbsp;</div>
-                    <div class="">&nbsp;</div>';
-                    $strRemitente     = 'notificaciones_bitte@massvision.tv';
-                    $arrayParametros  = array('strAsunto'        => $strAsunto,
-                                              'strMensajeCorreo' => $strMensajeCorreo,
-                                              'strRemitente'     => $strRemitente,
-                                              'strDestinatario'  => $objCliente->getCORREO());
-                    $objController    = new DefaultController();
-                    $objController->setContainer($this->container);
-                    $objController->enviaCorreo($arrayParametros);
                     /*$arrayRespuesta ['respuesta'][] = array('idRespuesta'     => $entityRespuesta->getId(),
                                                             'intIdCltEncuesta'=> $intIdCltEncuesta,
                                                             'respuesta'       => $entityRespuesta->getRESPUESTA(),
@@ -1067,6 +1038,35 @@ class ApiMovilController extends FOSRestController
             $em->getConnection()->commit();
             $em->getConnection()->close();
         }
+        $strAsunto            = '¡GANASTE PUNTOS!';
+        $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+        $strMensajeCorreo = '
+        <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
+        <div class="">&nbsp;</div>
+        <div class="">FELICITACIONES!!!!&nbsp;</div>
+        <div class="">&nbsp;</div>
+        <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+        <div class="">&nbsp;</div>
+        <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+        <div class="">&nbsp;</div>
+        <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
+        <div class="">&nbsp;</div>
+        <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!.&nbsp;</div>
+        <div class="">&nbsp;</div>
+        <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+        <div class="">&nbsp;</div>
+        <div class="">Buen provecho,&nbsp;</div>
+        <div class="">&nbsp;</div>
+        <div class="">Bitte.&nbsp;</div>
+        <div class="">&nbsp;</div>';
+        $strRemitente     = 'notificaciones_bitte@massvision.tv';
+        $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                  'strMensajeCorreo' => $strMensajeCorreo,
+                                  'strRemitente'     => $strRemitente,
+                                  'strDestinatario'  => $objCliente->getCORREO());
+        $objController    = new DefaultController();
+        $objController->setContainer($this->container);
+        $objController->enviaCorreo($arrayParametros);
         $arrayRespuesta['mensaje']          = $strMensajeError;
         $arrayRespuesta['intIdCltEncuesta'] = $intIdCltEncuesta;
         $objResponse->setContent(json_encode(array(
@@ -1576,15 +1576,15 @@ class ApiMovilController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div class="">Acabas de compartir tu foto en redes sociales de tu experiencia en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;, has ganado un cup&oacute; para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+                <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!.&nbsp;</div>
+                <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Buen provecho,.&nbsp;</div>
+                <div class="">Buen provecho,&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Bitte.&nbsp;</div>
                 <div class="">&nbsp;</div>';
