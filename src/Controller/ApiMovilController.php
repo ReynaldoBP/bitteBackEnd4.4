@@ -102,6 +102,8 @@ class ApiMovilController extends FOSRestController
               break;
               case 'createPuntoGlobal':$arrayRespuesta = $this->createPuntoGlobal($arrayData);//Obsoleto
               break;
+              case 'enviCorreoPrueba':$arrayRespuesta = $this->enviCorreoPrueba($arrayData);//Obsoleto
+              break;
               default:
                $objResponse->setContent(json_encode(array(
                                                    'status'    => 400,
@@ -225,7 +227,7 @@ class ApiMovilController extends FOSRestController
                                     'sector'         => $entityCliente->getSECTOR(),
                                     'usrCreacion'    => $entityCliente->getUSRCREACION(),
                                     'feCreacion'     => $entityCliente->getFECREACION());
-            /*if($strAutenticacionRS == 'N')
+            if($strAutenticacionRS == 'N')
             {
                 $strDistractor     = substr(md5(time()),0,16);
                 //$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
@@ -255,7 +257,7 @@ class ApiMovilController extends FOSRestController
                 $objController    = new DefaultController();
                 $objController->setContainer($this->container);
                 $objController->enviaCorreo($arrayParametros);
-            }*/
+            }
         }
         $arrayCliente['mensaje'] = $strMensajeError;
         $objResponse->setContent(json_encode(array(
@@ -878,6 +880,10 @@ class ApiMovilController extends FOSRestController
      * @version 1.0 04-09-2019
      * 
      * @return array  $objResponse
+     *
+     * @author Kevin Baque
+     * @version 1.1 03-12-2019 - Se agrega envío de correo notificando que ganó puntos
+     *
      */
     public function createRespuesta($arrayData)
     {
@@ -916,6 +922,13 @@ class ApiMovilController extends FOSRestController
             if(!is_object($objSucursal) || empty($objSucursal))
             {
                 throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
+            }
+            $objRestaurante = $this->getDoctrine()
+                                    ->getRepository(InfoRestaurante::class)
+                                    ->find($objSucursal->getRESTAURANTEID());
+            if(!is_object($objRestaurante) || empty($objRestaurante))
+            {
+                throw new \Exception('No existe restaurante con la descripción enviada por parámetro.');
             }
             $objEncuesta   = $this->getDoctrine()
                                   ->getRepository(InfoEncuesta::class)
@@ -992,6 +1005,35 @@ class ApiMovilController extends FOSRestController
                     $entityRespuesta->setFECREACION($strDatetimeActual);
                     $em->persist($entityRespuesta);
                     $em->flush();
+                    $strAsunto            = '¡GANASTE PUNTOS!';
+                    $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+                    $strMensajeCorreo = '
+                    <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">FELICITACIONES!!!!&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;, has ganado un cup&oacute; para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Buen provecho,.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Bitte.&nbsp;</div>
+                    <div class="">&nbsp;</div>';
+                    $strRemitente     = 'notificaciones_bitte@massvision.tv';
+                    $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                              'strMensajeCorreo' => $strMensajeCorreo,
+                                              'strRemitente'     => $strRemitente,
+                                              'strDestinatario'  => $objCliente->getCORREO());
+                    $objController    = new DefaultController();
+                    $objController->setContainer($this->container);
+                    $objController->enviaCorreo($arrayParametros);
                     /*$arrayRespuesta ['respuesta'][] = array('idRespuesta'     => $entityRespuesta->getId(),
                                                             'intIdCltEncuesta'=> $intIdCltEncuesta,
                                                             'respuesta'       => $entityRespuesta->getRESPUESTA(),
@@ -1457,6 +1499,10 @@ class ApiMovilController extends FOSRestController
      * @version 1.0 02-10-2019
      * 
      * @return array  $objResponse
+     * 
+     * @author Kevin Baque
+     * @version 1.1 03-12-2019 - Se agrega envío de correo notificando que ganó puntos
+     *
      */
     public function editContenido($arrayData)
     {
@@ -1464,6 +1510,8 @@ class ApiMovilController extends FOSRestController
         $intIdContenido     = $arrayData['idContenido'] ? $arrayData['idContenido']:'';
         $intIdRedSocial     = $arrayData['idRedSocial'] ? $arrayData['idRedSocial']:'NO COMPARTIDO';
         $strUsuarioCreacion = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $intIdCliente       = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
+        $intIdSucursal      = $arrayData['idSucursal'] ? $arrayData['idSucursal']:'';
         $strDatetimeActual  = new \DateTime('now');
         $strMensajeError    = '';
         $strStatus          = 400;
@@ -1473,6 +1521,27 @@ class ApiMovilController extends FOSRestController
         try
         {
             $em->getConnection()->beginTransaction();
+            $objCliente     = $this->getDoctrine()
+                                   ->getRepository(InfoCliente::class)
+                                   ->find($intIdCliente);
+            if(!is_object($objCliente) || empty($objCliente))
+            {
+                throw new \Exception('No existe el cliente con la descripción enviada por parámetro.');
+            }
+            $objSucursal = $this->getDoctrine()
+                                ->getRepository(InfoSucursal::class)
+                                ->find($intIdSucursal);
+            if(!is_object($objSucursal) || empty($objSucursal))
+            {
+                throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
+            }
+            $objRestaurante = $this->getDoctrine()
+                                    ->getRepository(InfoRestaurante::class)
+                                    ->find($objSucursal->getRESTAURANTEID());
+            if(!is_object($objRestaurante) || empty($objRestaurante))
+            {
+                throw new \Exception('No existe restaurante con la descripción enviada por parámetro.');
+            }
             $objContenido = $this->getDoctrine()
                                  ->getRepository(InfoContenidoSubido::class)
                                  ->find($intIdContenido);
@@ -1498,6 +1567,36 @@ class ApiMovilController extends FOSRestController
             }
             else
             {
+                $strAsunto            = '¡GANASTE PUNTOS!';
+                $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+                $strMensajeCorreo = '
+                <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">FELICITACIONES!!!!&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Acabas de compartir tu foto en redes sociales de tu experiencia en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;, has ganado un cup&oacute; para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Buen provecho,.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Bitte.&nbsp;</div>
+                <div class="">&nbsp;</div>';
+                $strRemitente     = 'notificaciones_bitte@massvision.tv';
+                $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                          'strMensajeCorreo' => $strMensajeCorreo,
+                                          'strRemitente'     => $strRemitente,
+                                          'strDestinatario'  => $objCliente->getCORREO());
+                $objController    = new DefaultController();
+                $objController->setContainer($this->container);
+                $objController->enviaCorreo($arrayParametros);
+
                 $objContenido->setREDESSOCIALESID($objRedSocial);
                 $objContenido->setCANTIDADPUNTOS($objParametro->getVALOR1());
                 $objContenido->setUSRMODIFICACION($strUsuarioCreacion);
@@ -2240,6 +2339,69 @@ class ApiMovilController extends FOSRestController
         {
             $em->getConnection()->commit();
             $em->getConnection()->close();
+        }
+        $objResponse->setContent(json_encode(array(
+                                            'status'    => $strStatus,
+                                            'resultado' => $strMensajeError,
+                                            'succes'    => $boolSucces
+                                            )
+                                        ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'enviCorreoPrueba'
+     * Método encargado de enviar correos de pruebas.
+     *
+     * @author Kevin Baque
+     * @version 1.0 03-12-2019
+     *
+     * @return array  $objResponse
+     */
+    public function enviCorreoPrueba($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strDestinatario  = $arrayData['strCorreo'] ? $arrayData['strCorreo']:'';
+        $strRemitente     = 'notificaciones_bitte@massvision.tv';
+        $objResponse      = new Response;
+        $strRespuesta     = '';
+        $arrayParametros  = array();
+        $strStatus        = 400;
+        $strMensajeError  = '';
+        $boolSucces       = true;
+        try
+        {
+            $strAsunto        = 'Prueba Correo';
+            $strContrasenia   = uniqid();
+            $strMensajeCorreo = '<div class="">Estimado cliente.</div>
+            <div class="">&nbsp;</div>
+            <div class="">En base a su solicitud el sistema BITTE ha procedido a asignarle una clave temporal.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div><strong>Tu clave temporal es :'.$strContrasenia.'&nbsp;</strong></div>
+            <div class="">&nbsp;</div>
+            <div class="">Recuerda que para mayor seguridad luego de ingresar a BITTE es muy importante cambiar la contraseña.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">
+            <div>
+            <div class="">Nuestro equipo de asistencia estar&aacute; disponible para usted para lo que necesite.&nbsp;</div>
+            <div>&nbsp;</div>
+            </div>
+            </div>
+            <div class="">Bienvenido al mundo BITTE.</div>';
+            $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                      'strMensajeCorreo' => $strMensajeCorreo,
+                                      'strRemitente'     => $strRemitente,
+                                      'strDestinatario'  => $strDestinatario);
+            $objController    = new DefaultController();
+            $objController->setContainer($this->container);
+            $objController->enviaCorreo($arrayParametros);
+            $strMensajeError = 'Envio de correo de prueba con exito.!';
+        }
+        catch(\Exception $ex)
+        {
+            $strStatus       = 404;
+            $boolSucces      = false;
+            $strMensajeError = "Fallo al generar el correo, intente nuevamente.\n ". $ex->getMessage();
         }
         $objResponse->setContent(json_encode(array(
                                             'status'    => $strStatus,
