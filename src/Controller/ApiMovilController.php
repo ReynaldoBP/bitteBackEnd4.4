@@ -126,6 +126,10 @@ class ApiMovilController extends FOSRestController
      * @version 1.0 26-08-2019
      * 
      * @return array  $objResponse
+     *
+     * @author Kevin Baque
+     * @version 1.1 05-12-2019 - Se edita el correo de bienvenida.
+     *
      */
     public function createCliente($arrayData)
     {
@@ -230,16 +234,33 @@ class ApiMovilController extends FOSRestController
             if($strAutenticacionRS == 'N')
             {
                 $strDistractor     = substr(md5(time()),0,16);
-                //$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
-                $strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                $strActivaCltProd  = "http://34.205.134.52/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strAsunto        = 'Bienvenido al mundo BITTE';
                 $strMensajeCorreo = '<div class="">Bienvenido al mundo BITTE:</div>
                 <div class="">&nbsp;</div>
-                <div class="">BITTE le da la bienvenida a su sistema de an&aacute;lisis de datos de satisfacci&oacute;n cliente. BITE le va a permitir conocer la satisfacci&oacute;n de sus clientes bajo diferentes variables y a su vez le permitir&aacute; hacer distintos comparativos para conocer el impacto de mejoras que implemente en su restaurante. A su vez, BITTE permite a los usuarios del app compartir imagenes en redes sociales, que permitir&aacute;n a su establecimiento tener un marketing viral, tanto los datos de veces compartidas las imagen como el alcance de cada imagen, son datos estad&iacute;sticos, que dependiendo de su plan, su restaurante podr&aacute; conocer.&nbsp;</div>
+                <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Es hora de premiar a su clientela fija reconoci&eacute;ndolos con premios que usted ya estableci&oacute; y podr&aacute; controlar, permitiendo crear un vinculo mas cercano con sus clientes.&nbsp;</div>
+                <div class="">Has logrado con exito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en tus restaurantes favoritos .&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Nuestro equipo de asistencia estar&aacute; disponible para usted para lo que necesite. Por favor complete su registro de establecimiento y comience a recolectar las opiniones de sus clientes de manera ordenada para un an&aacute;lisis y tabulaci&oacute;n din&aacute;mica.&nbsp;</div>
+                <div class="">En Bitte es muy importante seguir las reglas para que tus puntos sean v&aacute;lidos y no los pierdas. Puedes disfrutar de nuestra aplicaci&oacute;n siguiendo estos pasos:&nbsp;</div>
+                <div class="">1. Abre la aplicaci&oacute;n y elige tomar foto.&nbsp;</div>
+                <div class="">2. Solo se aceptan fotos de platos de comida.&nbsp;</div>
+                <div class="">3. Califica tu experiencia gastron&oacute;mica - GANASTE PUNTOS. &nbsp;</div>
+                <div class="">4. Comparte en redes sociales tu imagen si lo deseas - GANAS M&Aacute;S PUNTOS&nbsp;</div>
+                <div class="">5. Acumulas y canjea tus puntos en tus restaurantes favoritos. &nbsp;</div>
+                <div class="">6. Tus puntos tienen una vigencia de 8 meses.&nbsp;</div>
+                <div class="">7. Tus puntos son v&aacute;lidos solo en el restaurante donde comiste y calificaste.&nbsp;</div>
+                <div class="">8. El restaurante tiene la potestad de eliminar tus puntos si ve que la foto no concuerda con su men&uacute;.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Para mayor informaci&oacute;n consulta aqu&iacute; los t&eacute;rminos y condiciones de uso.&nbsp;</div>
+                <div class="">Para informaci&óacute;n de los restaurantes participantes has click aquí. .&nbsp;</div>
+                <div class="">Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas. .&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Buen provecho,&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Bitte.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">
                 <div>
