@@ -30,6 +30,7 @@ use App\Entity\InfoClienteEncuesta;
 use App\Entity\InfoPromocionHistorial;
 use App\Entity\InfoVistaPublicidad;
 use App\Entity\AdmiTipoComida;
+use App\Entity\InfoClienteInfluencer;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -255,8 +256,8 @@ class ApiMovilController extends FOSRestController
                 <div class="">8. El restaurante tiene la potestad de eliminar tus puntos si ve que la foto no concuerda con su men&uacute;.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Para mayor informaci&oacute;n consulta aqu&iacute; los t&eacute;rminos y condiciones de uso.&nbsp;</div>
-                <div class="">Para informaci&óacute;n de los restaurantes participantes has click aquí. .&nbsp;</div>
-                <div class="">Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas. .&nbsp;</div>
+                <div class="">Para informaci&oacute;n de los restaurantes participantes has click aquí.&nbsp;</div>
+                <div class="">Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Buen provecho,&nbsp;</div>
                 <div class="">&nbsp;</div>
@@ -494,12 +495,16 @@ class ApiMovilController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 28-08-2019
-     * 
+     *
+     * @return array  $objResponse
+     *
      * @author Nestor Naula
      * @version 1.1 04-10-2019 -  Se agrega la imagen a las coordenadas
      * @since 1.0
      * 
-     * @return array  $objResponse
+     * @author Kevin Baque
+     * @version 1.2 04-12-2019 -  Se agrega la imagen si el cliente en sesión es Influencer.
+     *
      */
     public function getSucursalPorUbicacion($arrayData)
     {
@@ -520,6 +525,7 @@ class ApiMovilController extends FOSRestController
         $boolError         = false;
         $boolSucces        = true;
         $arrayRespuesta    = array();
+        $strImagenInfluencer = null;
         try
         {
             /*$arrayCltEncuesta = $this->getDoctrine()
@@ -537,6 +543,14 @@ class ApiMovilController extends FOSRestController
                 throw new \Exception("Estimado, ud. ya cuenta con una encuesta llena, solo es permitido una encuesta por día en el mismo restaurante.");
             }*/
             $objController   = new DefaultController();
+            $objCltInfluencer = $this->getDoctrine()
+                                    ->getRepository(InfoClienteInfluencer::class)
+                                    ->findOneBy(array('ESTADO'      => 'ACTIVO',
+                                                      'CLIENTE_ID'  => $intIdCliente));
+            if(!empty($objCltInfluencer) && is_object($objCltInfluencer) && !empty($objCltInfluencer->getIMAGEN()))
+            {
+                $strImagenInfluencer = $objController->getImgBase64($objCltInfluencer->getIMAGEN());
+            }
             $objParametro    = $this->getDoctrine()
                                     ->getRepository(AdmiParametro::class)
                                     ->findOneBy(array('ESTADO'      => 'ACTIVO',
@@ -596,6 +610,7 @@ class ApiMovilController extends FOSRestController
         $objResponse->setContent(json_encode(array(
                                             'status'    => $strStatus,
                                             'resultado' => $arraySucursal,
+                                            'fotoInfluencer'=> $strImagenInfluencer,
                                             'succes'    => $boolSucces
                                             )
                                         ));
