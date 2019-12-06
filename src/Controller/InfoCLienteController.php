@@ -20,10 +20,15 @@ class InfoCLienteController extends Controller
      * @version 1.0 03-10-2019
      * 
      * @return array  $objResponse
+     *
+     * @author Kevin Baque
+     * @version 1.1 03-12-2019 - Se retorna pagina de bienvenida.
+     *
      */
     public function editClienteAction(Request $request)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
+
         $strEstado             = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
         $intIdCliente          = $request->query->get("idCliente") ? $request->query->get("idCliente"):'';
         $intIdClienteRS        = $request->query->get("jklasdqweuiorenm") ? $request->query->get("jklasdqweuiorenm"):'';
@@ -73,7 +78,28 @@ class InfoCLienteController extends Controller
         if(!empty($intIdClienteRS) && $intIdClienteRS!= NULL)
         {
             //header('Location: https://bitte.app/pages/login');
-            return $this->render('http://www.google.com/');
+            //return $this->render('http://www.google.com/');
+            return new Response(
+            '<html lang="en">
+            <head>
+            <title>Bootstrap Example</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+            </head>
+            <body>
+
+            <div class="jumbotron text-center" style = "background-color:#ffffff">
+            <h1>Bienvenido al mundo BITTE</h1>
+            <p>Se ha completado tu registro!</p> 
+            </div>
+
+            </body>
+            </html>');
+            
         }
         else
         {
