@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\InfoUsuario;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Process\PhpProcess;
 class DefaultController extends Controller
 {
     /**
@@ -30,6 +31,9 @@ class DefaultController extends Controller
      * @author Kevin Baque
      * @version 1.1 03-12-2019 - Se cambia la manera de instanciar la librería de envio de correo.
      *
+     * @author Kevin Baque
+     * @version 1.2 09-12-2019 - Se agrega logica para enviar correos de manera asincrona
+     *
      */
     public function enviaCorreo($arrayParametros)
     {
@@ -45,7 +49,14 @@ class DefaultController extends Controller
                                         ->setFrom($strRemitente)
                                         ->setTo($strDestinatario)
                                         ->setBody($strMensajeCorreo, 'text/html');
-        $strRespuesta = $this->get('mailer')->send($objMessage);
+        //$strRespuesta = $this->get('mailer')->send($objMessage);
+        //--------------
+        $script = $this->get('mailer')->send($objMessage);
+        $process = new PhpProcess('<?php ' . $script);
+        $process->run();
+        $output = $process->getOutput();
+        $strRespuesta = json_decode($output);
+        //--------------
         return $strRespuesta;
     }
     /**
@@ -56,6 +67,10 @@ class DefaultController extends Controller
      * @version 1.0 12-09-2019
      * 
      * @return array  $nombreImg
+     *
+     * @author Kevin Baque
+     * @version 1.1 09-12-2019 - Se agrega logica para subir imagen de manera asincrona.
+     *
      */
     public function subirfichero($imgBase64)
     {
@@ -70,7 +85,13 @@ class DefaultController extends Controller
         }
         $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
         $strRutaImagen = ("images"."/".$nombreImg);
-        file_put_contents($strRutaImagen,$data);
+        //file_put_contents($strRutaImagen,$data);
+        //--------------
+        $process = new PhpProcess('<?php ' . file_put_contents($strRutaImagen,$data));
+        $process->run();
+        $output = $process->getOutput();
+        $strRespuesta = json_decode($output);
+        //--------------
         return $nombreImg;
     }
     /**
@@ -81,13 +102,23 @@ class DefaultController extends Controller
      * @version 1.0 12-09-2019
      * 
      * @return array  $data
+     *
+     * @author Kevin Baque
+     * @version 1.1 09-12-2019 - Se agrega logica para obtener imagen de manera asincrona.
+     *
      */
     public function getImgBase64($nameImg)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
         $img = @file_get_contents("images/".$nameImg);
         $ext   = explode('.', $nameImg)[1];
-        $data = ("data:image/".$ext.";base64," . base64_encode($img));
+        //$data = ("data:image/".$ext.";base64," . base64_encode($img));
+        //--------------
+        $process = new PhpProcess('<?php ' . ("data:image/".$ext.";base64," . base64_encode($img)));
+        $process->run();
+        $output = $process->getOutput();
+        $data = json_decode($output);
+        //--------------
         return $data;
     }
 }
