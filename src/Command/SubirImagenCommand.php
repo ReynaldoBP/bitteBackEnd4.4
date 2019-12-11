@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use App\Entity\InfoContenidoSubido;
 
 class SubirImagenCommand extends Command
 {
@@ -17,6 +18,8 @@ class SubirImagenCommand extends Command
     {
         $this
             ->setDescription('Add a short description for your command')
+            ->addArgument('idContenido', InputArgument::REQUIRED, 'idContenido')
+            ->addArgument('imagen', InputArgument::REQUIRED, 'imagen')
             ->addArgument('arg1', InputArgument::OPTIONAL, 'Argument description')
             ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description')
         ;
@@ -24,8 +27,12 @@ class SubirImagenCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-        $arg1 = $input->getArgument('arg1');
+        $io          = new SymfonyStyle($input, $output);
+        $arg1        = $input->getArgument('arg1');
+        $idContenido = $input->getArgument('idContenido');
+        $imgBase64   = $input->getArgument('imagen');
+
+        $em          = $this->getContainer()->get('doctrine')->getManager();
 
         if ($arg1) {
             $io->note(sprintf('You passed an argument: %s', $arg1));
@@ -33,6 +40,34 @@ class SubirImagenCommand extends Command
 
         if ($input->getOption('option1')) {
             // ...
+        }
+
+        $base_to_php   = explode(',', $imgBase64);
+        $data          = base64_decode($base_to_php[1]);
+        $ext           = explode("/",explode(";",$base_to_php[0])[0])[1];
+        $pos           = strpos($ext, "ico");
+        if($pos > 0)
+        {
+            $ext = "ico";
+        }
+        $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
+        $strRutaImagen = ("images"."/".$nombreImg);
+        file_put_contents($strRutaImagen,$data);
+
+        $em->getConnection()->beginTransaction();
+
+        $objContenido = $this->getDoctrine()
+                                    ->getRepository(InfoContenidoSubido::class)
+                                    ->find($idContenido);
+        if(!is_object($objContenido) || empty($objContenido))
+        {
+            throw new \Exception('No existe el contenido con identificador enviada por parámetro.');
+        }
+        else
+        {
+            $objContenido->setIMAGEN($strRutaImagen);
+            $em->persist($objContenido);
+            $em->flush();
         }
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');

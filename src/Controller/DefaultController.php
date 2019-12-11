@@ -71,27 +71,30 @@ class DefaultController extends Controller
      * @version 1.1 09-12-2019 - Se agrega logica para subir imagen de manera asincrona.
      *
      */
-    public function subirfichero($imgBase64)
+    public function subirfichero($arrayParametros)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $base_to_php   = explode(',', $imgBase64);
-        $data          = base64_decode($base_to_php[1]);
-        $ext           = explode("/",explode(";",$base_to_php[0])[0])[1];
-        $pos           = strpos($ext, "ico");
-        if($pos > 0)
-        {
-            $ext = "ico";
-        }
-        $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
-        $strRutaImagen = ("images"."/".$nombreImg);
-        file_put_contents($strRutaImagen,$data);
+
+        $strImagen        = $arrayParametros['strImagen'] ? $arrayParametros['strImagen']:'';
+        $intIdContenido   = $arrayParametros['intIdContenido'] ? $arrayParametros['intIdContenido']:'';
+        $strRespuesta     = "";
+
+        $php = '/usr/bin/php7.3';
+        $console = '/var/www/bitteBackEnd4.4/bin/console'; 
+        $command = 'app:subirImagen'; 
+        
+        $proceso = $php.' '.$console.' '.$command.'  "'.$intIdContenido.'" "'.$strImagen.'" ';
+        
+        $process =  new Process($proceso);
+        $process->start();
+
         //--------------
         /*$process = new PhpProcess('<?php ' . file_put_contents($strRutaImagen,$data));
         $process->run();
         $output = $process->getOutput();
         $strRespuesta = json_decode($output);*/
         //--------------
-        return $nombreImg;
+        return $strRespuesta;
     }
     /**
      * Documentación para la función 'getImgBase64'

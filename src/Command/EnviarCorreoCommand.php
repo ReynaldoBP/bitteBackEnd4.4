@@ -26,7 +26,7 @@ class EnviarCorreoCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
+        $io     = new SymfonyStyle($input, $output);
         $correo = $input->getArgument('correo');
         $cuerpo = $input->getArgument('cuerpo');
         $encabezado = $input->getArgument('encabezado');
