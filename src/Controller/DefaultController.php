@@ -42,20 +42,20 @@ class DefaultController extends Controller
         $strMensajeCorreo = $arrayParametros['strMensajeCorreo'] ? $arrayParametros['strMensajeCorreo']:'';
         $strRemitente     = $arrayParametros['strRemitente'] ? $arrayParametros['strRemitente']:'';
         $strDestinatario  = $arrayParametros['strDestinatario'] ? $arrayParametros['strDestinatario']:'';
-        $strRespuesta     = '';
-        //$objMessage =  (new \Swift_Message('Hello Email'))
-        $objMessage =  (new \Swift_Message())
-                                        ->setSubject($strAsunto)
-                                        ->setFrom($strRemitente)
-                                        ->setTo($strDestinatario)
-                                        ->setBody($strMensajeCorreo, 'text/html');
-        $process = new Process('/usr/bin/php7.3 /var/www/bitteBackEnd4.4/bin/console app:enviarCorreo '.$strDestinatario.' Hola '.$strAsunto);
+        $strRespuesta     = 'Procesando';
+       
+        $php = '/usr/bin/php7.3';
+        $console = '/var/www/bitteBackEnd4.4/bin/console'; 
+        $command = 'app:enviarCorreo'; 
+        
+        $proceso = $php.' '.$console.' '.$command.'  "'.$strDestinatario.'" "'.$strMensajeCorreo.'" "'.$strAsunto.'"';
+        
+        $process =  new Process($proceso);
         $process->start();
        // $strRespuesta = $this->get('mailer')->send($objMessage);
         //--------------
         //$script = $this->get('mailer')->send($objMessage);
         
-        //--------------
         return $strRespuesta;
     }
     /**

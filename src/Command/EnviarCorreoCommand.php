@@ -38,18 +38,21 @@ class EnviarCorreoCommand extends Command
         if ($input->getOption('option1')) {
             // ...
         }
-        $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',25))
+        $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',587))
                                            ->setUsername('notificaciones@bitte.app')
                                            ->setPassword('Bitte2019');
+       // $transport = (new \Swift_SmtpTransport('smtp.mailtrap.io',2525))
+        //                                     ->setUsername('24f8367527b432')
+        //                                     ->setPassword('968eb343836f35');
         $mailer = new \Swift_Mailer($transport);
 
         $objMessage =  (new \Swift_Message())
                                         ->setSubject($encabezado)
                                         ->setFrom("notificaciones_bitte@massvision.tv")
                                         ->setTo($correo)
-                                        ->setBody($cuerpo);
+                                        ->setBody($cuerpo,'text/html');
        $strRespuesta =  $mailer->send($objMessage);
-        $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
+       $io->success($strRespuesta);
 
         return 0;
     }

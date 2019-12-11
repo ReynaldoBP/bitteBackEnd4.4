@@ -2430,8 +2430,7 @@ class ApiMovilController extends FOSRestController
                                       'strDestinatario'  => $strDestinatario);
             $objController    = new DefaultController();
             $objController->setContainer($this->container);
-            $objController->enviaCorreo($arrayParametros);
-            $strMensajeError = 'Envio de correo de prueba con exito.!';
+            $strMensajeError = $objController->enviaCorreo($arrayParametros);
         }
         catch(\Exception $ex)
         {
