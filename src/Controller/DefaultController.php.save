@@ -42,25 +42,20 @@ class DefaultController extends Controller
         $strMensajeCorreo = $arrayParametros['strMensajeCorreo'] ? $arrayParametros['strMensajeCorreo']:'';
         $strRemitente     = $arrayParametros['strRemitente'] ? $arrayParametros['strRemitente']:'';
         $strDestinatario  = $arrayParametros['strDestinatario'] ? $arrayParametros['strDestinatario']:'';
-        $strRespuesta     = 'Procesando';
-       
-        $php = '/usr/bin/php7.3';
-        $console = '/var/www/bitteBackEnd4.4/bin/console'; 
-        $command = 'app:enviarCorreo'; 
-        
-        $proceso = $php.' '.$console.' '.$command.'  "'.$strDestinatario.'" "'.$strMensajeCorreo.'" "'.$strAsunto.'"';
-        
-        $process =  new Process($proceso);
-        $process->start();
-/*
+        $strRespuesta     = '';
+        //$objMessage =  (new \Swift_Message('Hello Email'))
         $objMessage =  (new \Swift_Message())
                                         ->setSubject($strAsunto)
                                         ->setFrom($strRemitente)
                                         ->setTo($strDestinatario)
                                         ->setBody($strMensajeCorreo, 'text/html');
-        $strRespuesta = $this->get('mailer')->send($objMessage);
-*/
+        $process = new Process('php bin/console ');
+        $process->start();
+       // $strRespuesta = $this->get('mailer')->send($objMessage);
+        //--------------
+        //$script = $this->get('mailer')->send($objMessage);
         
+        //--------------
         return $strRespuesta;
     }
     /**
@@ -76,30 +71,27 @@ class DefaultController extends Controller
      * @version 1.1 09-12-2019 - Se agrega logica para subir imagen de manera asincrona.
      *
      */
-    public function subirfichero($arrayParametros)
+    public function subirfichero($imgBase64)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-
-        $strImagen        = $arrayParametros['strImagen'] ? $arrayParametros['strImagen']:'';
-        $intIdContenido   = $arrayParametros['intIdContenido'] ? $arrayParametros['intIdContenido']:'';
-        $strRespuesta     = "";
-
-        $php = '/usr/bin/php7.3';
-        $console = '/var/www/bitteBackEnd4.4/bin/console'; 
-        $command = 'app:subirImagen'; 
-        $proceso = str_repeat('a',  256*1024*2);
-        $proceso = $php.' '.$console.' '.$command.' '.$intIdContenido.' "'.$strImagen.'"';
-        error_log(strlen($strImagen)); 
-        $process =  new Process($proceso);
-//        $process->start();
-        $process->run();
+        $base_to_php   = explode(',', $imgBase64);
+        $data          = base64_decode($base_to_php[1]);
+        $ext           = explode("/",explode(";",$base_to_php[0])[0])[1];
+        $pos           = strpos($ext, "ico");
+        if($pos > 0)
+        {
+            $ext = "ico";
+        }
+        $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
+        $strRutaImagen = ("images"."/".$nombreImg);
+        file_put_contents($strRutaImagen,$data);
         //--------------
         /*$process = new PhpProcess('<?php ' . file_put_contents($strRutaImagen,$data));
         $process->run();
         $output = $process->getOutput();
         $strRespuesta = json_decode($output);*/
         //--------------
-        return $strRespuesta;
+        return $nombreImg;
     }
     /**
      * Documentación para la función 'getImgBase64'
