@@ -1702,10 +1702,7 @@ class ApiMovilController extends FOSRestController
         try
         {
             $em->getConnection()->beginTransaction();
-            if(!empty($strImagen))
-            {
-                $strRutaImagen = $objController->subirfichero($strImagen);
-            }
+
             $objCliente = $this->getDoctrine()
                                ->getRepository(InfoCliente::class)
                                ->find($intIdCliente);
@@ -1721,11 +1718,17 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe la red social con identificador enviada por parámetro.');
             }
+
+            if( empty($strImagen))
+            {
+                throw new \Exception('No existe la imagen enviada por parámetro.');
+            }
+
             $entityContSub = new InfoContenidoSubido();
             $entityContSub->setCLIENTEID($objCliente);
             $entityContSub->setREDESSOCIALESID($objRedSocial);
             $entityContSub->setDESCRIPCION($strDescripcion);
-            $entityContSub->setIMAGEN($strRutaImagen);
+            $entityContSub->setIMAGEN("");
             $entityContSub->setESTADO(strtoupper($strEstado));
             $entityContSub->setUSRCREACION($strUsuarioCreacion);
             $entityContSub->setFECREACION($strDatetimeActual);
@@ -1733,6 +1736,12 @@ class ApiMovilController extends FOSRestController
             $em->persist($entityContSub);
             $em->flush();
             $strMensajeError = 'Contenido creado con exito.!';
+
+            $arrayParametros = array('strImagen'      => $strImagen,
+                                     'intIdContenido' => $entityContSub->getId());
+
+            $strRutaImagen = $objController->subirfichero($arrayParametros);
+            
         }
         catch(\Exception $ex)
         {
@@ -2430,8 +2439,7 @@ class ApiMovilController extends FOSRestController
                                       'strDestinatario'  => $strDestinatario);
             $objController    = new DefaultController();
             $objController->setContainer($this->container);
-            $objController->enviaCorreo($arrayParametros);
-            $strMensajeError = 'Envio de correo de prueba con exito.!';
+            $strMensajeError = $objController->enviaCorreo($arrayParametros);
         }
         catch(\Exception $ex)
         {
