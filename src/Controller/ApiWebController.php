@@ -101,6 +101,7 @@ class ApiWebController extends FOSRestController
                                                      )
                                                  ));
                  $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+		 //$objResponse->headers->set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
                  $arrayRespuesta = $objResponse;
              }
          }
