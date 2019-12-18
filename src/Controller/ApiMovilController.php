@@ -99,6 +99,8 @@ class ApiMovilController extends FOSRestController
               break;
               case 'generarPass':$arrayRespuesta = $this->generarPass($arrayData);
               break;
+              case 'envioCorreoCalificacion':$arrayRespuesta = $this->envioCorreoCalificacion($arrayData);
+              break;
               case 'createPunto':$arrayRespuesta = $this->createPunto($arrayData);//Obsoleto
               break;
               case 'createPuntoGlobal':$arrayRespuesta = $this->createPuntoGlobal($arrayData);//Obsoleto
@@ -1539,6 +1541,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 03-12-2019 - Se agrega envío de correo notificando que ganó puntos
      *
+     * @author Kevin Baque
+     * @version 1.2 17-12-2019 - Se modifica envío de correo notificando que ganó puntos por calificar y compartir.
+     *
      */
     public function editContenido($arrayData)
     {
@@ -1593,6 +1598,14 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
             }
+            $objParametroRes = $this->getDoctrine()
+                                    ->getRepository(AdmiParametro::class)
+                                    ->findOneBy(array('DESCRIPCION' => 'PUNTOS_ENCUESTA',
+                                                      'ESTADO'      => 'ACTIVO'));
+            if(!is_object($objParametroRes) || empty($objParametroRes))
+            {
+                throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
+            }
             $objRedSocial = $this->getDoctrine()
                                  ->getRepository(InfoRedesSociales::class)
                                  ->findOneBy(array('id'     => $intIdRedSocial,
@@ -1606,23 +1619,22 @@ class ApiMovilController extends FOSRestController
                 $strAsunto            = '¡GANASTE PUNTOS!';
                 $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
                 $strMensajeCorreo = '
-                <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
+                <div class=""><b>¡Hola! '.$strNombreUsuario.',</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">FELICITACIONES!!!!&nbsp;</div>
+                <div class=""><i><b><p style="color:#0000FF";>FELICITACIONES!</p></b><i></div>
                 <div class="">&nbsp;</div>
-                <div class="">Acabas de compartir tu foto en redes sociales de tu experiencia en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+                <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+                <div class="">Has ganado '.$objParametroRes->getVALOR1().' puntos por calificar y '.$objParametro->getVALOR1().' puntos por compartir. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
+                <div class="">Tus puntos est&aacute;n en procesos de pendientes y en 24 horas se habilitan. Ingresa al app Bitte para que veas que promociones est&aacute;n vigentes y si has ganado suficientes puntos en este restaurante para canjear por comida o bebidas gratis. Para poder canjear comida o bebidas, debes estar en el restaurante e ingresar al app Bitte y elegir la promoci&oacute;n para redimirla.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
+                <div class="">Recuerda siempre usar tu app Bitte para calificar tu experiencia gastron&oacute;mica, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+                <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Buen provecho,&nbsp;</div>
+                <div class=""><b>ENJOY YUT BITTE</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Bitte.&nbsp;</div>
                 <div class="">&nbsp;</div>';
                 $strRemitente     = 'notificaciones_bitte@massvision.tv';
                 $arrayParametros  = array('strAsunto'        => $strAsunto,
@@ -2451,6 +2463,108 @@ class ApiMovilController extends FOSRestController
                                             'status'    => $strStatus,
                                             'resultado' => $strMensajeError,
                                             'succes'    => $boolSucces
+                                            )
+                                        ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'envioCorreoCalificacion'
+     *
+     * Método encargado de enviar correo en caso de que el cliente no comparta contenido
+     * 
+     * @author Kevin Baque
+     * @version 1.0 04-09-2019
+     * 
+     * @return array  $objResponse
+     *
+     */
+    public function envioCorreoCalificacion($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        date_default_timezone_set('America/Guayaquil');
+        $intIdCliente       = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
+        $intIdSucursal      = $arrayData['idSucursal'] ? $arrayData['idSucursal']:'';
+        $strUsuarioCreacion = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $strDatetimeActual  = new \DateTime('now');
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $strStatus          = 400;
+        $objResponse        = new Response;
+        $em                 = $this->getDoctrine()->getManager();
+        $boolSucces         = true;
+        try
+        {
+            $em->getConnection()->beginTransaction();
+            $objCliente     = $this->getDoctrine()
+                                   ->getRepository(InfoCliente::class)
+                                   ->find($intIdCliente);
+            if(!is_object($objCliente) || empty($objCliente))
+            {
+                throw new \Exception('No existe el cliente con la descripción enviada por parámetro.');
+            }
+            $objSucursal = $this->getDoctrine()
+                                ->getRepository(InfoSucursal::class)
+                                ->find($intIdSucursal);
+            if(!is_object($objSucursal) || empty($objSucursal))
+            {
+                throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
+            }
+            $objRestaurante = $this->getDoctrine()
+                                    ->getRepository(InfoRestaurante::class)
+                                    ->find($objSucursal->getRESTAURANTEID());
+            if(!is_object($objRestaurante) || empty($objRestaurante))
+            {
+                throw new \Exception('No existe restaurante con la descripción enviada por parámetro.');
+            }
+
+            $objParametro    = $this->getDoctrine()
+                                    ->getRepository(AdmiParametro::class)
+                                    ->findOneBy(array('DESCRIPCION' => 'PUNTOS_ENCUESTA',
+                                                      'ESTADO'      => 'ACTIVO'));
+            if(!is_object($objParametro) || empty($objParametro))
+            {
+                throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
+            }
+            $strAsunto            = '¡GANASTE PUNTOS!';
+            $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+            $strMensajeCorreo = '
+            <div class=""><b>¡Hola! '.$strNombreUsuario.'.</b>&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class=""><i><b><p style="color:#0000FF";>FELICITACIONES!</p></b><i></div>
+            <div class="">&nbsp;</div>
+            <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Has ganado '.$objParametro->getVALOR1().' puntos por calificar. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Tus puntos est&aacute;n en procesos de pendientes y en 24 horas se habilitan. Ingresa al app Bitte para que veas que promociones est&aacute;n vigentes y si has ganado suficientes puntos en este restaurante para canjear por comida o bebidas gratis. Para poder canjear comida o bebidas, debes estar en el restaurante e ingresar al app Bitte y elegir la promoci&oacute;n para redimirla.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Recuerda siempre usar tu app Bitte para calificar tu experiencia gastron&oacute;mica, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class=""><b>ENJOY YUT BITTE</b>&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">&nbsp;</div>';
+            $strRemitente     = 'notificaciones_bitte@massvision.tv';
+            $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                      'strMensajeCorreo' => $strMensajeCorreo,
+                                      'strRemitente'     => $strRemitente,
+                                      'strDestinatario'  => $objCliente->getCORREO());
+            $objController    = new DefaultController();
+            $objController->setContainer($this->container);
+            $objController->enviaCorreo($arrayParametros);
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces = false;
+            $strMensajeError ="Fallo al crear la respuesta, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayRespuesta['mensaje']          = $strMensajeError;
+        $objResponse->setContent(json_encode(array(
+                                                    'status'           => $strStatus,
+                                                    'resultado'        => $strMensajeError,
+                                                    'succes'           => $boolSucces
                                             )
                                         ));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
