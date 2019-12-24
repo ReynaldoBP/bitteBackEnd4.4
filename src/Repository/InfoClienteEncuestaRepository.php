@@ -347,4 +347,43 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $arrayCantPtos['error'] = $strMensajeError;
         return $arrayCantPtos;
     }
+    /**
+     * Documentación para la función 'getVigenciaEncuestaPend'
+     * Método encargado de retornar todas las encuestas en estado pendiente
+     * según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 28-10-2019
+     * 
+     * @return array  $arrayCltEncuesta
+     * 
+     */
+    public function getVigenciaEncuestaPend($arrayParametros)
+    {
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:'PENDIENTE';
+        $arrayCltEncuesta   = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $date               = date('Y-m-d H:i:s');
+        try
+        {
+            $strSelect      = "SELECT ICE.ID_CLT_ENCUESTA AS ID_CLT_ENCUESTA ";
+            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE ";
+            $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') > 24
+                                    AND ICE.ESTADO  = :ESTADO ";
+            $objQuery->setParameter("ESTADO",$strEstado);
+
+            $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayCltEncuesta['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayCltEncuesta['error'] = $strMensajeError;
+        return $arrayCltEncuesta;
+    }
 }
