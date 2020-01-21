@@ -11,11 +11,12 @@ use Symfony\Component\Process\Process;
 class DefaultController extends Controller
 {
     /**
-     * @Route("/", name="homepage")
+     * @Route("/", name="index")
+     * @Route("/pages/login", name="index2")
      */
     public function indexAction(Request $request)
     {
-        return $this->render('default/index.html.twig', [
+        return $this->render('web/index.html.twig', [
             'base_dir' => realpath($this->getParameter('kernel.root_dir').'/..'),
         ]);
     }
@@ -44,8 +45,8 @@ class DefaultController extends Controller
         $strDestinatario  = $arrayParametros['strDestinatario'] ? $arrayParametros['strDestinatario']:'';
         $strRespuesta     = 'Procesando';
        
-        $php = '/usr/bin/php7.3';
-        $console = '/var/www/bitteBackEnd4.4/bin/console'; 
+        $php = '/opt/bitnami/php/bin/php';
+        $console = '/opt/bitnami/nginx/html/bitteBackEnd4.4/bin/console'; 
         $command = 'app:enviarCorreo'; 
         
         $proceso = $php.' '.$console.' '.$command.'  "'.$strDestinatario.'" "'.$strMensajeCorreo.'" "'.$strAsunto.'"';
@@ -84,8 +85,8 @@ class DefaultController extends Controller
         $intIdContenido   = $arrayParametros['intIdContenido'] ? $arrayParametros['intIdContenido']:'';
         $strRespuesta     = "";
 
-        $php = '/usr/bin/php7.3';
-        $console = '/var/www/bitteBackEnd4.4/bin/console'; 
+        $php = '/opt/bitnami/php/bin/php';
+        $console = '/opt/bitnami/nginx/html/bitteBackEnd4.4/bin/console'; 
         $command = 'app:subirImagen'; 
         $proceso = str_repeat('a',  256*1024*2);
         $proceso = $php.' '.$console.' '.$command.' '.$intIdContenido.' "'.$strImagen.'"';
