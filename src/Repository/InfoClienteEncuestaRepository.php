@@ -374,7 +374,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
                                     AND ICE.ESTADO  = :ESTADO ";
             $objQuery->setParameter("ESTADO",$strEstado);
 
-            $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'string');
+            $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'integer');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayCltEncuesta['resultados'] = $objQuery->getResult();
