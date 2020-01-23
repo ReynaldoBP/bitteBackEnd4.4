@@ -368,6 +368,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $date               = date('Y-m-d H:i:s');
         try
         {
+           
             $strSelect      = "SELECT ICE.ID_CLT_ENCUESTA AS ID_CLT_ENCUESTA ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE ";
             $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') > 24
