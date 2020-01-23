@@ -36,32 +36,9 @@ class InfoClienteEncuestaController extends AbstractController
         $em                     = $this->getDoctrine()->getManager();
         try
         {
-            $em->getConnection()->beginTransaction();
-            $arrayParametros = array('strEstado'      => $strEstado);
-            $arrayEncuestas  = $this->getDoctrine()
-                                            ->getRepository(InfoClienteEncuesta::class)
-                                            ->getVigenciaEncuestaPend($arrayParametros);
-            if(empty($arrayEncuestas) || !is_array($arrayEncuestas))
-            {
-                $strStatus  = 404;
-                throw new \Exception('No existen encuestas con la descripción enviada por parametros');
-            }
-            foreach ($arrayEncuestas['resultados'] as $item)
-            {
-                $objEncuesta = $this->getDoctrine()
-                                    ->getRepository(InfoClienteEncuesta::class)
-                                    ->find($item['ID_CLT_ENCUESTA']);
-                if(!is_object($objEncuesta) || empty($objEncuesta))
-                {
-                    throw new \Exception('No existe la Promoción.');
-                }
-                $objEncuesta->setESTADO('ACTIVO');
-                $objEncuesta->setUSRMODIFICACION($strUsuarioCreacion);
-                $objEncuesta->setFEMODIFICACION($strDatetimeActual);
-                $em->persist($objEncuesta);
-                $em->flush();
-                $em->getConnection()->commit();
-            }
+            $objSql = $em->getConnection()->prepare('CALL massvisi_bitte.ValidarPuntaje');
+            $objSql->execute(); 
+           
         }
         catch(\Exception $ex)
         {
