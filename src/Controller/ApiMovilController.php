@@ -241,13 +241,13 @@ class ApiMovilController extends FOSRestController
                 $strDistractor     = substr(md5(time()),0,16);
                 ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
-                $strActivaCltProd  = "http://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strAsunto        = 'Bienvenido al mundo BITTE';
                 $strMensajeCorreo = '<div class="">Bienvenido al mundo BITTE:</div>
                 <div class="">&nbsp;</div>
                 <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Has logrado con exito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en tus restaurantes favoritos .&nbsp;</div>
+                <div class="">Has logrado con &eacute;xito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en tus restaurantes favoritos .&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">En Bitte es muy importante seguir las reglas para que tus puntos sean v&aacute;lidos y no los pierdas. Puedes disfrutar de nuestra aplicaci&oacute;n siguiendo estos pasos:&nbsp;</div>
                 <div class="">1. Abre la aplicaci&oacute;n y elige tomar foto.&nbsp;</div>
@@ -1659,7 +1659,7 @@ class ApiMovilController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class=""><b>ENJOY YUT BITTE</b>&nbsp;</div>
+                <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">&nbsp;</div>';
                 $strRemitente     = 'notificaciones_bitte@massvision.tv';
@@ -2569,7 +2569,7 @@ class ApiMovilController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class=""><b>ENJOY YUT BITTE</b>&nbsp;</div>
+            <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">&nbsp;</div>';
             $strRemitente     = 'notificaciones_bitte@massvision.tv';
