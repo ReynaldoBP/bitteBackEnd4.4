@@ -299,7 +299,10 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
      * @version 1.0 28-10-2019
      * 
      * @return array  $arrayCltEncuesta
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.0 25-01-2020 - Se agrega nueva forma para retornar los puntos pendientes.
+     *
      */
     public function getCantPtosResEnc($arrayParametros)
     {
@@ -318,15 +321,15 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 JOIN INFO_SUCURSAL         ISUR ON ISUR.ID_SUCURSAL   = ICE.SUCURSAL_ID
                                 JOIN INFO_RESTAURANTE      IRE  ON IRE.ID_RESTAURANTE = ISUR.RESTAURANTE_ID ";
-            $strWhere       = " WHERE ICE.ESTADO  = :ESTADO
-                                    AND ISUR.ESTADO = :ESTADO
+            $strWhere       = " WHERE ISUR.ESTADO = :ESTADO
                                     AND IRE.ESTADO  = :ESTADO ";
             $strGroupBy     = " GROUP BY IRE.ID_RESTAURANTE ";
             $objQuery->setParameter("ESTADO",$strEstado);
             if(!empty($intIdCliente))
             {
-                $strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.ESTADO='ACTIVO' AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS ";
-                $strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.ESTADO='PENDIENTE' AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS_PENDIENTE ";
+                $strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS ";
+                //$strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.ESTADO='PENDIENTE' AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS_PENDIENTE ";
+                $strSelect .= ", (SELECT IFNULL(SUM(ICEP.CANTIDAD_PUNTOS+ICSP.CANTIDAD_PUNTOS),0) FROM INFO_CLIENTE_ENCUESTA ICEP JOIN INFO_CONTENIDO_SUBIDO ICSP ON ICSP.ID_CONTENIDO_SUBIDO=ICEP.CONTENIDO_ID WHERE ICEP.ESTADO='PENDIENTE' AND ICEP.CLIENTE_ID = :CLIENTE_ID AND ICSP.ESTADO='PENDIENTE') AS CANT_PUNTOS_PENDIENTE ";
                 $strWhere .= " AND ICE.CLIENTE_ID= :CLIENTE_ID ";
                 $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
             }

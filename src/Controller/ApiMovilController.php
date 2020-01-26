@@ -241,7 +241,7 @@ class ApiMovilController extends FOSRestController
                 $strDistractor     = substr(md5(time()),0,16);
                 ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
-                $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                $strActivaCltProd  = "http://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strAsunto        = 'Bienvenido al mundo BITTE';
                 $strMensajeCorreo = '<div class="">Bienvenido al mundo BITTE:</div>
                 <div class="">&nbsp;</div>
@@ -275,14 +275,28 @@ class ApiMovilController extends FOSRestController
                 </div>
                 </div>
                 <div class="">Bienvenido al mundo BITTE.</div>';
+
                 $strRemitente     = 'notificaciones_bitte@massvision.tv';
                 $arrayParametros  = array('strAsunto'          => $strAsunto,
                                             'strMensajeCorreo' => $strMensajeCorreo,
                                             'strRemitente'     => $strRemitente,
                                             'strDestinatario'  => $strCorreo);
-                $objController    = new DefaultController();
-                $objController->setContainer($this->container);
-                $objController->enviaCorreo($arrayParametros);
+               $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',25))
+                                           ->setUsername('notificaciones@bitte.app')
+                                           ->setPassword('Bitte2019');
+
+                $mailer = new \Swift_Mailer($transport);
+
+                $objMessage =  (new \Swift_Message())
+                                        ->setSubject($strAsunto)
+                                        ->setFrom("notificaciones_bitte@massvision.tv")
+                                        ->setTo($strCorreo)
+                                        ->setBody($strMensajeCorreo,'text/html');
+                $strRespuesta =  $mailer->send($objMessage);
+
+            //    $objController    = new DefaultController();
+            //    $objController->setContainer($this->container);
+            //    $objController->enviaCorreo($arrayParametros);
             }
         }
         $arrayCliente['mensaje'] = $strMensajeError;
@@ -924,6 +938,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 03-12-2019 - Se agrega envío de correo notificando que ganó puntos
      *
+     * @author Kevin Baque
+     * @version 1.2 25-01-2020 - Se comenta correo por nuevas politicas.
+     *
      */
     public function createRespuesta($arrayData)
     {
@@ -992,6 +1009,8 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
             }
+
+            $intValor = $objParametro->getVALOR1();
             $entityCltEncuesta = new InfoClienteEncuesta();
             $entityCltEncuesta->setCLIENTEID($objCliente);
             $entityCltEncuesta->setSUCURSALID($objSucursal);
@@ -1000,7 +1019,7 @@ class ApiMovilController extends FOSRestController
             $entityCltEncuesta->setCONTENIDOID($objContenido);
             $entityCltEncuesta->setUSRCREACION($strUsuarioCreacion);
             $entityCltEncuesta->setFECREACION($strDatetimeActual);
-            $entityCltEncuesta->setCANTIDADPUNTOS($objParametro->getVALOR1());
+            $entityCltEncuesta->setCANTIDADPUNTOS($intValor);
 
             $em->persist($entityCltEncuesta);
             $em->flush();
@@ -1062,23 +1081,8 @@ class ApiMovilController extends FOSRestController
                 }
                 $strMensajeError = 'Respuesta creada con exito.!';
             }
-        }
-        catch(\Exception $ex)
-        {
-            $boolSucces = false;
-            if ($em->getConnection()->isTransactionActive())
-            {
-                $strStatus = 404;
-                $em->getConnection()->rollback();
-            }
-            $strMensajeError ="Fallo al crear la respuesta, intente nuevamente.\n ". $ex->getMessage();
-        }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        $strAsunto            = '¡GANASTE PUNTOS!';
+        
+        /*$strAsunto            = '¡GANASTE PUNTOS!';
         $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
         $strMensajeCorreo = '
         <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
@@ -1087,7 +1091,7 @@ class ApiMovilController extends FOSRestController
         <div class="">&nbsp;</div>
         <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
         <div class="">&nbsp;</div>
-        <div class="">Has ganado '.$objParametro->getVALOR1().' puntos en este establecimiento. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+        <div class="">Has ganado '.$intValor.' puntos en este establecimiento. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
         <div class="">&nbsp;</div>
         <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
         <div class="">&nbsp;</div>
@@ -1106,7 +1110,25 @@ class ApiMovilController extends FOSRestController
                                   'strDestinatario'  => $objCliente->getCORREO());
         $objController    = new DefaultController();
         $objController->setContainer($this->container);
-        $objController->enviaCorreo($arrayParametros);
+        $objController->enviaCorreo($arrayParametros);*/
+        
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces = false;
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 404;
+                $em->getConnection()->rollback();
+            }
+            $strMensajeError ="Fallo al crear la respuesta, intente nuevamente.\n ". $ex->getMessage();
+        }
+        if ($em->getConnection()->isTransactionActive())
+        {
+            $em->getConnection()->commit();
+            $em->getConnection()->close();
+        }
+
         $arrayRespuesta['mensaje']          = $strMensajeError;
         $arrayRespuesta['intIdCltEncuesta'] = $intIdCltEncuesta;
         $objResponse->setContent(json_encode(array(
@@ -1116,6 +1138,8 @@ class ApiMovilController extends FOSRestController
                                                     'succes'           => $boolSucces
                                             )
                                         ));
+
+
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -1702,7 +1726,7 @@ class ApiMovilController extends FOSRestController
         $intIdCliente       = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
         $intIdRedSocial     = $arrayData['idRedSocial'] ? $arrayData['idRedSocial']:'NO COMPARTIDO';
         $strDescripcion     = $arrayData['descripcion'] ? $arrayData['descripcion']:'';
-        $strEstado          = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
+        $strEstado          = $arrayData['estado'] ? $arrayData['estado']:'PENDIENTE';
         $strImagen          = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
         $strUsuarioCreacion = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual  = new \DateTime('now');
