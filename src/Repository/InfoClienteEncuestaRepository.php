@@ -327,9 +327,18 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $objQuery->setParameter("ESTADO",$strEstado);
             if(!empty($intIdCliente))
             {
-                $strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS ";
-                //$strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) FROM INFO_CLIENTE_PUNTO ICP WHERE CLIENTE_ID = :CLIENTE_ID AND ICP.ESTADO='PENDIENTE' AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS_PENDIENTE ";
-                $strSelect .= ", (SELECT IFNULL(SUM(ICEP.CANTIDAD_PUNTOS+ICSP.CANTIDAD_PUNTOS),0) FROM INFO_CLIENTE_ENCUESTA ICEP JOIN INFO_CONTENIDO_SUBIDO ICSP ON ICSP.ID_CONTENIDO_SUBIDO=ICEP.CONTENIDO_ID WHERE ICEP.ESTADO='PENDIENTE' AND ICEP.CLIENTE_ID = :CLIENTE_ID AND ICSP.ESTADO='PENDIENTE') AS CANT_PUNTOS_PENDIENTE ";
+                $strSelect .= ", (SELECT IFNULL(SUM(ICP.CANTIDAD_PUNTOS ),0) 
+                                    FROM INFO_CLIENTE_PUNTO ICP 
+                                    WHERE CLIENTE_ID = :CLIENTE_ID 
+                                        AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS ";
+                $strSelect .= ", (SELECT IFNULL(SUM(ICEP.CANTIDAD_PUNTOS+ICSP.CANTIDAD_PUNTOS),0) 
+                                  FROM INFO_CLIENTE_ENCUESTA ICEP 
+                                    JOIN INFO_CONTENIDO_SUBIDO ICSP ON ICSP.ID_CONTENIDO_SUBIDO = ICEP.CONTENIDO_ID 
+                                    JOIN INFO_SUCURSAL ISURP        ON ISURP.ID_SUCURSAL        = ICEP.SUCURSAL_ID
+                                  WHERE ICEP.ESTADO          ='PENDIENTE' 
+                                    AND ICEP.CLIENTE_ID      = :CLIENTE_ID 
+                                    AND ISURP.RESTAURANTE_ID = IRE.ID_RESTAURANTE
+                                    AND ICSP.ESTADO='PENDIENTE') AS CANT_PUNTOS_PENDIENTE ";
                 $strWhere .= " AND ICE.CLIENTE_ID= :CLIENTE_ID ";
                 $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
             }
