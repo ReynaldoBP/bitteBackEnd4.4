@@ -83,21 +83,46 @@ class InfoCLienteController extends Controller
             '<!DOCTYPE html>
             <html lang="en">
             <head>
-            <title>Bienvenido al mundo BITTE</title>
+            <title>ENJOY YOUR BITTE </title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
             <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+            <style>
+                .text {
+                  color: #FFF;
+                  margin: 0 auto;
+                  text-align: center;
+                  font-weight: 700;
+                  font: italic bold 100px Georgia, Serif;
+                  text-shadow: -4px 3px 0 #72A5E4, -14px 7px 0 #0a0e27;
+                }
+
+                .text-2 {
+                  color: #FFF;
+                  margin: 0 auto;
+                  text-align: center;
+                  font-weight: 300;
+                  font: italic bold 50px Georgia, Serif;
+                  text-shadow: -4px 3px 0 #72A5E4, -14px 7px 0 #0a0e27;
+                }
+            </style>
+
             </head>
-            <body>
+            <body  style = "background-image: url("/public/images/iconoBitte.jpeg");background-repeat: repeat;background-size: 300px 300px;" >
+                <div style = "background:rgb(0,0,0,0.5);height: 70rem;">
 
-            <div class="jumbotron text-center" style = "background-color:#ffffff">
-            <h1>Bienvenido al mundo BITTE</h1>
-            <p>Se ha completado tu registro!</p> 
+                
+            <div class="text-center" style="padding-top: 7em;" >  <!--
+                text-shadow: 1px 1px 2px black, 0 0 1em #72A5E4, 0 0 0.2em #72A5E4;
+            -->
+            <h1 class="text" style = "color: #ffffff;">ENJOY YOUR BITTE </h1>
+            <p class="text-2" style = "color: #ffffff;">Se ha completado tu registro!</p> 
             </div>
-
+        </div>
             </body>
             </html>');
             
