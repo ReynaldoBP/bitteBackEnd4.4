@@ -135,6 +135,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 05-12-2019 - Se edita el correo de bienvenida.
      *
+     * @author Kevin Baque
+     * @version 1.2 28-01-2020 - Se edita el correo de bienvenida(link de restaurante y term. cond.).
+     *
      */
     public function createCliente($arrayData)
     {
@@ -242,6 +245,8 @@ class ApiMovilController extends FOSRestController
                 ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                $strUrlTermCond    ="https://la.bitte.app/descargar-app/";
+                $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
                 $strAsunto        = 'Bienvenido al mundo BITTE';
                 $strMensajeCorreo = '<div class="">Bienvenido al mundo BITTE:</div>
                 <div class="">&nbsp;</div>
@@ -259,8 +264,12 @@ class ApiMovilController extends FOSRestController
                 <div class="">7. Tus puntos son v&aacute;lidos solo en el restaurante donde comiste y calificaste.&nbsp;</div>
                 <div class="">8. El restaurante tiene la potestad de eliminar tus puntos si ve que la foto no concuerda con su men&uacute;.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Para mayor informaci&oacute;n consulta aqu&iacute; los t&eacute;rminos y condiciones de uso.&nbsp;</div>
-                <div class="">Para informaci&oacute;n de los restaurantes participantes has click aquí.&nbsp;</div>
+                <div class="">Para mayor informaci&oacute;n de los t&eacute;rminos y condiciones de uso.&nbsp;</div>
+                <div><a href='.$strUrlTermCond.' target="_blank" >Haz click aqu&iacute;</a></div>
+
+                <div class="">Para mayor informaci&oacute;n de los restaurantes participantes.&nbsp;</div>
+                <div><a href='.$strUrlRestaurante.' target="_blank" >Haz click aqu&iacute;</a></div>
+
                 <div class="">Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Buen provecho,&nbsp;</div>
