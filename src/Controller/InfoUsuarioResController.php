@@ -23,6 +23,10 @@ class InfoUsuarioResController extends Controller
      * @version 1.0 15-09-2019
      * 
      * @return array  $objResponse
+     *
+     * @author Kevin Baque
+     * @version 1.1 28-01-2020 - se genera clave del usuario restaurante al correo de bienvenida.
+     *
      */
     public function createUsuarioResAction(Request $request)
     {
@@ -36,6 +40,7 @@ class InfoUsuarioResController extends Controller
         $objResponse            = new Response;
         $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
+        $strContrasenia         = uniqid();
         try
         {
             $em->getConnection()->beginTransaction();
@@ -57,6 +62,7 @@ class InfoUsuarioResController extends Controller
             {
                 throw new \Exception('No existe el usuario con la descripción enviada por parámetro.');
             }
+            $objUsuario->setCONTRASENIA(md5($strContrasenia));
             $arrayParametrosRelacion = array('ESTADO'        => 'ACTIVO',
                                              'USUARIOID'     => $intIdUsuario,
                                              'RESTAURANTEID' => $intIdRestaurante);
@@ -85,6 +91,8 @@ class InfoUsuarioResController extends Controller
             <div class="">Nuestro equipo de asistencia estar&aacute; disponible en lo que requiera.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">Por favor, complete su registro de establecimiento y comience a recolectar las opiniones de sus clientes de manera ordenada para un an&aacute;lisis y tabulaci&oacute;n din&aacute;mica.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div><strong>Tu clave temporal es :'.$strContrasenia.'&nbsp;</strong></div>
             <div class="">&nbsp;</div>
             <div class="">Bienvenido al mundo BITTE.</div>';
             $strRemitente     = 'notificaciones_bitte@massvision.tv';
