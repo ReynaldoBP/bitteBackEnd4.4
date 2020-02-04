@@ -20,6 +20,7 @@ use App\Entity\InfoPromocionHistorial;
 use App\Entity\InfoRespuesta;
 use App\Entity\AdmiParametro;
 use App\Entity\InfoUsuario;
+use App\Entity\InfoRedesSociales;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;

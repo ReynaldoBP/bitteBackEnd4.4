@@ -245,7 +245,7 @@ class ApiMovilController extends FOSRestController
                 ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
-                $strUrlTermCond    ="https://la.bitte.app/descargar-app/";
+                $strUrlTermCond    ="https://la.bitte.app/privacy-policy/";
                 $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
                 $strAsunto        = 'Bienvenido al mundo BITTE';
                 $strMensajeCorreo = '<div class="">Bienvenido al mundo BITTE:</div>
