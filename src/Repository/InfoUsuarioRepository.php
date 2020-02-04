@@ -17,13 +17,16 @@ class InfoUsuarioRepository extends \Doctrine\ORM\EntityRepository
      * 
      * @author Kevin Baque
      * @version 1.0 16-07-2019
-     * 
+     *
+     * @return array  $arrayUsuarios
+     *
      * @author Kevin Baque
      * @version 1.1 10-11-2019 Se agrega filtro por restaurante.
      *
-     * @return array  $arrayUsuarios
-     * 
-     */    
+     * @author Kevin Baque
+     * @version 1.2 04-02-2020 Se retorna el nombre comercial del restaurante si no es admin.
+     *
+     */
     public function getUsuariosCriterio($arrayParametros)
     {
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
@@ -43,16 +46,22 @@ class InfoUsuarioRepository extends \Doctrine\ORM\EntityRepository
         {
             $strSelect      = "SELECT IU.ID_USUARIO,IU.NOMBRES,IU.APELLIDOS,IU.CONTRASENIA, IU.IDENTIFICACION, IU.CORREO,IU.TIPO_ROL_ID,
                                IU.ESTADO,IU.PAIS,IU.CIUDAD,IU.USR_CREACION,IU.FE_CREACION,IU.USR_MODIFICACION,IU.FE_MODIFICACION,
-                               ATR.DESCRIPCION_TIPO_ROL,ATR.ID_TIPO_ROL ";
+                               ATR.DESCRIPCION_TIPO_ROL,ATR.ID_TIPO_ROL,
+                                CASE
+                                WHEN ATR.DESCRIPCION_TIPO_ROL ='ADMINISTRADOR' 
+                                THEN ''
+                                ELSE IRE.NOMBRE_COMERCIAL
+                                END AS NOMBRE_RESTAURANTE ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM INFO_USUARIO IU 
-                               JOIN ADMI_TIPO_ROL ATR ON IU.TIPO_ROL_ID=ATR.ID_TIPO_ROL ";
+                               JOIN ADMI_TIPO_ROL         ATR   ON IU.TIPO_ROL_ID     = ATR.ID_TIPO_ROL 
+                               LEFT JOIN INFO_USUARIO_RES IURES ON IURES.USUARIO_ID   = IU.ID_USUARIO
+                               LEFT JOIN INFO_RESTAURANTE IRE   ON IRE.ID_RESTAURANTE = IURES.RESTAURANTE_ID ";
             $strWhere       = "WHERE IU.ESTADO in (:ESTADO) ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
             if(!empty($intIdRestaurante))
             {
-                $strFrom .= " JOIN INFO_USUARIO_RES IURES ON IURES.USUARIO_ID = IU.ID_USUARIO ";
                 $strWhere .= " AND IURES.RESTAURANTE_ID =:RESTAURANTE_ID ";
                 $objQuery->setParameter("RESTAURANTE_ID", $intIdRestaurante);
                 $objQueryCount->setParameter("RESTAURANTE_ID", $intIdRestaurante);
@@ -103,6 +112,7 @@ class InfoUsuarioRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('FE_MODIFICACION', 'FE_MODIFICACION', 'date');
             $objRsmBuilder->addScalarResult('DESCRIPCION_TIPO_ROL', 'DESCRIPCION_TIPO_ROL', 'string');
             $objRsmBuilder->addScalarResult('ID_TIPO_ROL', 'ID_TIPO_ROL', 'string');
+            $objRsmBuilder->addScalarResult('NOMBRE_RESTAURANTE', 'NOMBRE_RESTAURANTE', 'string');
             $objRsmBuilderCount->addScalarResult('CANTIDAD', 'Cantidad', 'integer');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
