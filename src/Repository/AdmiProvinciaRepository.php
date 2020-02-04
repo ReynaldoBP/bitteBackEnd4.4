@@ -2,6 +2,8 @@
 
 namespace App\Repository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
+use App\Entity\AdmiPais;
+
 /**
  * AdmiProvinciaRepository
  *
