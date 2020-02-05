@@ -89,11 +89,11 @@ class DefaultController extends Controller
         $console = '/opt/bitnami/nginx/html/bitteBackEnd4.4/bin/console'; 
         $command = 'app:subirImagen'; 
         $proceso = str_repeat('a',  256*1024*2);
-        $proceso = $php.' '.$console.' '.$command.' '.$intIdContenido.' "'.$strImagen.'"';
+        $proceso = $php.' '.$console.' '.$command.' '.$intIdContenido. ' "'.$strImagen.'"';
         error_log(strlen($strImagen)); 
         $process =  new Process($proceso);
-//        $process->start();
-        $process->run();
+        $process->start();
+//        $process->run();
         //--------------
         /*$process = new PhpProcess('<?php ' . file_put_contents($strRutaImagen,$data));
         $process->run();
@@ -118,7 +118,7 @@ class DefaultController extends Controller
     public function getImgBase64($nameImg)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $img = @file_get_contents("images/".$nameImg);
+        $img = @file_get_contents($nameImg);
         $ext   = explode('.', $nameImg)[1];
         $data = ("data:image/".$ext.";base64," . base64_encode($img));
         //--------------

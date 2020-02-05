@@ -58,7 +58,7 @@ class SubirImagenCommand extends Command
             $ext = "ico";
         }
         $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
-        $strRutaImagen = ("/var/www/bitteBackEnd4.4/public/images"."/".$nombreImg);
+        $strRutaImagen = (dirname(__FILE__)."/../../public/images"."/".$nombreImg);
         file_put_contents($strRutaImagen,$data);
 
         $em = $this->container->get('doctrine')->getManager();
