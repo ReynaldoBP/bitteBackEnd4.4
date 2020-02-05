@@ -170,7 +170,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             $objQueryCount->setParameter("ESTADO", $strEstado);
             if(!empty($intIdCliente))
             {
-                $strSelect .= ",(SELECT ILR.ID_LIKE FROM INFO_LIKE_RES ILR WHERE ILR.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ESTADO='ACTIVO' AND CLIENTE_ID=:CLIENTE_ID) as ID_LIKE ";
+                $strSelect .= " ,(SELECT ILR.ID_LIKE FROM INFO_LIKE_RES ILR WHERE ILR.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ESTADO='ACTIVO' AND CLIENTE_ID=:CLIENTE_ID LIMIT 1) as ID_LIKE ";
                 $objQuery->setParameter("CLIENTE_ID", $intIdCliente);
                 $objQueryCount->setParameter("CLIENTE_ID", $intIdCliente);
                 $objRsmBuilder->addScalarResult('ID_LIKE', 'ID_LIKE', 'string');

@@ -177,7 +177,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
-            $strSelect      = "SELECT IC.GENERO,COUNT(*) AS CANTIDAD ";
+            $strSelect      = "SELECT UPPER(IC.GENERO),COUNT(*) AS CANTIDAD ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 INNER JOIN INFO_CLIENTE IC ON ICE.CLIENTE_ID = IC.ID_CLIENTE ";
             $strWhere       = " WHERE EXTRACT(MONTH FROM ICE.FE_CREACION)  = :MES
