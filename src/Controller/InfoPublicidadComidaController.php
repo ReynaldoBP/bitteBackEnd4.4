@@ -265,6 +265,10 @@ class InfoPublicidadComidaController extends Controller
      * @version 1.0 15-09-2019
      * 
      * @return array  $objResponse
+     * 
+     * @author Kevin Baque
+     * @version 1.1 05-02-2020 - Se elimina el findOneBy por find al momento de buscar la publicidad.
+     *
      */
     public function deletePublicidadComidaAction(Request $request)
     {
@@ -283,11 +287,9 @@ class InfoPublicidadComidaController extends Controller
             $em->getConnection()->beginTransaction();
             if(!empty($intIdPublicidad))
             {
-                $arrayParametrosPub = array('ESTADO' => 'ACTIVO',
-                                            'id'     => $intIdPublicidad);
                 $objPublicidad      = $this->getDoctrine()
                                            ->getRepository(InfoPublicidad::class)
-                                           ->findOneBy($arrayParametrosPub);
+                                           ->find($intIdPublicidad);
                 if(!is_object($objPublicidad) || empty($objPublicidad))
                 {
                     throw new \Exception('No existe la publicidad con la descripción enviada por parámetro.');

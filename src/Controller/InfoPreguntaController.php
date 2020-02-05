@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManager;
 use App\Entity\InfoEncuesta;
 use App\Entity\InfoPregunta;
+use App\Entity\InfoOpcionRespuesta;
 class InfoPreguntaController extends Controller
 {
     /**
