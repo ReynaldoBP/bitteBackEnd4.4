@@ -43,8 +43,8 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                     ON C.ID_REDES_SOCIALES = B.REDES_SOCIALES_ID
                                 INNER JOIN INFO_ENCUESTA D 
                                     ON A.ENCUESTA_ID = D.ID_ENCUESTA ";
-            $strWhere       = "WHERE A.ESTADO in (:ESTADO)
-                                AND EXTRACT(YEAR FROM A.FE_CREACION ) = :strAnio 
+            $strWhere       = "WHERE 
+                                EXTRACT(YEAR FROM A.FE_CREACION ) = :strAnio 
                                 AND EXTRACT(MONTH FROM A.FE_CREACION ) = :strMes ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQuery->setParameter("strMes", $strMes);
