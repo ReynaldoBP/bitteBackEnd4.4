@@ -2064,6 +2064,7 @@ class ApiWebController extends FOSRestController
         $objResponse->setContent(json_encode(array(
                                             'status'    => $strStatus,
                                             'resultado' => $strMensajeError,
+'clave'=>$strContrasenia,
                                             'succes'    => true
                                             )
                                         ));

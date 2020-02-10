@@ -38,7 +38,7 @@ class EnviarCorreoCommand extends Command
         if ($input->getOption('option1')) {
             // ...
         }
-        $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',25))
+        $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',26))
                                            ->setUsername('notificaciones@bitte.app')
                                            ->setPassword('Bitte2019');
        // $transport = (new \Swift_SmtpTransport('smtp.mailtrap.io',2525))
