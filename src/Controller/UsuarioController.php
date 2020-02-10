@@ -180,6 +180,17 @@ class UsuarioController extends Controller
             $em->persist($entityUsuario);
             $em->flush();
             $strMensajeError = 'Usuario creado con exito.!';
+
+            $arrayUsuario    = array('id'             => $entityUsuario->getId(),
+                                 'identificacion' => $entityUsuario->getIDENTIFICACION(),
+                                 'nombres'        => $entityUsuario->getNOMBRES(),
+                                 'apellido'       => $entityUsuario->getAPELLIDOS(),
+                                 'correo'         => $entityUsuario->getCORREO(),
+                                 'estado'         => $entityUsuario->getESTADO(),
+                                 'usrCreacion'    => $entityUsuario->getUSRCREACION(),
+                                 'feCreacion'     => $entityUsuario->getFECREACION(),
+                                 'mensaje'        => $strMensajeError);        
+
         }
         catch(\Exception $ex)
         {
@@ -188,22 +199,14 @@ class UsuarioController extends Controller
                 $strStatus = 404;
                 $em->getConnection()->rollback();
             }
-            $strMensajeError = "Fallo al crear un Usuario, intente nuevamente.\n ". $ex->getMessage();
+            $arrayUsuario = "Fallo al crear un Usuario, intente nuevamente.\n ". $ex->getMessage();
         }
         if ($em->getConnection()->isTransactionActive())
         {
             $em->getConnection()->commit();
             $em->getConnection()->close();
         }
-        $arrayUsuario    = array('id'             => $entityUsuario->getId(),
-                                 'identificacion' => $entityUsuario->getIDENTIFICACION(),
-                                 'nombres'        => $entityUsuario->getNOMBRES(),
-                                 'apellido'       => $entityUsuario->getAPELLIDOS(),
-                                 'correo'         => $entityUsuario->getCORREO(),
-                                 'estado'         => $entityUsuario->getESTADO(),
-                                 'usrCreacion'    => $entityUsuario->getUSRCREACION(),
-                                 'feCreacion'     => $entityUsuario->getFECREACION(),
-                                 'mensaje'        => $strMensajeError);
+        
         $objResponse->setContent(json_encode(array(
                                             'status'    => $strStatus,
                                             'resultado' => $arrayUsuario,
