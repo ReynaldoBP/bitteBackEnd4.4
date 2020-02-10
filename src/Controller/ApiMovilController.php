@@ -290,7 +290,8 @@ class ApiMovilController extends FOSRestController
                                             'strMensajeCorreo' => $strMensajeCorreo,
                                             'strRemitente'     => $strRemitente,
                                             'strDestinatario'  => $strCorreo);
-               $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',25))
+
+               $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',26))
                                            ->setUsername('notificaciones@bitte.app')
                                            ->setPassword('Bitte2019');
 

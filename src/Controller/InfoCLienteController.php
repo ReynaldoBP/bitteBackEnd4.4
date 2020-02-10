@@ -79,7 +79,63 @@ class InfoCLienteController extends Controller
         {
             //header('Location: https://bitte.app/pages/login');
             //return $this->render('http://www.google.com/');
-            return new Response(
+            return new Response('
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+            <title>ENJOY YOUR BITTE </title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+            <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Varela+Round" />
+
+            <style>
+                .text {
+                  color: #FFF;
+                  margin: 0 auto;
+                  text-align: center;
+                  font-weight: 700;
+                  font-size: 50px;
+                }
+
+                .text-2 {
+                  color: #FFF;
+                  margin: 0 auto;
+                  text-align: center;
+                  font-weight: 400;
+                  font-size: 20px;
+                }
+                  html {
+                  height: 100%;
+                }
+                body {
+                  font-family: \'Varela Round\';
+                  min-height: 100%;
+                }
+            </style>
+            </head>
+            <body  style = "background-image: url(\'fondo_bitte_bienvenida.jpg\');background-repeat: no-repeat;background-size: 100% 100%;height: 100%;" >
+                <div class="h-100 w-100 mr-0 ml-0" style="background:rgb(0,0,0,0.4);">
+                    <div class="container">
+                        <div class="row">
+                            <div align="center" class="col-sm mt-5">
+                                <img src="logotransp.png"/>
+                            </div>
+                        </div>
+                    <div class="row">
+                        <div align="center" class="col-sm mt-5">
+                            <h5 class="text" >Enjoy your Bitte</h5>
+                            <p class="text-2" >Se ha completado tu registro!</p>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </body>
+            </html>');
+            /*return new Response(
             '<!DOCTYPE html>
             <html lang="en">
             <head>
@@ -124,7 +180,7 @@ class InfoCLienteController extends Controller
             </div>
         </div>
             </body>
-            </html>');
+            </html>');*/
             
         }
         else
