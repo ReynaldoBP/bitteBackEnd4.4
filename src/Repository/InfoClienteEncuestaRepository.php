@@ -272,12 +272,12 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
-            $strSelect      = "SELECT (SELECT VALOR1 
-                                            FROM ADMI_PARAMETRO
-                                            WHERE DESCRIPCION = 'EDAD' 
-                                            AND EXTRACT(YEAR FROM IC.EDAD) >= VALOR2 
-                                            AND EXTRACT(YEAR FROM IC.EDAD) <= VALOR3) AS GENERACION,
-                                        COUNT(*) AS CANTIDAD  ";
+            $strSelect      = "SELECT (SELECT CONCAT(VALOR1,' (',YEAR(NOW())-VALOR3, ' A ',YEAR(NOW())-VALOR2,' AÑOS)')
+                                        FROM ADMI_PARAMETRO
+                                        WHERE DESCRIPCION = 'EDAD' 
+                                        AND EXTRACT(YEAR FROM IC.EDAD) >= VALOR2 
+                                        AND EXTRACT(YEAR FROM IC.EDAD) <= VALOR3) AS GENERACION,
+                                    COUNT(*) AS CANTIDAD  ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                     INNER JOIN INFO_CLIENTE IC 
                                         ON ICE.CLIENTE_ID = IC.ID_CLIENTE ";
