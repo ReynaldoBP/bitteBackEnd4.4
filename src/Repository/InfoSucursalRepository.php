@@ -200,4 +200,59 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         $arraySucursal['error'] = $strMensajeError;
         return $arraySucursal;
     }
+    /**
+     * Documentación para la función 'getValidaCoordenadas'
+     * Método encargado de retornar Si o No si se encuentra al rededor de la sucursal según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 10-02-2020
+     * 
+     * @return array  $arraySucursal
+     * 
+     */
+    public function getValidaCoordenadas($arrayParametros)
+    {
+        $strLatitud            = $arrayParametros['latitud'] ? $arrayParametros['latitud']:'';
+        $strLongitud           = $arrayParametros['longitud'] ? $arrayParametros['longitud']:'';
+        $strMetros             = $arrayParametros['metros'] ? $arrayParametros['metros']:5;
+        $strEstado             = $arrayParametros['estado'] ? $arrayParametros['estado']:array('ACTIVO');
+        $intIdRestaurante      = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $arraySucursal         = array();
+        $strMensajeError       = '';
+        $date                  = date('Y-m-d H:i:s');
+        $objRsmBuilder         = new ResultSetMappingBuilder($this->_em);
+        $objQuery              = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $objRsmBuilderCount    = new ResultSetMappingBuilder($this->_em);
+        try
+        {
+            $strSelect      = "SELECT  T1.DISTANCIA,T1.ID_SUCURSAL,T1.DESCRIPCION FROM (SELECT (6371 * ACOS( 
+                                                SIN(RADIANS(ISU.LATITUD)) * SIN(RADIANS(:LATITUD)) 
+                                                + COS(RADIANS(ISU.LONGITUD - :LONGITUD)) * COS(RADIANS(ISU.LATITUD)) 
+                                                * COS(RADIANS(:LATITUD))
+                                        ) )as DISTANCIA , ISU.ID_SUCURSAL,ISU.DESCRIPCION ";
+            $strFrom        = " FROM INFO_SUCURSAL ISU
+                                JOIN INFO_RESTAURANTE IRE
+                                ON IRE.ID_RESTAURANTE=ISU.RESTAURANTE_ID ";
+            $strWhere       = " WHERE IRE.ID_RESTAURANTE=:intIdRestaurante) T1 WHERE T1.DISTANCIA < (:METROS/1000) ";
+
+            $objQuery->setParameter("LATITUD", $strLatitud);
+            $objQuery->setParameter("LONGITUD", $strLongitud);
+            $objQuery->setParameter("METROS", $strMetros);
+            $objQuery->setParameter("intIdRestaurante",$intIdRestaurante);
+
+            $objRsmBuilder->addScalarResult('DISTANCIA', 'DISTANCIA', 'string');
+            $objRsmBuilder->addScalarResult('ID_SUCURSAL', 'ID_SUCURSAL', 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
+
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arraySucursal['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arraySucursal['error'] = $strMensajeError;
+        return $arraySucursal;
+    }
 }

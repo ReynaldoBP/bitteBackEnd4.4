@@ -1894,6 +1894,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 10-11-2019 Se agrega filtro por restaurante.
      *
+     * @author Kevin Baque
+     * @version 1.2 10-02-2020 - Se valida si el cliente está serca de una sucursal.
+     *
      * @return array  $objResponse
      */
     public function getPromocion($arrayData)
@@ -1903,6 +1906,8 @@ class ApiMovilController extends FOSRestController
         $intIdRestaurante       = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
         $intIdCliente           = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
+        $strLatitud             = $arrayData['latitud'] ? $arrayData['latitud']:'';
+        $strLongitud            = $arrayData['longitud'] ? $arrayData['longitud']:'';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
@@ -1913,6 +1918,7 @@ class ApiMovilController extends FOSRestController
         $em                     = $this->getDoctrine()->getManager();
         $objController          = new DefaultController();
         $intCantPuntos          = 0;
+        $strDescripcion         = 'CANTIDAD_DISTANCIA';
         $objController->setContainer($this->container);
         try
         {
@@ -1925,6 +1931,17 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('La promoción a buscar no existe.');
             }
+            $objParametro    = $this->getDoctrine()
+                                    ->getRepository(AdmiParametro::class)
+                                    ->findOneBy(array('ESTADO'      => 'ACTIVO',
+                                                      'DESCRIPCION' => $strDescripcion));
+            $arraySucursal   = $this->getDoctrine()
+                                    ->getRepository(InfoSucursal::class)
+                                    ->getValidaCoordenadas(array('latitud'      => $strLatitud,
+                                                                'longitud'     => $strLongitud,
+                                                                'estado'       => $strEstado,
+                                                                'intIdRestaurante' => $intIdRestaurante,
+                                                                'metros'       => $objParametro->getVALOR2()));
             foreach($objPromocion as $arrayItem)
             {
                 if(!empty($arrayItem->getIMAGEN()))
@@ -1936,6 +1953,7 @@ class ApiMovilController extends FOSRestController
                                         'imagen'           => $strRutaImagen ? $strRutaImagen:'',
                                         'cantPuntos'       => $arrayItem->getCANTIDADPUNTOS(),
                                         'aceptaGlobal'     => $arrayItem->getACEPTAGLOBAL(),
+                                        'habilitar'        => (!empty($arraySucursal["resultados"])&& isset($arraySucursal["resultados"])) ? 'SI':'NO',
                                         'estado'           => $arrayItem->getESTADO());
             }
             $arrayPuntos     = $this->getDoctrine()
