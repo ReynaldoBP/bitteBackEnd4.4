@@ -1020,6 +1020,20 @@ class ApiMovilController extends FOSRestController
                 throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
             }
 
+            $objCltEncuesta  = $this->getDoctrine()
+                                        ->getRepository(InfoClienteEncuesta::class)
+                                        ->getClienteEncuestaRepetida(array('intClienteId'   => $intIdCliente,
+                                                                           'intSucursalId'  => $intIdSucursal,
+                                                                           'intEncuestaId'  => $intIdEncuesta,
+                                                                           'intContenidoId' => $intIdContenido,
+                                                                           'strFecha'       => date('Y-m-d'),
+                                                                           'strEstado'      => $strEstadoPendiente
+                                                                          ));
+           if(is_object($objCltEncuesta))
+           {  
+               throw new \Exception('Ya existe la encuesta.');
+           }
+
             $intValor = $objParametro->getVALOR1();
             $entityCltEncuesta = new InfoClienteEncuesta();
             $entityCltEncuesta->setCLIENTEID($objCliente);

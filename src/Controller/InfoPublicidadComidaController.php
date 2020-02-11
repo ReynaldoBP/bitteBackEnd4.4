@@ -40,11 +40,9 @@ class InfoPublicidadComidaController extends Controller
         try
         {
             $em->getConnection()->beginTransaction();
-            $arrayParametrosPublicidad = array('ESTADO' => 'ACTIVO',
-                                               'id'     => $intIdPublicidad);
             $objPublicidad             = $this->getDoctrine()
                                               ->getRepository(InfoPublicidad::class)
-                                              ->findOneBy($arrayParametrosPublicidad);
+                                              ->find($intIdPublicidad);
             if(!is_object($objPublicidad) || empty($objPublicidad))
             {
                 throw new \Exception('No existe la publicidad con la descripción enviada por parámetro.');
