@@ -1802,7 +1802,7 @@ class ApiMovilController extends FOSRestController
             $arrayParametros = array('strImagen'      => $strImagen,
                                      'intIdContenido' => $entityContSub->getId());
 
-            $strRutaImagen = $objController->subirfichero($arrayParametros);
+            $strRutaImagen = $objController->subirficheroMovil($arrayParametros);
             
         }
         catch(\Exception $ex)

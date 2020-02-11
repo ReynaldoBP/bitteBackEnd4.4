@@ -68,7 +68,7 @@ class DefaultController extends Controller
      * Documentación para la función 'subir_fichero'
      * Método encargado de subir una imagen al servidor según los parámetros recibidos.
      * 
-     * @author Jorge Bermeo
+     * @author El kevin de mucho lote
      * @version 1.0 12-09-2019
      * 
      * @return array  $nombreImg
@@ -77,7 +77,7 @@ class DefaultController extends Controller
      * @version 1.1 09-12-2019 - Se agrega logica para subir imagen de manera asincrona.
      *
      */
-    public function subirfichero($arrayParametros)
+    public function subirficheroMovil($arrayParametros)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
 
@@ -102,6 +102,32 @@ class DefaultController extends Controller
         //--------------
         return $strRespuesta;
     }
+
+    /**
+     * Documentación para la función 'subir_fichero'
+     * Método encargado de subir una imagen al servidor según los parámetros recibidos.
+     * 
+     * @author Jorge Bermeo
+     * @version 1.0 12-09-2019
+     * 
+     * @return array  $nombreImg
+     */
+    public function subirfichero($imgBase64)
+    {
+        $base_to_php   = explode(',', $imgBase64);
+        $data          = base64_decode($base_to_php[1]);
+        $ext           = explode("/",explode(";",$base_to_php[0])[0])[1];
+        $pos           = strpos($ext, "ico");
+        if($pos > 0)
+        {
+            $ext = "ico";
+        }
+        $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
+        $strRutaImagen = ("images"."/".$nombreImg);
+        file_put_contents($strRutaImagen,$data);
+        return $nombreImg;
+    }
+
     /**
      * Documentación para la función 'getImgBase64'
      * Método encargado de subir una imagen al servidor según los parámetros recibidos.

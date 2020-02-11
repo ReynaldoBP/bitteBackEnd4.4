@@ -266,6 +266,9 @@ class InfoPublicidadComidaController extends Controller
      * 
      * @author Kevin Baque
      * @version 1.1 05-02-2020 - Se elimina el findOneBy por find al momento de buscar la publicidad.
+     * 
+     * @author Kevin Baque
+     * @version 1.2 11-02-2020 - No se valida la relacion entre publicidad y tipo de comida por motivos de la administración Web.
      *
      */
     public function deletePublicidadComidaAction(Request $request)
@@ -297,13 +300,12 @@ class InfoPublicidadComidaController extends Controller
             $objPubComida             = $this->getDoctrine()
                                              ->getRepository(InfoPublicidadComida::class)
                                              ->findBy($arrayParametrosPubComida);
-            if(empty($objPubComida))
+            if(!empty($objPubComida))
             {
-                throw new \Exception('No existe una Relación entre Publicidad y Tipo de comida con la descripción enviada por parámetro.');
-            }
-            foreach($objPubComida as $item)
-            {
-                $em->remove($item);
+                foreach($objPubComida as $item)
+                {
+                    $em->remove($item);
+                }
             }
             $em->flush();
             $strMensajeError = 'Relación entre Publicidad y Tipo de comida eliminado con exito.!';
