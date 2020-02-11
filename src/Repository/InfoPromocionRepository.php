@@ -40,12 +40,11 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
         {
             $strSelect      = "SELECT PR.ID_PROMOCION,PR.DESCRIPCION_TIPO_PROMOCION, PR.CANTIDAD_PUNTOS, PR.ACEPTA_GLOBAL,
                                PR.ESTADO,PR.USR_CREACION,PR.FE_CREACION,PR.USR_MODIFICACION,PR.FE_MODIFICACION, 
-                               PR.PREMIO,PR.IMAGEN,ISUR.ID_SUCURSAL,ISUR.DESCRIPCION,
+                               PR.PREMIO,PR.IMAGEN,
                                IRE.ID_RESTAURANTE,IRE.IDENTIFICACION,IRE.RAZON_SOCIAL,IRE.NOMBRE_COMERCIAL ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM INFO_PROMOCION PR 
-                                JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE=PR.RESTAURANTE_ID 
-                                JOIN INFO_SUCURSAL    ISUR ON IRE.ID_RESTAURANTE=ISUR.RESTAURANTE_ID ";
+                                JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE=PR.RESTAURANTE_ID ";
             $strWhere       = "WHERE PR.ESTADO in (:ESTADO) ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
@@ -77,12 +76,12 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
                 $objQueryCount->setParameter("strAnio", $strAnio);
                 $objQueryCount->setParameter("strMes", $strMes);
             }
-            if(!empty($intIdSucursal))
+            /*if(!empty($intIdSucursal))
             {
                 $strWhere .= " AND ISUR.ID_SUCURSAL =:ID_SUCURSAL";
                 $objQuery->setParameter("ID_SUCURSAL", $intIdSucursal);
                 $objQueryCount->setParameter("ID_SUCURSAL", $intIdSucursal);
-            }
+            }*/
             if(!empty($intIdRestaurante))
             {
                 $strWhere .= " AND IRE.ID_RESTAURANTE =:ID_RESTAURANTE ";
@@ -105,8 +104,6 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('FE_MODIFICACION', 'FE_MODIFICACION', 'date');
             $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
             $objRsmBuilder->addScalarResult('PREMIO', 'PREMIO', 'string');
-            $objRsmBuilder->addScalarResult('ID_SUCURSAL', 'ID_SUCURSAL', 'string');
-            $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'ID_RESTAURANTE', 'string');
             $objRsmBuilder->addScalarResult('IDENTIFICACION', 'IDENTIFICACION', 'string');
             $objRsmBuilder->addScalarResult('RAZON_SOCIAL', 'RAZON_SOCIAL', 'string');
