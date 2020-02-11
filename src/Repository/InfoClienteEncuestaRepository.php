@@ -11,6 +11,58 @@ use Doctrine\ORM\Query\ResultSetMappingBuilder;
 class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
 {
     /**
+     * Documentación para la función 'getClienteEncuestaRepetida'
+     * Método encargado de retornar si la encuenta enviada existe.
+     * 
+     * @author El Kevin Baque de Mucho Lote
+     * @version 1.0 11-02-2020
+     * 
+     * @return array  $arrayCltEncuesta
+     * 
+     */    
+    public function getClienteEncuestaRepetida($arrayParametros)
+    {
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']: 'PENDIENTE';
+        $intClienteId       = $arrayParametros['intClienteId'] ? $arrayParametros['intClienteId']:'';
+        $intSucursalId      = $arrayParametros['intSucursalId'] ? $arrayParametros['intSucursalId']:'';
+        $intEncuestaId      = $arrayParametros['intEncuestaId'] ? $arrayParametros['intEncuestaId']:'';
+        $intContenidoId     = $arrayParametros['intContenidoId'] ? $arrayParametros['intContenidoId']:'';
+        $strFecha           = $arrayParametros['strFecha'] ? $arrayParametros['strFecha']:'';
+        $arrayCltEncuesta   = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = "SELECT ice.ID_CLT_ENCUESTA ";
+            $strFrom        = "FROM INFO_CLIENTE_ENCUESTA ice ";
+            $strWhere       = "WHERE ice.SUCURSAL_ID = :IDSUCURSAL ".
+                                     " AND ice.CLIENTE_ID = :IDCLIENTE ".
+                                     " AND ice.ENCUESTA_ID = :IDENCUESTA ".
+                                     " AND ice.CONTENIDO_ID = :IDCONTENIDO ".
+                                     " AND ice.ESTADO = :ESTADO ".
+                                     " AND DATE(ice.FE_CREACION) = :FECHA ";
+            $objQuery->setParameter("IDSUCURSAL", $intSucursalId);
+            $objQuery->setParameter("IDCLIENTE", $intClienteId);
+            $objQuery->setParameter("IDENCUESTA", $intEncuestaId);
+            $objQuery->setParameter("IDCONTENIDO", $intContenidoId);
+            $objQuery->setParameter("ESTADO", $strEstado);
+            $objQuery->setParameter("FECHA", $strFecha);
+            $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_ENCUESTA', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayCltEncuesta = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayCltEncuesta['error'] = $strMensajeError;
+        return $arrayCltEncuesta;
+    }
+
+
+    /**
      * Documentación para la función 'getClienteEncuesta'
      * Método encargado de retornar las relaciones entre cliente y encuesta según los parámetros recibidos.
      * 

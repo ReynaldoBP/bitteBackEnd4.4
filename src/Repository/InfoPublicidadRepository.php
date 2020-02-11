@@ -159,12 +159,6 @@ class InfoPublicidadRepository extends \Doctrine\ORM\EntityRepository
                     $objQuery->setParameter("PARROQUIA", $intIdParroquia);
                     $objQueryCount->setParameter("PARROQUIA", $intIdParroquia);
                 }
-                if(!empty($strHorizontal))
-                {
-                    $strWhere .= " AND PB.ORIENTACION =:ORIENTACION ";
-                    $objQuery->setParameter("ORIENTACION", $strHorizontal);
-                    $objQueryCount->setParameter("ORIENTACION", $strHorizontal);
-                }
                 if(!empty($strEdad))
                 {
                     $strWhere .= " AND PB.EDAD_MAXIMA >= :EDAD_MAXIMA AND PB.EDAD_MINIMA <= :EDAD_MINIMA ";
@@ -173,6 +167,12 @@ class InfoPublicidadRepository extends \Doctrine\ORM\EntityRepository
                     $objQueryCount->setParameter("EDAD_MAXIMA", $strEdad);
                     $objQueryCount->setParameter("EDAD_MINIMA", $strEdad);
                 }
+            }
+             if(!empty($strHorizontal))
+            {
+                $strWhere .= " AND PB.ORIENTACION =:ORIENTACION ";
+                $objQuery->setParameter("ORIENTACION", $strHorizontal);
+                $objQueryCount->setParameter("ORIENTACION", $strHorizontal);
             }
             if(!empty($strGenero))
             {
