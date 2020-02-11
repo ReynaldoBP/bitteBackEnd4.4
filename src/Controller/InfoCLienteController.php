@@ -117,12 +117,12 @@ class InfoCLienteController extends Controller
                 }
             </style>
             </head>
-            <body  style = "background-image: url(\'fondo_bitte_bienvenida.jpg\');background-repeat: no-repeat;background-size: 100% 100%;height: 100%;" >
+            <body  style = "background-image: url(\'images/fondo_bitte_bienvenida.jpg\');background-repeat: no-repeat;background-size: 100% 100%;height: 100%;" >
                 <div class="h-100 w-100 mr-0 ml-0" style="background:rgb(0,0,0,0.4);">
                     <div class="container">
                         <div class="row">
                             <div align="center" class="col-sm mt-5">
-                                <img src="logotransp.png"/>
+                                <img src="images/logotransp.png"/>
                             </div>
                         </div>
                     <div class="row">

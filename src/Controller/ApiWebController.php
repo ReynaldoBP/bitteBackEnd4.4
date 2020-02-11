@@ -423,6 +423,7 @@ class ApiWebController extends FOSRestController
             $entityPublicidad->setPROVINCIA($strProvincia);
             $entityPublicidad->setCIUDAD($strCiudad);
             $entityPublicidad->setPARROQUIA($strParroquia);
+            $entityPublicidad->setCANTVISTAS(0);
             $entityPublicidad->setESTADO(strtoupper($strEstado));
             $entityPublicidad->setUSRCREACION($strUsuarioCreacion);
             $entityPublicidad->setFECREACION($strDatetimeActual);
