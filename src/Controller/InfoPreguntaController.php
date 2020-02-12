@@ -49,7 +49,7 @@ class InfoPreguntaController extends Controller
             {
                 throw new \Exception('No existe encuesta con los parámetros enviados.');
             }
-            $objOpcionRespuesta = $em->getRepository('AppBundle:InfoOpcionRespuesta')->find($intIdOpcionRespuesta);
+            $objOpcionRespuesta = $em->getRepository(InfoOpcionRespuesta::class)->find($intIdOpcionRespuesta);
             if(!is_object($objOpcionRespuesta) || empty($objOpcionRespuesta))
             {
                 throw new \Exception('No existe la opción de respuesta con los parámetros enviados.');
