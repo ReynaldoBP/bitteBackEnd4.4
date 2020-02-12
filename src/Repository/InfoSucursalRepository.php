@@ -90,7 +90,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('DIRECCION', 'DIRECCION', 'string');
             $objRsmBuilder->addScalarResult('RESTAURANTE_ID', 'RESTAURANTE_ID', 'string');
             $objRsmBuilder->addScalarResult('IDENTIFICACION', 'IDENTIFICACION', 'string');
-            $objRsmBuilder->addScalarResult('RAZON_SOCIAL', 'NOMBRE_COMERCIAL', 'string');
+            $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'RAZON_SOCIAL', 'string');
             $objRsmBuilder->addScalarResult('NUMERO_CONTACTO', 'NUMERO_CONTACTO', 'string');
             $objRsmBuilder->addScalarResult('ESTADO_FACTURACION', 'ESTADO_FACTURACION', 'string');
             $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
