@@ -230,7 +230,7 @@ class InfoSucursalController extends Controller
                     throw new \Exception('No existe restaurante con la parámetros enviados.');
                 }
             }
-            $entitySucursal = $em->getRepository('AppBundle:InfoSucursal')->find($intIdSucursal);
+            $entitySucursal = $em->getRepository(InfoSucursal::class)->find($intIdSucursal);
             $entitySucursal->setRESTAURANTEID($objRestaurante);
             if(!empty($strDescripcion))
             {
