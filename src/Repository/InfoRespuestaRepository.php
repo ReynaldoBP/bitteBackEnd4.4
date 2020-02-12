@@ -62,7 +62,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
             $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
             $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'string');
-            $strSql       = $strSelect.$strFrom.$strWhere;
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayRespuesta['resultados'] = $objQuery->getResult();
         }
