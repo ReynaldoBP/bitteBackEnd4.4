@@ -46,6 +46,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $strWhere       = "WHERE 
                                 EXTRACT(YEAR FROM A.FE_CREACION ) = :strAnio 
                                 AND EXTRACT(MONTH FROM A.FE_CREACION ) = :strMes ";
+            $strOrderBy     = " ORDER BY A.FE_CREACION DESC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQuery->setParameter("strMes", $strMes);
             $objQuery->setParameter("strAnio", $strAnio);
@@ -61,7 +62,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
             $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
             $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'string');
-            $strSql       = $strSelect.$strFrom.$strWhere;
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayRespuesta['resultados'] = $objQuery->getResult();
         }
