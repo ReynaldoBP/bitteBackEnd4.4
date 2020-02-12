@@ -193,8 +193,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                 INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID ";
             $strWhere       = "WHERE IOR.TIPO_RESPUESTA = 'CERRADA'
                                 AND IOR.VALOR           = '5'
-                                AND IE.ESTADO           = 'ACTIVO'
-                                AND ICE.ESTADO          = 'ACTIVO' ";
+                                AND IE.ESTADO           = 'ACTIVO'";
             $strGroupBy     = " GROUP BY PREGUNTA_ID ";
 
             if(!empty($strFechaIni) && !empty($strFechaFin))
