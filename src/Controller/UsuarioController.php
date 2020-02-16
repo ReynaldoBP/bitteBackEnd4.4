@@ -439,7 +439,7 @@ class UsuarioController extends Controller
         </div>
         </div>
         <div class="">Bienvenido al mundo BITTE.</div>';
-        $strRemitente     = 'notificaciones_bitte@massvision.tv';
+        $strRemitente     = 'notificaciones@bitte.app';
         $objResponse      = new Response;
         $strRespuesta     = '';
         $arrayParametros  = array();
