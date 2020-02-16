@@ -95,7 +95,7 @@ class InfoUsuarioResController extends Controller
             <div><strong>Tu clave temporal es :'.$strContrasenia.'&nbsp;</strong></div>
             <div class="">&nbsp;</div>
             <div class="">Bienvenido al mundo BITTE.</div>';
-            $strRemitente     = 'notificaciones_bitte@massvision.tv';
+            $strRemitente     = 'notificaciones@bitte.app';
             $arrayParametros  = array('strAsunto'        => $strAsunto,
                                       'strMensajeCorreo' => $strMensajeCorreo,
                                       'strRemitente'     => $strRemitente,

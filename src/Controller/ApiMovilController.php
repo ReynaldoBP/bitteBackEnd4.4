@@ -285,7 +285,7 @@ class ApiMovilController extends FOSRestController
                 </div>
                 <div class="">Bienvenido al mundo BITTE.</div>';
 
-                $strRemitente     = 'notificaciones_bitte@massvision.tv';
+                $strRemitente     = 'notificaciones@bitte.app';
                 $arrayParametros  = array('strAsunto'          => $strAsunto,
                                             'strMensajeCorreo' => $strMensajeCorreo,
                                             'strRemitente'     => $strRemitente,
@@ -299,7 +299,7 @@ class ApiMovilController extends FOSRestController
 
                 $objMessage =  (new \Swift_Message())
                                         ->setSubject($strAsunto)
-                                        ->setFrom("notificaciones_bitte@massvision.tv")
+                                        ->setFrom("notificaciones@bitte.app")
                                         ->setTo($strCorreo)
                                         ->setBody($strMensajeCorreo,'text/html');
                 $strRespuesta =  $mailer->send($objMessage);
@@ -1127,7 +1127,7 @@ class ApiMovilController extends FOSRestController
         <div class="">&nbsp;</div>
         <div class="">Bitte.&nbsp;</div>
         <div class="">&nbsp;</div>';
-        $strRemitente     = 'notificaciones_bitte@massvision.tv';
+        $strRemitente     = 'notificaciones@bitte.app';
         $arrayParametros  = array('strAsunto'        => $strAsunto,
                                   'strMensajeCorreo' => $strMensajeCorreo,
                                   'strRemitente'     => $strRemitente,
@@ -1686,7 +1686,7 @@ class ApiMovilController extends FOSRestController
                 <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">&nbsp;</div>';
-                $strRemitente     = 'notificaciones_bitte@massvision.tv';
+                $strRemitente     = 'notificaciones@bitte.app';
                 $arrayParametros  = array('strAsunto'        => $strAsunto,
                                           'strMensajeCorreo' => $strMensajeCorreo,
                                           'strRemitente'     => $strRemitente,
@@ -2411,7 +2411,7 @@ class ApiMovilController extends FOSRestController
         </div>
         </div>
         <div class="">Bienvenido al mundo BITTE.</div>';
-        $strRemitente     = 'notificaciones_bitte@massvision.tv';
+        $strRemitente     = 'notificaciones@bitte.app';
         $objResponse      = new Response;
         $strRespuesta     = '';
         $arrayParametros  = array();
@@ -2487,7 +2487,7 @@ class ApiMovilController extends FOSRestController
     {
         error_reporting( error_reporting() & ~E_NOTICE );
         $strDestinatario  = $arrayData['strCorreo'] ? $arrayData['strCorreo']:'';
-        $strRemitente     = 'notificaciones_bitte@massvision.tv';
+        $strRemitente     = 'notificaciones@bitte.app';
         $objResponse      = new Response;
         $strRespuesta     = '';
         $arrayParametros  = array();
@@ -2614,7 +2614,7 @@ class ApiMovilController extends FOSRestController
             <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">&nbsp;</div>';
-            $strRemitente     = 'notificaciones_bitte@massvision.tv';
+            $strRemitente     = 'notificaciones@bitte.app';
             $arrayParametros  = array('strAsunto'        => $strAsunto,
                                       'strMensajeCorreo' => $strMensajeCorreo,
                                       'strRemitente'     => $strRemitente,

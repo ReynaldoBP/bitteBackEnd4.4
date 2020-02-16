@@ -1394,7 +1394,7 @@ class ApiWebController extends FOSRestController
                 <div class="">Bitte.&nbsp;</div>
                 <div class="">&nbsp;</div>';
             }
-            $strRemitente     = 'notificaciones_bitte@massvision.tv';
+            $strRemitente     = 'notificaciones@bitte.app';
             $arrayParametros  = array('strAsunto'        => $strAsunto,
                                       'strMensajeCorreo' => $strMensajeCorreo,
                                       'strRemitente'     => $strRemitente,
@@ -2011,7 +2011,7 @@ class ApiWebController extends FOSRestController
         </div>
         </div>
         <div class="">Bienvenido al mundo BITTE.</div>';
-        $strRemitente     = 'notificaciones_bitte@massvision.tv';
+        $strRemitente     = 'notificaciones@bitte.app';
         $objResponse      = new Response;
         $strRespuesta     = '';
         $arrayParametros  = array();

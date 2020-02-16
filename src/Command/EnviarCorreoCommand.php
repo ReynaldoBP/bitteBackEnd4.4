@@ -48,7 +48,7 @@ class EnviarCorreoCommand extends Command
 
         $objMessage =  (new \Swift_Message())
                                         ->setSubject($encabezado)
-                                        ->setFrom("notificaciones_bitte@massvision.tv")
+                                        ->setFrom("notificaciones@bitte.app")
                                         ->setTo($correo)
                                         ->setBody($cuerpo,'text/html');
        $strRespuesta =  $mailer->send($objMessage);
