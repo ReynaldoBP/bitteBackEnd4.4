@@ -83,7 +83,7 @@ class InfoCLienteController extends Controller
             <!DOCTYPE html>
             <html lang="en">
             <head>
-            <title>ENJOY YOUR BITTE </title>
+            <title>Enjoy your Bitte </title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
@@ -139,7 +139,7 @@ class InfoCLienteController extends Controller
             '<!DOCTYPE html>
             <html lang="en">
             <head>
-            <title>ENJOY YOUR BITTE </title>
+            <title>Enjoy your Bitte </title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
@@ -175,7 +175,7 @@ class InfoCLienteController extends Controller
             <div class="text-center" style="padding-top: 7em;" >  <!--
                 text-shadow: 1px 1px 2px black, 0 0 1em #72A5E4, 0 0 0.2em #72A5E4;
             -->
-            <h1 class="text" style = "color: #ffffff;">ENJOY YOUR BITTE </h1>
+            <h1 class="text" style = "color: #ffffff;">Enjoy your Bitte </h1>
             <p class="text-2" style = "color: #ffffff;">Se ha completado tu registro!</p> 
             </div>
         </div>

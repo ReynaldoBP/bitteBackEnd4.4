@@ -438,7 +438,7 @@ class UsuarioController extends Controller
         <div>&nbsp;</div>
         </div>
         </div>
-        <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>';
+        <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
         $strRemitente     = 'notificaciones@bitte.app';
         $objResponse      = new Response;
         $strRespuesta     = '';
