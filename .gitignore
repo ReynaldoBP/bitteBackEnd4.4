@@ -7,7 +7,7 @@
 /var/
 /vendor/
 /.env
-###/public/images/*
+/public/images/*
 ###< symfony/framework-bundle ###
 
 ###> symfony/phpunit-bridge ###
