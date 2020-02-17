@@ -241,14 +241,17 @@ class ApiMovilController extends FOSRestController
                                     'feCreacion'     => $entityCliente->getFECREACION());
             if($strAutenticacionRS == 'N')
             {
+                $strNombreClt      = !empty($entityCliente->getNOMBRE()) ? $entityCliente->getNOMBRE():'';
+                $strWelcome        = (!empty($entityCliente->getGENERO()) && $entityCliente->getGENERO() == "MASCULINO") ? "Bienvenido":"Bienvenida";
                 $strDistractor     = substr(md5(time()),0,16);
                 ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strUrlTermCond    ="https://la.bitte.app/privacy-policy/";
                 $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
-                $strAsunto        = 'Enjoy your Bitte';
-                $strMensajeCorreo = '<div style=\"font-family:Varela Round\">Enjoy your Bitte:</div>
+                $strAsunto         = $strWelcome.' Usuario Bitte';
+
+                $strMensajeCorreo = '<div style=\"font-family:Varela Round\">Hola '.$strNombreClt.' ,</div>
                 <div class="">&nbsp;</div>
                 <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
