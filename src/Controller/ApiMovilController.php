@@ -247,8 +247,8 @@ class ApiMovilController extends FOSRestController
                 $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strUrlTermCond    ="https://la.bitte.app/privacy-policy/";
                 $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
-                $strAsunto        = 'Bienvenido al mundo BITTE';
-                $strMensajeCorreo = '<div class="">Bienvenido al mundo BITTE:</div>
+                $strAsunto        = 'ENJOY YOUR BITTE';
+                $strMensajeCorreo = '<div class="">ENJOY YOUR BITTE:</div>
                 <div class="">&nbsp;</div>
                 <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
@@ -283,7 +283,7 @@ class ApiMovilController extends FOSRestController
                 <div>&nbsp;</div>
                 </div>
                 </div>
-                <div class="">Bienvenido al mundo BITTE.</div>';
+                <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>';
 
                 $strRemitente     = 'notificaciones@bitte.app';
                 $arrayParametros  = array('strAsunto'          => $strAsunto,
@@ -2410,7 +2410,7 @@ class ApiMovilController extends FOSRestController
         <div>&nbsp;</div>
         </div>
         </div>
-        <div class="">Bienvenido al mundo BITTE.</div>';
+        <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>';
         $strRemitente     = 'notificaciones@bitte.app';
         $objResponse      = new Response;
         $strRespuesta     = '';
@@ -2512,7 +2512,7 @@ class ApiMovilController extends FOSRestController
             <div>&nbsp;</div>
             </div>
             </div>
-            <div class="">Bienvenido al mundo BITTE.</div>';
+            <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>';
             $arrayParametros  = array('strAsunto'        => $strAsunto,
                                       'strMensajeCorreo' => $strMensajeCorreo,
                                       'strRemitente'     => $strRemitente,
