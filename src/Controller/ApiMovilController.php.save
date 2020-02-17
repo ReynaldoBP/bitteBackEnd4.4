@@ -1677,7 +1677,7 @@ class ApiMovilController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>
+                <div class=""><b>Enjoy your Bitte</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">&nbsp;</div>';
                 $strRemitente     = 'notificaciones@bitte.app';
@@ -2587,7 +2587,7 @@ class ApiMovilController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>
+            <div class=""><b>Enjoy your Bitte</b>&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">&nbsp;</div>';
             $strRemitente     = 'notificaciones@bitte.app';

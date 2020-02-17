@@ -247,8 +247,8 @@ class ApiMovilController extends FOSRestController
                 $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                 $strUrlTermCond    ="https://la.bitte.app/privacy-policy/";
                 $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
-                $strAsunto        = 'ENJOY YOUR BITTE';
-                $strMensajeCorreo = '<div class="">ENJOY YOUR BITTE:</div>
+                $strAsunto        = 'Enjoy your Bitte';
+                $strMensajeCorreo = '<div style=\"font-family:Varela Round\">Enjoy your Bitte:</div>
                 <div class="">&nbsp;</div>
                 <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
@@ -283,7 +283,7 @@ class ApiMovilController extends FOSRestController
                 <div>&nbsp;</div>
                 </div>
                 </div>
-                <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>';
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
 
                 $strRemitente     = 'notificaciones@bitte.app';
                 $arrayParametros  = array('strAsunto'          => $strAsunto,
@@ -1683,7 +1683,7 @@ class ApiMovilController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">&nbsp;</div>';
                 $strRemitente     = 'notificaciones@bitte.app';
@@ -2410,7 +2410,7 @@ class ApiMovilController extends FOSRestController
         <div>&nbsp;</div>
         </div>
         </div>
-        <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>';
+        <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
         $strRemitente     = 'notificaciones@bitte.app';
         $objResponse      = new Response;
         $strRespuesta     = '';
@@ -2512,7 +2512,7 @@ class ApiMovilController extends FOSRestController
             <div>&nbsp;</div>
             </div>
             </div>
-            <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>';
+            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
             $arrayParametros  = array('strAsunto'        => $strAsunto,
                                       'strMensajeCorreo' => $strMensajeCorreo,
                                       'strRemitente'     => $strRemitente,
@@ -2611,7 +2611,7 @@ class ApiMovilController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>
+            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">&nbsp;</div>';
             $strRemitente     = 'notificaciones@bitte.app';
