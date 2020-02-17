@@ -438,7 +438,7 @@ class UsuarioController extends Controller
         <div>&nbsp;</div>
         </div>
         </div>
-        <div class="">Bienvenido al mundo BITTE.</div>';
+        <div class=""><b>ENJOY YOUR BITTE</b>&nbsp;</div>';
         $strRemitente     = 'notificaciones@bitte.app';
         $objResponse      = new Response;
         $strRespuesta     = '';
