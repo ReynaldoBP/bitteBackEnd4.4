@@ -47,7 +47,6 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                 EXTRACT(YEAR FROM A.FE_CREACION ) = :strAnio 
                                 AND EXTRACT(MONTH FROM A.FE_CREACION ) = :strMes ";
             $strOrderBy     = " ORDER BY A.FE_CREACION DESC ";
-            $objQuery->setParameter("ESTADO",$strEstado);
             $objQuery->setParameter("strMes", $strMes);
             $objQuery->setParameter("strAnio", $strAnio);
             if(!empty($intIdCltEncuesta))
@@ -157,6 +156,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
      */
     public function getResultadoProEncuesta($arrayParametros)
     {
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $strFechaIni        = $arrayParametros['strFechaIni'] ? $arrayParametros['strFechaIni']:'';
         $strFechaFin        = $arrayParametros['strFechaFin'] ? $arrayParametros['strFechaFin']:'';
         $strGenero          = $arrayParametros['strGenero'] ? $arrayParametros['strGenero']:'';
@@ -170,6 +170,10 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+
+        $objRsmBuilder2     = new ResultSetMappingBuilder($this->_em);
+        $objQuery2          = $this->_em->createNativeQuery(null, $objRsmBuilder2);        
+
         try
         {
             $strSelect      = "SELECT IP.ID_PREGUNTA,
@@ -190,12 +194,17 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                     AND EXTRACT(YEAR FROM IC.EDAD) >= AP_EDAD.VALOR2
                                     AND EXTRACT(YEAR FROM IC.EDAD) <= AP_EDAD.VALOR3
                                 INNER JOIN INFO_SUCURSAL ISU         ON ISU.ID_SUCURSAL         =  ICE.SUCURSAL_ID
-                                INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID ";
-            $strWhere       = "WHERE IOR.TIPO_RESPUESTA = 'CERRADA'
+                                INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID 
+                                WHERE IOR.TIPO_RESPUESTA = 'CERRADA'
                                 AND IOR.VALOR           = '5'
-                                AND IE.ESTADO           = 'ACTIVO'";
+                                AND IE.ESTADO           = 'ACTIVO' ";
             $strGroupBy     = " GROUP BY PREGUNTA_ID ";
-
+            if(!empty($intIdRestaurante))
+            {
+                $strWhere .= " AND IRES.ID_RESTAURANTE = :IDRESTAURANTE ";
+                $objQuery->setParameter("IDRESTAURANTE", $intIdRestaurante);
+                $objQuery2->setParameter("IDRESTAURANTE", $intIdRestaurante);
+            }
             if(!empty($strFechaIni) && !empty($strFechaFin))
             {
                 $strWhere .= " AND ICE.FE_CREACION BETWEEN '".$strFechaIni."' AND '".$strFechaFin."' ";
@@ -204,45 +213,76 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             {
                 $strWhere .= " AND IC.GENERO = :GENERO";
                 $objQuery->setParameter("GENERO", $strGenero);
+                $objQuery2->setParameter("GENERO", $strGenero);
             }
             if(!empty($strHorario))
             {
                 $strWhere .= " AND AP_HORARIO.VALOR1 = :HORARIO ";
                 $objQuery->setParameter("HORARIO", $strHorario);
+                $objQuery2->setParameter("HORARIO", $strHorario);
             }
             if(!empty($strEdad))
             {
                 $strWhere .= " AND AP_EDAD.VALOR1 = :EDAD ";
                 $objQuery->setParameter("EDAD", $strEdad);
+                $objQuery2->setParameter("EDAD", $strEdad);
             }
             if(!empty($strPais))
             {
                 $strWhere .= " AND ISU.PAIS = :PAIS ";
                 $objQuery->setParameter("PAIS", $strPais);
+                $objQuery2->setParameter("PAIS", $strPais);
             }
             if(!empty($strCiudad))
             {
                 $strWhere .= " AND ISU.CIUDAD = :CIUDAD ";
                 $objQuery->setParameter("CIUDAD", $strCiudad);
+                $objQuery2->setParameter("CIUDAD", $strCiudad);
             }
             if(!empty($strProvincia))
             {
                 $strWhere .= " AND ISU.PROVINCIA = :PROVINCIA ";
                 $objQuery->setParameter("PROVINCIA", $strProvincia);
+                $objQuery2->setParameter("PROVINCIA", $strProvincia);
             }
             if(!empty($strParroquia))
             {
                 $strWhere .= " AND ISU.PARROQUIA = :PARROQUIA ";
                 $objQuery->setParameter("PARROQUIA", $strParroquia);
+                $objQuery2->setParameter("PARROQUIA", $strParroquia);
             }
             $objRsmBuilder->addScalarResult('ID_PREGUNTA', 'ID_PREGUNTA', 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
             $objRsmBuilder->addScalarResult('PROMEDIO', 'PROMEDIO', 'string');
             $objRsmBuilder->addScalarResult('TITULO', 'TITULO', 'string');
             $objRsmBuilder->addScalarResult('ID_ENCUESTA', 'ID_ENCUESTA', 'string');
+
             $strSql       = $strSelect.$strFrom.$strWhere.$strGroupBy;
             $objQuery->setSQL($strSql);
             $arrayRespuesta['resultados'] = $objQuery->getResult();
+           
+            $objRsmBuilder2->addScalarResult('NUMERO_ENCUESTAS', 'NUMERO_ENCUESTA', 'string');
+            $strSelect2      = " SELECT COUNT(IE.ID_ENCUESTA) AS NUMERO_ENCUESTAS ";
+            $strGroupBy2     = " GROUP BY ID_ENCUESTA ";
+            $strFrom2        = " FROM 
+                                INFO_CLIENTE_ENCUESTA ICE 
+                                INNER JOIN INFO_ENCUESTA IE          ON IE.ID_ENCUESTA          = ICE.ENCUESTA_ID
+                                INNER JOIN ADMI_PARAMETRO AP_HORARIO ON AP_HORARIO.DESCRIPCION  = 'HORARIO'
+                                    AND CAST(ICE.FE_CREACION AS TIME) >= CAST(AP_HORARIO.VALOR2 AS TIME)
+                                    AND CAST(ICE.FE_CREACION AS TIME) <= CAST(AP_HORARIO.VALOR3 AS TIME)
+                                INNER JOIN INFO_CLIENTE IC           ON IC.ID_CLIENTE           = ICE.CLIENTE_ID
+                                INNER JOIN ADMI_PARAMETRO AP_EDAD    ON AP_EDAD.DESCRIPCION     = 'EDAD'
+                                    AND EXTRACT(YEAR FROM IC.EDAD) >= AP_EDAD.VALOR2
+                                    AND EXTRACT(YEAR FROM IC.EDAD) <= AP_EDAD.VALOR3
+                                INNER JOIN INFO_SUCURSAL ISU         ON ISU.ID_SUCURSAL         =  ICE.SUCURSAL_ID
+                                INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID 
+                                WHERE 
+                                IE.ESTADO           = 'ACTIVO'
+                                AND ICE.ESTADO      = 'ACTIVO' ";
+            $strSql2         = $strSelect2.$strFrom2.$strWhere.$strGroupBy2;
+            $objQuery2->setSQL($strSql2);
+            $arrayResultadoEnc                 = $objQuery2->getOneOrNullResult();
+            $arrayRespuesta['NUMERO_ENCUESTA'] = $arrayResultadoEnc['NUMERO_ENCUESTA'];
         }
         catch(\Exception $ex)
         {

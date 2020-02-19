@@ -61,6 +61,44 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         return $arrayCltEncuesta;
     }
 
+    /**
+     * Documentación para la función 'getCantidadEncuestaCliente'
+     * Método encargado de retornar la cantidad de encuesta entrea las relaciones de cliente y encuesta según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 27-09-2019
+     * 
+     * @return array  $arrayCltEncuesta
+     * 
+     */    
+    public function getCantidadEncuestaCliente($arrayParametros)
+    {
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
+        $intclienteId       = $arrayParametros['clienteId'] ? $arrayParametros['clienteId']:'';
+        $intCantidadEncuesta  = 0;
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = "SELECT COUNT(IE.ID_CLT_ENCUESTA) AS CANTIDAD ";
+            $strFrom        = "FROM INFO_CLIENTE_ENCUESTA IE ";
+            $strWhere       = "WHERE IE.ESTADO in (:ESTADO) AND IE.CLIENTE_ID = :IDCLIENTE  ";
+            $objQuery->setParameter("ESTADO",$strEstado);
+            $objQuery->setParameter("IDCLIENTE", $intclienteId);
+            
+            $objRsmBuilder->addScalarResult('CANTIDAD', 'CANTIDAD', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $intCantidadEncuesta = $objQuery->getOneOrNullResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayCltEncuesta['error'] = $strMensajeError;
+        return $intCantidadEncuesta;
+    }
 
     /**
      * Documentación para la función 'getClienteEncuesta'
@@ -77,16 +115,27 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
         $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayCltEncuesta   = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
+            $strSubSelect = "";
+            $strSubWhere  = "";
+            if(!empty($intIdRestaurante))
+            {
+                $strSubSelect = " JOIN INFO_SUCURSAL SUB_ISU 
+                                    ON SUB_ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
+                $strSubWhere  = " AND SUB_ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
+            }
             $strSelect      = "SELECT IE.ID_ENCUESTA, IE.TITULO,
                                 IFNULL( (SELECT COUNT(*) 
                                             FROM INFO_CLIENTE_ENCUESTA ICE
+                                            ".$strSubSelect."
                                             WHERE ICE.ENCUESTA_ID = IE.ID_ENCUESTA 
+                                            ".$strSubWhere."
                                             AND EXTRACT(MONTH FROM ICE.FE_CREACION) = :strMes
                                             AND EXTRACT(YEAR  FROM ICE.FE_CREACION) = :strAnio
                                             GROUP BY ICE.ENCUESTA_ID) ,0) AS CANTIDAD ";
@@ -123,6 +172,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
     public function getClienteEncuestaSemestral($arrayParametros)
     {
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $strLimite          = $arrayParametros['strLimite'] ? $arrayParametros['strLimite']:'';
         $arrayCltEncuesta   = array();
         $strMensajeError    = '';
@@ -130,13 +180,22 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
+            $strSubSelect = "";
+            $strSubWhere  = "";
+            if(!empty($intIdRestaurante))
+            {
+                $strSubSelect = " JOIN INFO_SUCURSAL SUB_ISU 
+                                    ON SUB_ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
+                $strSubWhere  = " AND SUB_ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
+            }
             $strSelect      = "SELECT IE.ID_ENCUESTA, IE.TITULO,
                                     EXTRACT(MONTH FROM ICE.FE_CREACION) AS MES,
                                     EXTRACT(YEAR  FROM ICE.FE_CREACION) AS ANIO, 
                                     IFNULL(COUNT(*),0) AS CANTIDAD ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
+                                ".$strSubSelect."
                                     INNER JOIN INFO_ENCUESTA IE ON ICE.ENCUESTA_ID = IE.ID_ENCUESTA ";
-            $strWhere       = " WHERE IE.ESTADO in (:ESTADO) ";
+            $strWhere       = " WHERE IE.ESTADO in (:ESTADO) ".$strSubWhere." ";
             $strGroup       = " GROUP BY ICE.ENCUESTA_ID,EXTRACT(MONTH FROM ICE.FE_CREACION),EXTRACT(YEAR  FROM ICE.FE_CREACION) ";
             $strOrder       = " ORDER BY ICE.FE_CREACION DESC ";
             $strLimit       = " LIMIT ".$strLimite." ";
@@ -173,20 +232,30 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
     {
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
         $strLimite          = $arrayParametros['strLimite'] ? $arrayParametros['strLimite']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayCltEncuesta   = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
+            $strSubSelect = "";
+            $strSubWhere  = "";
+            if(!empty($intIdRestaurante))
+            {
+                $strSubSelect = " JOIN INFO_SUCURSAL SUB_ISU 
+                                    ON SUB_ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
+                $strSubWhere  = " AND SUB_ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
+            }
             $strSelect      = "SELECT IE.ID_ENCUESTA, 
                                 IE.TITULO,
                                 WEEK(ICE.FE_CREACION) AS SEMANA,
                                 EXTRACT(YEAR  FROM ICE.FE_CREACION) AS ANIO, 
                                 IFNULL(COUNT(*),0) AS CANTIDAD ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
+                                ".$strSubSelect."
                                     INNER JOIN INFO_ENCUESTA IE ON ICE.ENCUESTA_ID = IE.ID_ENCUESTA ";
-            $strWhere       = " WHERE IE.ESTADO in (:ESTADO) ";
+            $strWhere       = " WHERE IE.ESTADO in (:ESTADO) ".$strSubWhere." ";
             $strGroup       = " GROUP BY ICE.ENCUESTA_ID,WEEK(ICE.FE_CREACION),EXTRACT(YEAR  FROM ICE.FE_CREACION) ";
             $strOrder       = " ORDER BY ICE.FE_CREACION DESC ";
             $strLimit       = " LIMIT ".$strLimite." ";
@@ -223,17 +292,27 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
     {
         $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayCltEncuesta   = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
+            $strSubSelect = "";
+            $strSubWhere  = "";
+            if(!empty($intIdRestaurante))
+            {
+                $strSubSelect = " JOIN INFO_SUCURSAL SUB_ISU 
+                                    ON SUB_ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
+                $strSubWhere  = " AND SUB_ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
+            }
             $strSelect      = "SELECT UPPER(IC.GENERO) AS GENERO,COUNT(*) AS CANTIDAD ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
+                                ".$strSubSelect."
                                 INNER JOIN INFO_CLIENTE IC ON ICE.CLIENTE_ID = IC.ID_CLIENTE ";
             $strWhere       = " WHERE EXTRACT(MONTH FROM ICE.FE_CREACION)  = :MES
-                                    AND EXTRACT(YEAR FROM ICE.FE_CREACION) = :ANIO ";
+                                    AND EXTRACT(YEAR FROM ICE.FE_CREACION) = :ANIO ".$strSubWhere."";
             $strGroup       = " GROUP BY IC.GENERO ";
             $objQuery->setParameter("MES",$strMes);
             $objQuery->setParameter("ANIO",$strAnio);
@@ -266,12 +345,21 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
     {
         $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayCltEncuesta   = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
+            $strSubSelect = "";
+            $strSubWhere  = "";
+            if(!empty($intIdRestaurante))
+            {
+                $strSubSelect = " JOIN INFO_SUCURSAL SUB_ISU 
+                                    ON SUB_ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
+                $strSubWhere  = " AND SUB_ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
+            }
             $strSelect      = "SELECT (SELECT CONCAT(VALOR1,' (',YEAR(NOW())-VALOR3, ' A ',YEAR(NOW())-VALOR2,' AÑOS)')
                                         FROM ADMI_PARAMETRO
                                         WHERE DESCRIPCION = 'EDAD' 
@@ -279,10 +367,11 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
                                         AND EXTRACT(YEAR FROM IC.EDAD) <= VALOR3) AS GENERACION,
                                     COUNT(*) AS CANTIDAD  ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
+                                ".$strSubSelect."
                                     INNER JOIN INFO_CLIENTE IC 
                                         ON ICE.CLIENTE_ID = IC.ID_CLIENTE ";
             $strWhere       = " WHERE EXTRACT(MONTH FROM ICE.FE_CREACION)  = :MES
-                                    AND EXTRACT(YEAR FROM ICE.FE_CREACION) = :ANIO ";
+                                    AND EXTRACT(YEAR FROM ICE.FE_CREACION) = :ANIO ".$strSubWhere."";
             $strGroup       = " GROUP BY GENERACION ";
             $objQuery->setParameter("MES",$strMes);
             $objQuery->setParameter("ANIO",$strAnio);
