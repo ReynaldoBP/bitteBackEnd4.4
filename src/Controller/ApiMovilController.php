@@ -1942,7 +1942,6 @@ class ApiMovilController extends FOSRestController
             $objPromocion     = $this->getDoctrine()
                                      ->getRepository(InfoPromocion::class)
                                      ->findBy(array('ESTADO'         => $strEstado,
-                                                    'PREMIO'         => 'NO',
                                                     'RESTAURANTE_ID' => $intIdRestaurante));
             if(empty($objPromocion) && !is_array($objPromocion))
             {
