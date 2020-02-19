@@ -2348,6 +2348,10 @@ class ApiMovilController extends FOSRestController
         $objController->setContainer($this->container);
         try
         {
+            $intNumeroEncuesta  = $this->getDoctrine()
+                                       ->getRepository(InfoClienteEncuesta::class)
+                                       ->getCantidadEncuestaCliente(array('clienteId'=>$intIdCliente));
+           
             $arrayParametros = array('intIdCliente'     => $intIdCliente,
                                     'strEstado'         => $strEstado
                                     );
@@ -2369,6 +2373,7 @@ class ApiMovilController extends FOSRestController
                     }
                 }
             }
+            $arrayPuntos['numeroEncuestas'] = $intNumeroEncuesta['CANTIDAD'];
         }
         catch(\Exception $ex)
         {
