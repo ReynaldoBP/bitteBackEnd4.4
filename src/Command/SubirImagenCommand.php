@@ -58,8 +58,8 @@ class SubirImagenCommand extends Command
             $ext = "ico";
         }
         $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
-        //$strRutaImagen = (dirname(__FILE__)."/../../public/images"."/".$nombreImg);
-        $strRutaImagen = $nombreImg;
+        $strRutaImagen = (dirname(__FILE__)."/../../public/images"."/".$nombreImg);
+        //$strRutaImagen = $nombreImg;
         file_put_contents($strRutaImagen,$data);
 
         $em = $this->container->get('doctrine')->getManager();
@@ -74,7 +74,7 @@ class SubirImagenCommand extends Command
         }
         else
         {
-            $objContenido->setIMAGEN($strRutaImagen);
+            $objContenido->setIMAGEN($nombreImg);
             $em->persist($objContenido);
             $em->flush();
         }

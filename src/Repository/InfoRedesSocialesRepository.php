@@ -25,19 +25,27 @@ class InfoRedesSocialesRepository extends \Doctrine\ORM\EntityRepository
     {
         $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayRedSocial     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
+            if(!empty($intIdRestaurante))
+            {
+                $strInnerJoin    = " INNER JOIN INFO_CLIENTE_ENCUESTA ICE ON ICE.CONTENIDO_ID=ICS.ID_CONTENIDO_SUBIDO
+                                     INNER JOIN INFO_SUCURSAL ISU ON  ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
+                $strSubWhere     = " AND ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
+            }
+
             $strSelect      = "SELECT IR.ID_REDES_SOCIALES,
                                       IR.DESCRIPCION,
                                       IFNULL((SELECT count(*) 
-                                                FROM INFO_CONTENIDO_SUBIDO
-                                                WHERE REDES_SOCIALES_ID = IR.ID_REDES_SOCIALES
-                                                AND EXTRACT( MONTH FROM FE_CREACION) = :MES 
-                                                AND EXTRACT( YEAR FROM  FE_CREACION) = :ANIO  ),0) AS CANTIDAD ";
+                                                FROM INFO_CONTENIDO_SUBIDO ICS ".$strInnerJoin." 
+                                                WHERE ICS.REDES_SOCIALES_ID = IR.ID_REDES_SOCIALES 
+                                                AND EXTRACT( MONTH FROM ICS.FE_CREACION) = :MES 
+                                                AND EXTRACT( YEAR FROM  ICS.FE_CREACION) = :ANIO ".$strSubWhere."  ),0) AS CANTIDAD ";
 
             $strFrom        = " FROM INFO_REDES_SOCIALES IR ";
             $objQuery->setParameter("MES",$strMes);

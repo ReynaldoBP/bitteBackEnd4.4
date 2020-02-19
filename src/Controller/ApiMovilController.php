@@ -1942,7 +1942,6 @@ class ApiMovilController extends FOSRestController
             $objPromocion     = $this->getDoctrine()
                                      ->getRepository(InfoPromocion::class)
                                      ->findBy(array('ESTADO'         => $strEstado,
-                                                    'PREMIO'         => 'NO',
                                                     'RESTAURANTE_ID' => $intIdRestaurante));
             if(empty($objPromocion) && !is_array($objPromocion))
             {
@@ -2348,6 +2347,10 @@ class ApiMovilController extends FOSRestController
         $objController->setContainer($this->container);
         try
         {
+            $intNumeroEncuesta  = $this->getDoctrine()
+                                       ->getRepository(InfoClienteEncuesta::class)
+                                       ->getCantidadEncuestaCliente(array('clienteId'=>$intIdCliente));
+           
             $arrayParametros = array('intIdCliente'     => $intIdCliente,
                                     'strEstado'         => $strEstado
                                     );
@@ -2369,6 +2372,7 @@ class ApiMovilController extends FOSRestController
                     }
                 }
             }
+            $arrayPuntos['numeroEncuestas'] = $intNumeroEncuesta['CANTIDAD'];
         }
         catch(\Exception $ex)
         {
