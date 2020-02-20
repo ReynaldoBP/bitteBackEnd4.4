@@ -31,7 +31,12 @@ class AdmiParametroRepository extends \Doctrine\ORM\EntityRepository
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
-            $strSelect      = "SELECT AP.ID_PARAMETRO,AP.DESCRIPCION,AP.VALOR1, AP.VALOR2, AP.VALOR3,AP.ESTADO,
+            $strSubQuery =" AP.VALOR1 ";
+            if(!empty($strDescripcion) && ($strDescripcion=='EDAD' || $strDescripcion=='HORARIO'))
+            {
+                $strSubQuery =" concat(AP.VALOR1,' ',AP.VALOR2,' - ',AP.VALOR3) AS VALOR1 ";
+            }
+            $strSelect      = "SELECT AP.ID_PARAMETRO,AP.DESCRIPCION,".$strSubQuery.", AP.VALOR2, AP.VALOR3,AP.ESTADO,
                                 AP.USR_CREACION,AP.FE_CREACION,AP.USR_MODIFICACION,AP.FE_MODIFICACION ";
             $strFrom        = "FROM ADMI_PARAMETRO AP  ";
             $strWhere       = "WHERE AP.ESTADO in (:ESTADO) ";
