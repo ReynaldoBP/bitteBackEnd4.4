@@ -40,7 +40,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             if(!empty($intIdRestaurante))
             {
                 $strSubSelect = " JOIN INFO_SUCURSAL SUB_ISU 
-                                    ON SUB_ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
+                                    ON SUB_ISU.ID_SUCURSAL = A.SUCURSAL_ID ";
                 $strSubWhere  = " AND SUB_ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
             }
             $strSelect      = "SELECT C.DESCRIPCION AS RED_SOCIAL, A.FE_CREACION, A.CLIENTE_ID, 
@@ -287,8 +287,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                 INNER JOIN INFO_SUCURSAL ISU         ON ISU.ID_SUCURSAL         =  ICE.SUCURSAL_ID
                                 INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID 
                                 WHERE 
-                                IE.ESTADO           = 'ACTIVO'
-                                AND ICE.ESTADO      = 'ACTIVO' ";
+                                IE.ESTADO           = 'ACTIVO' ";
             $strSql2         = $strSelect2.$strFrom2.$strWhere.$strGroupBy2;
             $objQuery2->setSQL($strSql2);
             $arrayResultadoEnc                 = $objQuery2->getOneOrNullResult();
