@@ -8,6 +8,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManager;
 use App\Entity\InfoRespuesta;
+use App\Entity\InfoUsuario;
+use App\Entity\AdmiTipoRol;
+use App\Entity\InfoUsuarioRes;
 use App\Controller\DefaultController;
 
 class InfoRespuestaController extends Controller
@@ -83,6 +86,7 @@ class InfoRespuestaController extends Controller
         $strMes                 = $request->query->get("strMes") ? $request->query->get("strMes"):'';
         $conImagen              = $request->query->get("conImagen") ? $request->query->get("conImagen"):'NO';
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
+        $intIdUsuario           = $request->query->get("id_usuario") ? $request->query->get("id_usuario"):'';
         $arrayRespuesta         = array();
         $strMensajeError        = '';
         $strStatus              = 400;
@@ -91,9 +95,34 @@ class InfoRespuestaController extends Controller
         $objController->setContainer($this->container);
         try
         {
+            $objUsuario = $this->getDoctrine()
+                               ->getRepository(InfoUsuario::class)
+                               ->find($intIdUsuario);
+            if(!empty($objUsuario) && is_object($objUsuario))
+            {
+                $objTipoRol = $this->getDoctrine()
+                                    ->getRepository(AdmiTipoRol::class)
+                                    ->find($objUsuario->getTIPOROLID()->getId());
+                if(!empty($objTipoRol) && is_object($objTipoRol))
+                {
+                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    {
+                        $intIdRestaurante = '';
+                    }
+                    else
+                    {
+                        $objUsuarioRes = $this->getDoctrine()
+                                              ->getRepository(InfoUsuarioRes::class)
+                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                    }
+                }
+            }
             $arrayParametros = array('strAnio'   => $strAnio,
                                      'strMes'    => $strMes,
                                      'intIdCltEncuesta' => $intIdCltEncuesta,
+                                     'intIdRestaurante'  => $intIdRestaurante,
                                      'strEstado' => $strEstado);
             $arrayRespuesta = (array) $this->getDoctrine()
                                            ->getRepository(InfoRespuesta::class)
