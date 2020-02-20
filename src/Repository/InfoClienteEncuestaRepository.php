@@ -112,7 +112,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
      */    
     public function getClienteEncuesta($arrayParametros)
     {
-        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
         $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';

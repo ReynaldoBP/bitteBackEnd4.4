@@ -28,15 +28,25 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
         $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
+            $strSubSelect = "";
+            $strSubWhere  = "";
+            if(!empty($intIdRestaurante))
+            {
+                $strSubSelect = " JOIN INFO_SUCURSAL SUB_ISU 
+                                    ON SUB_ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
+                $strSubWhere  = " AND SUB_ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
+            }
             $strSelect      = "SELECT C.DESCRIPCION AS RED_SOCIAL, A.FE_CREACION, A.CLIENTE_ID, 
                                 D.TITULO, B.IMAGEN, A.ESTADO, A.ID_CLT_ENCUESTA ";
             $strFrom        = "FROM INFO_CLIENTE_ENCUESTA A 
+                                ".$strSubSelect."
                                 INNER JOIN INFO_CONTENIDO_SUBIDO B 
                                     ON A.CONTENIDO_ID = B.`ID_CONTENIDO_SUBIDO`
                                 INNER JOIN INFO_REDES_SOCIALES C 
@@ -45,7 +55,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                     ON A.ENCUESTA_ID = D.ID_ENCUESTA ";
             $strWhere       = "WHERE 
                                 EXTRACT(YEAR FROM A.FE_CREACION ) = :strAnio 
-                                AND EXTRACT(MONTH FROM A.FE_CREACION ) = :strMes ";
+                                AND EXTRACT(MONTH FROM A.FE_CREACION ) = :strMes ".$strSubWhere."";
             $strOrderBy     = " ORDER BY A.FE_CREACION DESC ";
             $objQuery->setParameter("strMes", $strMes);
             $objQuery->setParameter("strAnio", $strAnio);
