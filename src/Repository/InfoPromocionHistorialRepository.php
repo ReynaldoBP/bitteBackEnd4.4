@@ -54,6 +54,64 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
         $arrayPromocion['error'] = $strMensajeError;
         return $arrayPromocion;
     }
+
+     /**
+     * Documentación para la función 'getPromoHistorialTenedorMovil'
+     * Método encargado de retornar todos las promociones según los parámetros recibidos.
+     * 
+     * @author El Kevin de Mucho Lote
+     * @version 1.0 28-02-2020
+     * 
+     * @return array  $arrayPromocion
+     * 
+     */
+    public function getPromoHistorialTenedorMovil($arrayParametros)
+    {
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('PENDIENTE');
+        $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $arrayPromocion     = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = "SELECT 
+                                       ipo.ID_PROMOCION,
+                                       ipo.DESCRIPCION_TIPO_PROMOCION,
+                                       ipo.IMAGEN,
+                                       ipo.CANTIDAD_PUNTOS,
+                                       ipo.ESTADO,
+                                       ire.ID_RESTAURANTE,
+                                       ire.NOMBRE_COMERCIAL  ";
+            $strFrom        = "FROM 
+                                    INFO_CLIENTE_PROMOCION_HISTORIAL icph 
+                                    INNER JOIN INFO_PROMOCION ipo ON icph.PROMOCION_ID =ipo.ID_PROMOCION 
+                                    INNER JOIN INFO_RESTAURANTE ire ON ipo.RESTAURANTE_ID = ire.ID_RESTAURANTE ";
+            $strWhere       = "WHERE ipo.PREMIO = 'SI' AND icph.ESTADO in (:ESTADO) ";
+            $objQuery->setParameter("ESTADO",$strEstado);
+            if(!empty($intIdCliente))
+            {
+                $strWhere .= " AND icph.CLIENTE_ID =:CLIENTE_ID";
+                $objQuery->setParameter("CLIENTE_ID", $intIdCliente);
+            }
+            $objRsmBuilder->addScalarResult('ID_PROMOCION', 'idPromocion', 'integer');
+            $objRsmBuilder->addScalarResult('DESCRIPCION_TIPO_PROMOCION', 'descripcion', 'string');
+            $objRsmBuilder->addScalarResult('IMAGEN', 'imagen', 'string');
+            $objRsmBuilder->addScalarResult('CANTIDAD_PUNTOS', 'cantPuntos', 'integer');
+            $objRsmBuilder->addScalarResult('ESTADO', 'estado', 'string');
+            $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'idRestaurante', 'integer');
+            $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'nombreRestaurante', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayPromocion['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayPromocion['error'] = $strMensajeError;
+        return $arrayPromocion;
+    }
     /**
      * Documentación para la función 'getPromocionCriterioWeb'
      * Método encargado de retornar todos los historiales promociones según los parámetros recibidos.

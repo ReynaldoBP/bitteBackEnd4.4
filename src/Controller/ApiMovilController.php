@@ -1942,6 +1942,7 @@ class ApiMovilController extends FOSRestController
             $objPromocion     = $this->getDoctrine()
                                      ->getRepository(InfoPromocion::class)
                                      ->findBy(array('ESTADO'         => $strEstado,
+                                                    'PREMIO'         => 'NO',
                                                     'RESTAURANTE_ID' => $intIdRestaurante));
             if(empty($objPromocion) && !is_array($objPromocion))
             {
@@ -2354,9 +2355,17 @@ class ApiMovilController extends FOSRestController
             $arrayParametros = array('intIdCliente'     => $intIdCliente,
                                     'strEstado'         => $strEstado
                                     );
+            $arrayParametrosTenedor = array('intIdCliente'     => $intIdCliente,
+                                            'strEstado'         => 'PENDIENTE'
+                                            );
             $arrayPuntos   = $this->getDoctrine()
                                     ->getRepository(InfoClienteEncuesta::class)
                                     ->getCantPtosResEnc($arrayParametros);
+
+           $arrayTenedorOro   = $this->getDoctrine()
+                                    ->getRepository(InfoPromocionHistorial::class)
+                                    ->getPromoHistorialTenedorMovil($arrayParametrosTenedor);
+
             if(isset($arrayPuntos['error']) && !empty($arrayPuntos['error']))
             {
                 $strStatus  = 404;
@@ -2371,7 +2380,15 @@ class ApiMovilController extends FOSRestController
                         $item['ICONO'] = $objController->getImgBase64($item['ICONO']);
                     }
                 }
+                foreach ($arrayTenedorOro['resultados'] as &$item)
+                {
+                    if($item['IMAGEN'])
+                    {
+                        $item['IMAGEN'] = $objController->getImgBase64($item['IMAGEN']);
+                    }
+                }
             }
+            $arrayPuntos['resultadoTenedor'] = $arrayTenedorOro['resultados'];
             $arrayPuntos['numeroEncuestas'] = $intNumeroEncuesta['CANTIDAD'];
         }
         catch(\Exception $ex)
