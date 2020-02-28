@@ -32,9 +32,13 @@ class AdmiParametroRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSubQuery =" AP.VALOR1 ";
-            if(!empty($strDescripcion) && ($strDescripcion=='EDAD' || $strDescripcion=='HORARIO'))
+            if(!empty($strDescripcion) && ($strDescripcion=='HORARIO'))
             {
                 $strSubQuery =" concat(AP.VALOR1,' ',AP.VALOR2,' - ',AP.VALOR3) AS VALOR1 ";
+            }
+            else if ($strDescripcion=='EDAD')
+            {
+                $strSubQuery =" CONCAT(VALOR1,' (',YEAR(NOW())-VALOR3, ' A ',YEAR(NOW())-VALOR2,' AÑOS)') AS VALOR1 ";
             }
             $strSelect      = "SELECT AP.ID_PARAMETRO,AP.DESCRIPCION,".$strSubQuery.", AP.VALOR2, AP.VALOR3,AP.ESTADO,
                                 AP.USR_CREACION,AP.FE_CREACION,AP.USR_MODIFICACION,AP.FE_MODIFICACION ";

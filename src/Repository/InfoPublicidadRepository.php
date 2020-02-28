@@ -130,7 +130,14 @@ class InfoPublicidadRepository extends \Doctrine\ORM\EntityRepository
                                PB.IMAGEN, PB.ESTADO,PB.USR_CREACION,PB.FE_CREACION,PB.USR_MODIFICACION,PB.FE_MODIFICACION ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM INFO_PUBLICIDAD PB ";
-            $strWhere       = "WHERE PB.ESTADO in (:ESTADO) ";
+            $strWhere       = "WHERE PB.ESTADO in (:ESTADO) AND PB.ID_PUBLICIDAD not in (
+                                         SELECT T1.PUBLICIDAD_ID 
+                                         FROM (SELECT ivp.PUBLICIDAD_ID
+                                         FROM INFO_VISTA_PUBLICIDAD ivp
+                                         WHERE  ivp.ESTADO in ('ACTIVO') AND ivp.CLIENTE_ID=59 AND FE_CREACION = DATE_FORMAT(NOW(),'%Y%m%d')
+                                         ORDER BY ID_VISTA_PUBLICIDAD DESC
+                                         LIMIT 1)T1
+                                         ) ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
             if(!empty($strGenero) && $strGenero!= 'TODOS')

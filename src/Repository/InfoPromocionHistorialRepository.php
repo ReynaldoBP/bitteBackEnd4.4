@@ -29,23 +29,45 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $objRsmBuilder2     = new ResultSetMappingBuilder($this->_em);
+        $objQuery2          = $this->_em->createNativeQuery(null, $objRsmBuilder2);
         try
         {
             $strSelect      = "SELECT sum(IPROMO.CANTIDAD_PUNTOS) as CANTIDAD_PUNTOS ";
             $strFrom        = "FROM INFO_CLIENTE_PROMOCION_HISTORIAL ICPH
                                 JOIN INFO_PROMOCION IPROMO
                                     ON IPROMO.ID_PROMOCION=ICPH.PROMOCION_ID ";
-            $strWhere       = "WHERE ICPH.ESTADO in (:ESTADO) ";
+            $strWhere       = "WHERE ICPH.ESTADO in (:ESTADO) AND IPROMO.PREMIO = 'NO' ";
             $objQuery->setParameter("ESTADO",$strEstado);
+            $objQuery2->setParameter("ESTADO",$strEstado);
             if(!empty($intIdCliente))
             {
                 $strWhere .= " AND ICPH.CLIENTE_ID =:CLIENTE_ID";
                 $objQuery->setParameter("CLIENTE_ID", $intIdCliente);
+                $objQuery2->setParameter("CLIENTE_ID", $intIdCliente);
             }
             $objRsmBuilder->addScalarResult('CANTIDAD_PUNTOS', 'CANTIDAD_PUNTOS', 'integer');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayPromocion['resultados'] = $objQuery->getSingleScalarResult();
+
+            $strSelect2      = "SELECT DISTINCT(IRE.NOMBRE_COMERCIAL)AS NOMBRE ";
+            $strFrom2        = "FROM INFO_CLIENTE_PROMOCION_HISTORIAL ICPH
+                               INNER JOIN INFO_PROMOCION IPROMO
+                               ON IPROMO.ID_PROMOCION=ICPH.PROMOCION_ID 
+                               INNER JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE=IPROMO.RESTAURANTE_ID ";
+            
+            $objRsmBuilder2->addScalarResult('NOMBRE', 'nombre', 'string');
+            $strSql2       = $strSelect2.$strFrom2.$strWhere;
+            $objQuery2->setSQL($strSql2);
+            $arrayResultado = $objQuery2->getResult();
+            $stringRestaurante = "";
+
+            foreach ($arrayResultado as $item)
+            {
+               $stringRestaurante = $stringRestaurante . $item["nombre"] . ", ";
+            }
+            $arrayPromocion['resultados2'] = $stringRestaurante;
         }
         catch(\Exception $ex)
         {

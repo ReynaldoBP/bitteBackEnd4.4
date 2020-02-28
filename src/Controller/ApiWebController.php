@@ -717,8 +717,7 @@ class ApiWebController extends FOSRestController
             }
             if(!empty($intIdRestaurante))
             {
-                $arrayParametros = array('ESTADO' => $strEstado,
-                                         'id'     => $intIdRestaurante);
+                $arrayParametros = array('id'     => $intIdRestaurante);
                 $objRestaurante  = $this->getDoctrine()
                                         ->getRepository(InfoRestaurante::class)
                                         ->findOneBy($arrayParametros);
@@ -1941,6 +1940,15 @@ class ApiWebController extends FOSRestController
         $objResponse        = new Response;
         try
         {
+            if(!empty($strEdad))
+            {
+                 $arrayEdad = explode("(", $strEdad);
+                 if(is_array($arrayEdad))
+                 { 
+                    $strEdad = trim($arrayEdad[0]);
+                 }
+            }
+            
             $objUsuario = $this->getDoctrine()
                                ->getRepository(InfoUsuario::class)
                                ->find($intIdUsuario);
@@ -1965,6 +1973,7 @@ class ApiWebController extends FOSRestController
                     }
                 }
             }
+            
             $arrayParametros = array("strMes"      => $strMes,
                                     "strAnio"      => $strAnio,
                                     "strFechaIni"  => $strFechaIni,
@@ -2028,6 +2037,15 @@ class ApiWebController extends FOSRestController
         $objResponse        = new Response;
         try
         {
+            if(!empty($strEdad))
+            {
+                 $arrayEdad = explode("(", $strEdad);
+                 if(is_array($arrayEdad))
+                 { 
+                    $strEdad = trim($arrayEdad[0]);
+                 }
+            }
+
             $arrayParametros = array("strMes"      => $strMes,
                                     "strAnio"      => $strAnio,
                                     "strGenero"    => $strGenero,
@@ -2089,6 +2107,15 @@ class ApiWebController extends FOSRestController
         $objResponse        = new Response;
         try
         {
+            if(!empty($strEdad))
+            {
+                 $arrayEdad = explode("(", $strEdad);
+                 if(is_array($arrayEdad))
+                 { 
+                    $strEdad = trim($arrayEdad[0]);
+                 }
+            }
+
             $arrayParametros = array("strMes"      => $strMes,
                                     "strAnio"      => $strAnio,
                                     "strGenero"    => $strGenero,
@@ -2150,6 +2177,15 @@ class ApiWebController extends FOSRestController
         $objResponse        = new Response;
         try
         {
+            if(!empty($strEdad))
+            {
+                 $arrayEdad = explode("(", $strEdad);
+                 if(is_array($arrayEdad))
+                 { 
+                    $strEdad = trim($arrayEdad[0]);
+                 }
+            }
+
             $arrayParametros = array("strMes"      => $strMes,
                                     "strAnio"      => $strAnio,
                                     "strFechaIni"  => $strFechaIni,

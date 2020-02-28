@@ -1961,11 +1961,25 @@ class ApiMovilController extends FOSRestController
                                                                 'metros'       => $objParametro->getVALOR2()));
             foreach($objPromocion as $arrayItem)
             {
+                $strRutaImagen = "";
                 if(!empty($arrayItem->getIMAGEN()))
                 {
                     $strRutaImagen = $objController->getImgBase64($arrayItem->getIMAGEN());
                 }
+ 
+                $arrayPromocionesActivas   = $this->getDoctrine()
+                                                  ->getRepository(InfoPromocionHistorial::class)
+                                                  ->findBy(array('CLIENTE_ID'  =>$intIdCliente,
+                                                                 'ESTADO'      =>'PENDIENTE',
+                                                                 'PROMOCION_ID'=>$arrayItem->getId()));
+                $strPromocionActiva= "";
+                if(isset($arrayPromocionesActivas) && !empty($arrayPromocionesActivas))
+                {
+                     $strPromocionActiva = "Procesando";
+                }
+
                 $arrayPromocion []= array( 'idPromocion'   => $arrayItem->getId(),
+                                        'textoProceso'     => $strPromocionActiva,
                                         'descripcion'      => $arrayItem->getDESCRIPCIONTIPOPROMOCION(),
                                         'imagen'           => $strRutaImagen ? $strRutaImagen:'',
                                         'cantPuntos'       => $arrayItem->getCANTIDADPUNTOS(),
@@ -2146,6 +2160,7 @@ class ApiMovilController extends FOSRestController
                     throw new \Exception($arrayPromociones['error']);
                 }
                 $intCantidadPromocion = $arrayPromociones['resultados'];
+                $strNombreRestaurante = $arrayPromociones['resultados2'];
                 //(puntajeCliente-puntjaePromocionesVigente) > puntajePromocion
                 $intSumaPuntajeClt    = $intCantidadPuntos - $intCantidadPromocion;
                 if($intSumaPuntajeClt >= $intCantPuntospromo)
@@ -2163,7 +2178,7 @@ class ApiMovilController extends FOSRestController
                 else
                 {
                     $intResultado = $intCantPuntospromo - $intCantidadPuntos;
-                    throw new \Exception('Puntaje reservado. Se está procesando una promoción.');
+                    throw new \Exception('Puntaje actual insuficiente.Tiene promociones en '.$strNombreRestaurante. "pendientes");
                 }
             }
             else
@@ -2350,7 +2365,9 @@ class ApiMovilController extends FOSRestController
         {
             $intNumeroEncuesta  = $this->getDoctrine()
                                        ->getRepository(InfoClienteEncuesta::class)
-                                       ->getCantidadEncuestaCliente(array('clienteId'=>$intIdCliente));
+                                       ->getCantidadEncuestaCliente(
+                                                              array('clienteId'=>$intIdCliente,
+                                                                    'strEstado' =>array('ACTIVO','PENDIENTE')));
            
             $arrayParametros = array('intIdCliente'     => $intIdCliente,
                                     'strEstado'         => $strEstado
@@ -2382,9 +2399,9 @@ class ApiMovilController extends FOSRestController
                 }
                 foreach ($arrayTenedorOro['resultados'] as &$item)
                 {
-                    if($item['IMAGEN'])
+                    if($item['imagen'])
                     {
-                        $item['IMAGEN'] = $objController->getImgBase64($item['IMAGEN']);
+                        $item['imagen'] = $objController->getImgBase64($item['imagen']);
                     }
                 }
             }
