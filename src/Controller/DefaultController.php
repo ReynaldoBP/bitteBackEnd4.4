@@ -50,9 +50,9 @@ class DefaultController extends Controller
         $command = 'app:enviarCorreo'; 
         
         $proceso = $php.' '.$console.' '.$command.'  "'.$strDestinatario.'" "'.$strMensajeCorreo.'" "'.$strAsunto.'"';
-        
         $process =  new Process($proceso);
-        $process->start();
+        //$process->start();
+       $process->run();
 /*
         $objMessage =  (new \Swift_Message())
                                         ->setSubject($strAsunto)

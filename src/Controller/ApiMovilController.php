@@ -2635,7 +2635,8 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
             }
-            $strAsunto            = '¡GANASTE PUNTOS!';
+
+            $strAsunto            = "¡GANASTE PUNTOS!";
             $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
             $strMensajeCorreo = '
             <div class=""><b>¡Hola! '.$strNombreUsuario.'.</b>&nbsp;</div>

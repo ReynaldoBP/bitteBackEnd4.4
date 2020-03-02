@@ -1278,6 +1278,7 @@ class ApiWebController extends FOSRestController
                     }
                 }
             }
+
             $arrayCltEncuesta   = $this->getDoctrine()
                                        ->getRepository(InfoClienteEncuesta::class)
                                        ->getClienteEncuestaSemanal(array('strEstado'  => $strEstado,

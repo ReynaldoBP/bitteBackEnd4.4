@@ -237,7 +237,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
-        try
+         $strLimite=1;try
         {
             $strSubSelect = "";
             $strSubWhere  = "";
