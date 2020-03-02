@@ -183,6 +183,17 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
 
         $objRsmBuilder2     = new ResultSetMappingBuilder($this->_em);
         $objQuery2          = $this->_em->createNativeQuery(null, $objRsmBuilder2);        
+        
+        if(empty($strFechaIni) && !empty($strFechaFin))
+        {
+           $arrayFechaFin = explode("-",$strFechaFin);
+           if(is_array($arrayFechaFin))
+           {   
+               $strAnio =  trim($arrayFechaFin[0]);
+               $strMes  =  trim($arrayFechaFin[1]);
+               $strFechaIni = $strAnio."-".$strMes."-01";
+           }
+        }
 
         try
         {
@@ -215,8 +226,9 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                 $objQuery->setParameter("IDRESTAURANTE", $intIdRestaurante);
                 $objQuery2->setParameter("IDRESTAURANTE", $intIdRestaurante);
             }
+
             if(!empty($strFechaIni) && !empty($strFechaFin))
-            {
+            { 
                 $strWhere .= " AND ICE.FE_CREACION BETWEEN '".$strFechaIni."' AND '".$strFechaFin."' ";
             }
             if(!empty($strGenero))

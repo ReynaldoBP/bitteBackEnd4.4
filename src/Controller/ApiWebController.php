@@ -1412,11 +1412,11 @@ class ApiWebController extends FOSRestController
         try
         {
             $em->getConnection()->beginTransaction();
-            $arrayPromocionHist = $this->getDoctrine()
+            $objPromocionHist = $this->getDoctrine()
                                        ->getRepository(InfoPromocionHistorial::class)
-                                       ->findBy(array('id'     => $intIdPromocionHist,
+                                       ->findOneBy(array('id'     => $intIdPromocionHist,
                                                       'ESTADO' => 'PENDIENTE'));
-            if(!is_array($arrayPromocionHist) || empty($arrayPromocionHist))
+            /*if(!is_array($arrayPromocionHist) || empty($arrayPromocionHist))
             {
                 throw new \Exception('Promoción no existe o ha sido completada.');
             }
@@ -1426,7 +1426,7 @@ class ApiWebController extends FOSRestController
             }
             $objPromocionHist = $this->getDoctrine()
                                      ->getRepository(InfoPromocionHistorial::class)
-                                     ->find($intIdPromocionHist);
+                                     ->find($intIdPromocionHist);*/
             if(!is_object($objPromocionHist) || empty($objPromocionHist))
             {
                 throw new \Exception('Promoción no existe o ha sido completada.');
@@ -1464,89 +1464,51 @@ class ApiWebController extends FOSRestController
                                      ->getRepository(InfoPromocion::class)
                                      ->findOneBy(array('PREMIO'         => 'SI',
                                                        'id'             => $objPromocionHist->getPROMOCIONID()->getId()));
-            if(!empty($objPromocionOro) && is_object($objPromocionOro))
+            if($strEstado == 'COMPLETADO')
             {
-                $strAsuntoOro            = 'TENEDOR DE ORO';
-                $strNombreUsuarioOro     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-                $strMensajeCorreoOro = '
-                <div class="">¡Hola! '.$strNombreUsuarioOro.'.&nbsp;</div>
+                $strAsunto            = '¡CANJEASTE PUNTOS!';
+                $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+                $strMensajeCorreo = '
+                <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">En el sorteo de Febrero has sido el ganador de un Tenedor de Oro en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de \"mis puntos\" encontrar&aacute;s el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' con el Tenedor de Oro asignado.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Ahora solo ve, y disfruta tu premio. &nbsp;</div>
+                <div class="">Acabas de canjear '.$objPromocion->getCANTIDADPUNTOS().' puntos en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' esperamos que tu premio est&eacute; delicioso.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Buen provecho,&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Bitte.&nbsp;</div>
-                <div class="">&nbsp;</div>';
-                $strRemitenteOro     = 'notificaciones@bitte.app';
-                $arrayParametrosOro  = array('strAsunto'        => $strAsuntoOro,
-                                             'strMensajeCorreo' => $strMensajeCorreoOro,
-                                             'strRemitente'     => $strRemitenteOro,
-                                             'strDestinatario'  => $objCliente->getCORREO());
-                $objControllerOro    = new DefaultController();
-                $objControllerOro->setContainer($this->container);
-                $objControllerOro->enviaCorreo($arrayParametrosOro);
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
             }
-            else
+            else if($strEstado == 'ELIMINADO')
             {
-                if($strEstado == 'COMPLETADO')
-                {
-                    $strAsunto            = '¡CANJEASTE PUNTOS!';
-                    $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-                    $strMensajeCorreo = '
-                    <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">FELICITACIONES!!!!&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Acabas de canjear '.$objPromocion->getCANTIDADPUNTOS().' puntos en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' esperamos que tu premio est&eacute; delicioso.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Buen provecho,&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Bitte.&nbsp;</div>
-                    <div class="">&nbsp;</div>';
-                }
-                else if($strEstado == 'ELIMINADO')
-                {
-                    $strAsunto            = '¡PERDISTE PUNTOS!';
-                    $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-                    $strMensajeCorreo = '
-                    <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">¡LO SENTIMOS!&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Se han restado '.$objPromocion->getCANTIDADPUNTOS().' puntos en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un cup&oacute;n para el sorteo mensual de comidas gratuitas.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Sabemos que fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de calificar.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Buen provecho,&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Bitte.&nbsp;</div>
-                    <div class="">&nbsp;</div>';
-                }
-                $strRemitente     = 'notificaciones@bitte.app';
-                $arrayParametros  = array('strAsunto'        => $strAsunto,
-                                          'strMensajeCorreo' => $strMensajeCorreo,
-                                          'strRemitente'     => $strRemitente,
-                                          'strDestinatario'  => $objCliente->getCORREO());
-                $objController    = new DefaultController();
-                $objController->setContainer($this->container);
-                $objController->enviaCorreo($arrayParametros);
+                $strAsunto            = '¡PERDISTE PUNTOS!';
+                $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+                $strMensajeCorreo = '
+                <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">¡LO SENTIMOS!&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Se han restado '.$objPromocion->getCANTIDADPUNTOS().' puntos en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un cup&oacute;n para el sorteo mensual de comidas gratuitas.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Sabemos que fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de calificar.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
             }
+            $strRemitente            = 'notificaciones@bitte.app';
+            $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                        'strMensajeCorreo' => $strMensajeCorreo,
+                                        'strRemitente'     => $strRemitente,
+                                        'strDestinatario'  => $objCliente->getCORREO());
+            $objController    = new DefaultController();
+            $objController->setContainer($this->container);
+            $objController->enviaCorreo($arrayParametros);
+            
             $strMensajeError = 'Historial de la promoción editado con exito.!';
         }
         catch(\Exception $ex)
@@ -1631,6 +1593,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 09-10-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 02-03-2020 - Se agrega correo para enviar correo de tenedor de oro al cliente y administrador.
+     * 
      * @return array  $objResponse
      */
     public function createPromocionHistorial($arrayData)
@@ -1666,6 +1631,81 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception('No existe la promoción con identificador enviada por parámetro.');
             }
+            $objRestaurante = $this->getDoctrine()
+                                   ->getRepository(InfoRestaurante::class)
+                                   ->find($objPromocion->getRESTAURANTEID()->getId());
+            if(!is_object($objRestaurante) || empty($objRestaurante))
+            {
+                throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
+            }
+            $objRestauranteUS = $this->getDoctrine()
+                                   ->getRepository(InfoUsuarioRes::class)
+                                   ->findOneBy(array('RESTAURANTEID'     => $objRestaurante->getId()));
+            if(!is_object($objRestauranteUS) || empty($objRestauranteUS))
+            {
+                throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
+            }
+            $objUsuarioRes = $this->getDoctrine()
+                                ->getRepository(InfoUsuarioRes::class)
+                                ->findOneBy(array('USUARIOID'=>$objRestauranteUS->getUSUARIOID()));
+            if(!is_object($objUsuarioRes) || empty($objUsuarioRes))
+            {
+                throw new \Exception('No existe el usuario relacionado con el restaurante enviada por parámetro.');
+            }
+            $objUsuario = $this->getDoctrine()
+                                ->getRepository(InfoUsuario::class)
+                                ->findOneBy(array('id'=>$objUsuarioRes->getUSUARIOID()));
+            if(!is_object($objUsuario) || empty($objUsuario))
+            {
+                throw new \Exception('No existe el usuario relacionado con el restaurante enviada por parámetro.');
+            }
+            date_default_timezone_set('America/Guayaquil');
+            $strNombreUsuarioOro     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+            $strRemitenteOro         = 'notificaciones@bitte.app';
+            $strMes                  = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][date("n") - 1];
+            $strAsuntoOro            = 'TENEDOR DE ORO';
+            $strNombreResUsOro       = $objUsuario->getNOMBRES() .' '.$objUsuario->getAPELLIDOS();
+            $strMensajeResCorreoOro  = '<div style=\"font-family:Varela Round\">Hola '.$strNombreResUsOro.' ,</div>
+            <div class="">&nbsp;</div>
+            <div class="">FELICITACIONES!!!&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.' ('.$strNombreUsuarioOro.') ha sido el/la ganador(a) del <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Como administrador, una vez que el ganador est&eacute; en el restaurante y solicite por medio de app Bitte su Tenedor de Oro, podr&aacute;s ingresar a la plataforma web <a href=www.bitte.app target="_blank" >www.bitte.app</a> en la secci&oacute;n de puntos y buscar el nombre del ganador, para de esa forma aceptar la solicitud del Tenedor de Oro y as&iacute; conceder el premio a este ganador.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Que bueno es poner contento a tus clientes.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
+            $arrayParametrosResOro  = array('strAsunto'        => $strAsuntoOro,
+                                            'strMensajeCorreo' => $strMensajeResCorreoOro,
+                                            'strRemitente'     => $strRemitenteOro,
+                                            'strDestinatario'  => $objUsuario->getCORREO());
+            $objControllerResOro    = new DefaultController();
+            $objControllerResOro->setContainer($this->container);
+            $objControllerResOro->enviaCorreo($arrayParametrosResOro);
+            /* cliente */
+            $strMensajeCorreoOro = '<div style=\"font-family:Varela Round\">Hola '.$strNombreUsuarioOro.' ,</div>
+            <div class="">&nbsp;</div>
+            <div class="">FELICITACIONES!!!&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.' has sido el ganador de un <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de "mis puntos" encontrar&aacute;s el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' con el Tenedor de Oro asignado.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Ahora solo ve, y disfruta tu premio. &nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
+
+            $arrayParametrosOro  = array('strAsunto'        => $strAsuntoOro,
+                                            'strMensajeCorreo' => $strMensajeCorreoOro,
+                                            'strRemitente'     => $strRemitenteOro,
+                                            'strDestinatario'  => $objCliente->getCORREO());
+            $objControllerOro    = new DefaultController();
+            $objControllerOro->setContainer($this->container);
+            $objControllerOro->enviaCorreo($arrayParametrosOro);
+
             $entityPromocionHist = new InfoPromocionHistorial();
             $entityPromocionHist->setCLIENTEID($objCliente);
             $entityPromocionHist->setPROMOCIONID($objPromocion);
@@ -1971,10 +2011,14 @@ class ApiWebController extends FOSRestController
                                               ->getRepository(InfoUsuarioRes::class)
                                               ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                         $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        if(empty($intIdRestaurante))
+                        {
+                            $intIdRestaurante = 0;
+                        }
                     }
                 }
             }
-            
+         
             $arrayParametros = array("strMes"      => $strMes,
                                     "strAnio"      => $strAnio,
                                     "strFechaIni"  => $strFechaIni,
