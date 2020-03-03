@@ -79,14 +79,21 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $objDate            = new \DateTime();
+        $strFecha           = $objDate->format('m');
+        $strAnio            = $objDate->format('Y');
+        $strFechaInicial    = $strAnio."-".$strFecha."-01";
+
         try
         {
             $strSelect      = "SELECT COUNT(IE.ID_CLT_ENCUESTA) AS CANTIDAD ";
             $strFrom        = "FROM INFO_CLIENTE_ENCUESTA IE ";
-            $strWhere       = "WHERE IE.ESTADO in (:ESTADO) AND IE.CLIENTE_ID = :IDCLIENTE  ";
+            $strWhere       = "WHERE IE.ESTADO in (:ESTADO) AND IE.CLIENTE_ID = :IDCLIENTE 
+                               AND IE.FE_CREACION >= :FECHA ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQuery->setParameter("IDCLIENTE", $intclienteId);
-            
+            $objQuery->setParameter("FECHA", $strFechaInicial);
+
             $objRsmBuilder->addScalarResult('CANTIDAD', 'CANTIDAD', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
@@ -444,6 +451,9 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.0 25-01-2020 - Se agrega nueva forma para retornar los puntos pendientes.
      *
+     * @author Kevin Baque
+     * @version 1.1 03-03-2020 - Se retorna direccion y telefono.
+     *
      */
     public function getCantPtosResEnc($arrayParametros)
     {
@@ -458,6 +468,8 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             //SUM(ICE.CANTIDAD_PUNTOS) AS CANT_PUNTOS,
             $strSelect      = "SELECT IRE.NOMBRE_COMERCIAL,
                                       IRE.ID_RESTAURANTE,
+                                      IRE.NUMERO_CONTACTO,
+                                      IRE.DIRECCION_TRIBUTARIO,
                                       IRE.ICONO ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 JOIN INFO_SUCURSAL         ISUR ON ISUR.ID_SUCURSAL   = ICE.SUCURSAL_ID
@@ -488,6 +500,8 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CANT_PUNTOS_PENDIENTE', 'CANT_PUNTOS_PENDIENTE', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'RAZON_SOCIAL', 'string');
             $objRsmBuilder->addScalarResult('ICONO', 'ICONO', 'string');
+            $objRsmBuilder->addScalarResult('NUMERO_CONTACTO', 'NUMERO_CONTACTO', 'string');
+            $objRsmBuilder->addScalarResult('DIRECCION_TRIBUTARIO', 'DIRECCION_TRIBUTARIO', 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'IDRESTAURANTE', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strGroupBy;
             $objQuery->setSQL($strSql);
