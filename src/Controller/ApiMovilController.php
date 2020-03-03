@@ -281,7 +281,7 @@ class ApiMovilController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div class="">
                 <div>
-                <div><strong>Estás a un paso de comenzar, solamente debes activar tu cuenta.&nbsp;</strong></div>
+                <div><strong>Est&aacute;s a un paso de comenzar, solamente debes activar tu cuenta.&nbsp;</strong></div>
                 <div><a href='.$strActivaCltProd.' target="_blank" >Activar mi cuenta</a></div>
                 <div>&nbsp;</div>
                 </div>
@@ -289,7 +289,7 @@ class ApiMovilController extends FOSRestController
                 <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
 
                 $strRemitente     = 'notificaciones@bitte.app';
-                $arrayParametros  = array('strAsunto'          => $strAsunto,
+                /*$arrayParametros  = array('strAsunto'          => $strAsunto,
                                             'strMensajeCorreo' => $strMensajeCorreo,
                                             'strRemitente'     => $strRemitente,
                                             'strDestinatario'  => $strCorreo);
@@ -305,11 +305,15 @@ class ApiMovilController extends FOSRestController
                                         ->setFrom("notificaciones@bitte.app")
                                         ->setTo($strCorreo)
                                         ->setBody($strMensajeCorreo,'text/html');
-                $strRespuesta =  $mailer->send($objMessage);
+                $strRespuesta =  $mailer->send($objMessage);*/
 
-            //    $objController    = new DefaultController();
-            //    $objController->setContainer($this->container);
-            //    $objController->enviaCorreo($arrayParametros);
+                $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                          'strMensajeCorreo' => $strMensajeCorreo,
+                                          'strRemitente'     => $strRemitente,
+                                          'strDestinatario'  => $strCorreo);
+                $objController    = new DefaultController();
+                $objController->setContainer($this->container);
+                $objController->enviaCorreo($arrayParametros);
             }
         }
         $arrayCliente['mensaje'] = $strMensajeError;

@@ -1462,9 +1462,9 @@ class ApiWebController extends FOSRestController
             $em->flush();
             $objPromocionOro     = $this->getDoctrine()
                                      ->getRepository(InfoPromocion::class)
-                                     ->findOneBy(array('PREMIO'         => 'SI',
+                                     ->findOneBy(array('PREMIO'         => 'NO',
                                                        'id'             => $objPromocionHist->getPROMOCIONID()->getId()));
-            if($strEstado == 'COMPLETADO')
+            if($strEstado == 'COMPLETADO' && !empty($objPromocionOro))
             {
                 $strAsunto            = '¡CANJEASTE PUNTOS!';
                 $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
@@ -1481,7 +1481,7 @@ class ApiWebController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
             }
-            else if($strEstado == 'ELIMINADO')
+            else if($strEstado == 'ELIMINADO' && !empty($objPromocionOro))
             {
                 $strAsunto            = '¡PERDISTE PUNTOS!';
                 $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
@@ -1669,7 +1669,7 @@ class ApiWebController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class="">FELICITACIONES!!!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.', ('.$strNombreUsuarioOro.') ha sido el/la ganador(a) del <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.', '.$strNombreUsuarioOro.' ha sido el/la ganador(a) del <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">Como administrador, una vez que el ganador est&eacute; en el restaurante y solicite por medio de app Bitte su Tenedor de Oro, podr&aacute;s ingresar a la plataforma web <a href=www.bitte.app target="_blank" >www.bitte.app</a> en la secci&oacute;n de puntos y buscar el nombre del ganador, para de esa forma aceptar la solicitud del Tenedor de Oro y as&iacute; conceder el premio a este ganador.&nbsp;</div>
             <div class="">&nbsp;</div>

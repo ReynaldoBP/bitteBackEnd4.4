@@ -451,6 +451,9 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.0 25-01-2020 - Se agrega nueva forma para retornar los puntos pendientes.
      *
+     * @author Kevin Baque
+     * @version 1.1 03-03-2020 - Se retorna direccion y telefono.
+     *
      */
     public function getCantPtosResEnc($arrayParametros)
     {
@@ -465,6 +468,8 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             //SUM(ICE.CANTIDAD_PUNTOS) AS CANT_PUNTOS,
             $strSelect      = "SELECT IRE.NOMBRE_COMERCIAL,
                                       IRE.ID_RESTAURANTE,
+                                      IRE.NUMERO_CONTACTO,
+                                      IRE.DIRECCION_TRIBUTARIO,
                                       IRE.ICONO ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 JOIN INFO_SUCURSAL         ISUR ON ISUR.ID_SUCURSAL   = ICE.SUCURSAL_ID
@@ -495,6 +500,8 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CANT_PUNTOS_PENDIENTE', 'CANT_PUNTOS_PENDIENTE', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'RAZON_SOCIAL', 'string');
             $objRsmBuilder->addScalarResult('ICONO', 'ICONO', 'string');
+            $objRsmBuilder->addScalarResult('NUMERO_CONTACTO', 'NUMERO_CONTACTO', 'string');
+            $objRsmBuilder->addScalarResult('DIRECCION_TRIBUTARIO', 'DIRECCION_TRIBUTARIO', 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'IDRESTAURANTE', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strGroupBy;
             $objQuery->setSQL($strSql);
