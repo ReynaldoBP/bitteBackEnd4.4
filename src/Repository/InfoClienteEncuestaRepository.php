@@ -79,14 +79,21 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $objDate            = new \DateTime();
+        $strFecha           = $objDate->format('m');
+        $strAnio            = $objDate->format('Y');
+        $strFechaInicial    = $strAnio."-".$strFecha."-01";
+
         try
         {
             $strSelect      = "SELECT COUNT(IE.ID_CLT_ENCUESTA) AS CANTIDAD ";
             $strFrom        = "FROM INFO_CLIENTE_ENCUESTA IE ";
-            $strWhere       = "WHERE IE.ESTADO in (:ESTADO) AND IE.CLIENTE_ID = :IDCLIENTE  ";
+            $strWhere       = "WHERE IE.ESTADO in (:ESTADO) AND IE.CLIENTE_ID = :IDCLIENTE 
+                               AND IE.FE_CREACION >= :FECHA ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQuery->setParameter("IDCLIENTE", $intclienteId);
-            
+            $objQuery->setParameter("FECHA", $strFechaInicial);
+
             $objRsmBuilder->addScalarResult('CANTIDAD', 'CANTIDAD', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);

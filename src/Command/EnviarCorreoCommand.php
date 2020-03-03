@@ -8,10 +8,19 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class EnviarCorreoCommand extends Command
 {
     protected static $defaultName = 'app:enviarCorreo';
+
+   private $container;
+
+    public function __construct(ContainerInterface $container)
+    {
+      parent::__construct();
+      $this->container = $container;
+    }    
 
     protected function configure()
     {
@@ -38,20 +47,14 @@ class EnviarCorreoCommand extends Command
         if ($input->getOption('option1')) {
             // ...
         }
-        $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',26))
-                                           ->setUsername('notificaciones@bitte.app')
-                                           ->setPassword('Bitte2019');
-       // $transport = (new \Swift_SmtpTransport('smtp.mailtrap.io',2525))
-        //                                     ->setUsername('24f8367527b432')
-        //                                     ->setPassword('968eb343836f35');
-        $mailer = new \Swift_Mailer($transport);
 
         $objMessage =  (new \Swift_Message())
                                         ->setSubject($encabezado)
                                         ->setFrom("notificaciones@bitte.app")
                                         ->setTo($correo)
                                         ->setBody($cuerpo,'text/html');
-       $strRespuesta =  $mailer->send($objMessage);
+       
+       $strRespuesta = $this->container->get('mailer')->send($objMessage);
        $io->success($strRespuesta);
 
         return 0;

@@ -44,15 +44,15 @@ class DefaultController extends Controller
         $strRemitente     = $arrayParametros['strRemitente'] ? $arrayParametros['strRemitente']:'';
         $strDestinatario  = $arrayParametros['strDestinatario'] ? $arrayParametros['strDestinatario']:'';
         $strRespuesta     = 'Procesando';
-       
-        $php = '/opt/bitnami/php/bin/php';
-        $console = '/opt/bitnami/nginx/html/bitteBackEnd4.4/bin/console'; 
-        $command = 'app:enviarCorreo'; 
-        
-        $proceso = $php.' '.$console.' '.$command.'  "'.$strDestinatario.'" "'.$strMensajeCorreo.'" "'.$strAsunto.'"';
-        $process =  new Process($proceso);
-        //$process->start();
-       $process->run();
+        try
+        {
+            $php = 'php';
+            $console = 'bin/console'; 
+            $command = 'app:enviarCorreo';
+            $proceso = $php.' '.$console.' '.$command.'  "'.$strDestinatario.'" "'.$strMensajeCorreo.'" "'.$strAsunto.'"';
+            $process =  new Process($proceso);
+            $process->setWorkingDirectory(getcwd() . "/../");
+            $process->start();
 /*
         $objMessage =  (new \Swift_Message())
                                         ->setSubject($strAsunto)
@@ -61,7 +61,9 @@ class DefaultController extends Controller
                                         ->setBody($strMensajeCorreo, 'text/html');
         $strRespuesta = $this->get('mailer')->send($objMessage);
 */
-        
+        } catch (\Exception $e) {
+           return  $e->getMessage();
+        }
         return $strRespuesta;
     }
     /**
@@ -85,13 +87,14 @@ class DefaultController extends Controller
         $intIdContenido   = $arrayParametros['intIdContenido'] ? $arrayParametros['intIdContenido']:'';
         $strRespuesta     = "";
 
-        $php = '/opt/bitnami/php/bin/php';
-        $console = '/opt/bitnami/nginx/html/bitteBackEnd4.4/bin/console'; 
+        $php = 'php';
+        $console = 'bin/console'; 
         $command = 'app:subirImagen'; 
         $proceso = str_repeat('a',  256*1024*2);
         $proceso = $php.' '.$console.' '.$command.' '.$intIdContenido. ' "'.$strImagen.'"';
         error_log(strlen($strImagen)); 
         $process =  new Process($proceso);
+        $process->setWorkingDirectory(getcwd() . "/../");
         $process->start();
 //        $process->run();
         //--------------

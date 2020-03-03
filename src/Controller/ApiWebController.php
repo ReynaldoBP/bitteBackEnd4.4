@@ -1669,7 +1669,7 @@ class ApiWebController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class="">FELICITACIONES!!!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.' ('.$strNombreUsuarioOro.') ha sido el/la ganador(a) del <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.', ('.$strNombreUsuarioOro.') ha sido el/la ganador(a) del <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">Como administrador, una vez que el ganador est&eacute; en el restaurante y solicite por medio de app Bitte su Tenedor de Oro, podr&aacute;s ingresar a la plataforma web <a href=www.bitte.app target="_blank" >www.bitte.app</a> en la secci&oacute;n de puntos y buscar el nombre del ganador, para de esa forma aceptar la solicitud del Tenedor de Oro y as&iacute; conceder el premio a este ganador.&nbsp;</div>
             <div class="">&nbsp;</div>
@@ -1683,12 +1683,13 @@ class ApiWebController extends FOSRestController
             $objControllerResOro    = new DefaultController();
             $objControllerResOro->setContainer($this->container);
             $objControllerResOro->enviaCorreo($arrayParametrosResOro);
+            sleep(1);
             /* cliente */
             $strMensajeCorreoOro = '<div style=\"font-family:Varela Round\">Hola '.$strNombreUsuarioOro.' ,</div>
             <div class="">&nbsp;</div>
             <div class="">FELICITACIONES!!!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.' has sido el ganador de un <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de "mis puntos" encontrar&aacute;s el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' con el Tenedor de Oro asignado.&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.' has sido el ganador de un <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de <b>mis puntos</b> encontrar&aacute;s el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' con el Tenedor de Oro asignado.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">Ahora solo ve, y disfruta tu premio. &nbsp;</div>
             <div class="">&nbsp;</div>
@@ -1698,13 +1699,14 @@ class ApiWebController extends FOSRestController
             <div class="">&nbsp;</div>
             <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
 
-            $arrayParametrosOro  = array('strAsunto'        => $strAsuntoOro,
+            $arrayParametrosOroCliente  = array('strAsunto'     => $strAsuntoOro,
                                             'strMensajeCorreo' => $strMensajeCorreoOro,
                                             'strRemitente'     => $strRemitenteOro,
                                             'strDestinatario'  => $objCliente->getCORREO());
-            $objControllerOro    = new DefaultController();
-            $objControllerOro->setContainer($this->container);
-            $objControllerOro->enviaCorreo($arrayParametrosOro);
+            
+            $objControllerOroCliente    = new DefaultController();
+            $objControllerOroCliente->setContainer($this->container);
+            $objControllerOroCliente->enviaCorreo($arrayParametrosOroCliente);
 
             $entityPromocionHist = new InfoPromocionHistorial();
             $entityPromocionHist->setCLIENTEID($objCliente);
