@@ -289,7 +289,7 @@ class ApiMovilController extends FOSRestController
                 <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
 
                 $strRemitente     = 'notificaciones@bitte.app';
-                /*$arrayParametros  = array('strAsunto'          => $strAsunto,
+                $arrayParametros  = array('strAsunto'          => $strAsunto,
                                             'strMensajeCorreo' => $strMensajeCorreo,
                                             'strRemitente'     => $strRemitente,
                                             'strDestinatario'  => $strCorreo);
@@ -305,15 +305,15 @@ class ApiMovilController extends FOSRestController
                                         ->setFrom("notificaciones@bitte.app")
                                         ->setTo($strCorreo)
                                         ->setBody($strMensajeCorreo,'text/html');
-                $strRespuesta =  $mailer->send($objMessage);*/
+                $strRespuesta =  $mailer->send($objMessage);
 
-                $arrayParametros  = array('strAsunto'        => $strAsunto,
+                /*$arrayParametros  = array('strAsunto'        => $strAsunto,
                                           'strMensajeCorreo' => $strMensajeCorreo,
                                           'strRemitente'     => $strRemitente,
                                           'strDestinatario'  => $strCorreo);
                 $objController    = new DefaultController();
                 $objController->setContainer($this->container);
-                $objController->enviaCorreo($arrayParametros);
+                $objController->enviaCorreo($arrayParametros);*/
             }
         }
         $arrayCliente['mensaje'] = $strMensajeError;
