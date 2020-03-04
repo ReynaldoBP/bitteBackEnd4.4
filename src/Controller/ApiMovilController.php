@@ -2625,7 +2625,7 @@ class ApiMovilController extends FOSRestController
             }
             $objRestaurante = $this->getDoctrine()
                                     ->getRepository(InfoRestaurante::class)
-                                    ->find($objSucursal->getRESTAURANTEID());
+                                    ->find($objSucursal->getRESTAURANTEID()->getId());
             if(!is_object($objRestaurante) || empty($objRestaurante))
             {
                 throw new \Exception('No existe restaurante con la descripción enviada por parámetro.');
