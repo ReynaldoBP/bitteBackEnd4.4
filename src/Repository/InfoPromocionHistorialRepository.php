@@ -104,7 +104,9 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
                                        ipo.CANTIDAD_PUNTOS,
                                        ipo.ESTADO,
                                        ire.ID_RESTAURANTE,
-                                       ire.NOMBRE_COMERCIAL  ";
+                                       ire.NOMBRE_COMERCIAL,
+                                       ire.NUMERO_CONTACTO,
+                                       ire.DIRECCION_TRIBUTARIO  ";
             $strFrom        = "FROM 
                                     INFO_CLIENTE_PROMOCION_HISTORIAL icph 
                                     INNER JOIN INFO_PROMOCION ipo ON icph.PROMOCION_ID =ipo.ID_PROMOCION 
@@ -123,6 +125,8 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('ESTADO', 'estado', 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'idRestaurante', 'integer');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'nombreRestaurante', 'string');
+            $objRsmBuilder->addScalarResult('DIRECCION_TRIBUTARIO', 'direccion', 'string');
+            $objRsmBuilder->addScalarResult('NUMERO_CONTACTO', 'contacto', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayPromocion['resultados'] = $objQuery->getResult();
