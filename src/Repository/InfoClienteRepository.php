@@ -11,7 +11,7 @@ use Doctrine\ORM\Query\ResultSetMappingBuilder;
 class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
 {
     /**
-     * Documentación para la función 'getClienteCriterio'
+     * Documentación para la función 'getClienteCriterioMovil'
      * Método encargado de retornar todos los clientes para el movil según los parámetros recibidos.
      * 
      * @author Kevin Baque
@@ -154,8 +154,7 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
             {
                 $strSelect      = "SELECT IC.ID_CLIENTE,IC.USUARIO_ID,IC.TIPO_CLIENTE_PUNTAJE_ID, IC.IDENTIFICACION, IC.NOMBRE,IC.APELLIDO,
                                 IC.CORREO,IC.DIRECCION,IC.EDAD,IC.TIPO_COMIDA,IC.GENERO,IC.ESTADO,
-                                IC.USR_CREACION,IC.FE_CREACION,IC.USR_MODIFICACION,IC.FE_MODIFICACION,
-                                IFNULL(SUM(ICP.CANTIDAD_PUNTOS),0) AS PUNTOS_RESTAURANTES ";
+                                IC.USR_CREACION,IC.FE_CREACION,IC.USR_MODIFICACION,IC.FE_MODIFICACION  ";
                 $strFrom        = "FROM INFO_CLIENTE IC 
                                 LEFT JOIN INFO_CLIENTE_PUNTO ICP         ON IC.ID_CLIENTE       = ICP.CLIENTE_ID
                                 LEFT JOIN INFO_RESTAURANTE IRES          ON IRES.ID_RESTAURANTE = ICP.RESTAURANTE_ID
@@ -177,8 +176,29 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
                 }
                 if(!empty($intIdRestaurante))
                 {
-                    $strWhere .= " AND IRES.ID_RESTAURANTE =:intIdRestaurante";
+                    //$strWhere .= " AND IRES.ID_RESTAURANTE =:intIdRestaurante";
+                    $strWhere .= "  AND (IRES.ID_RESTAURANTE =:intIdRestaurante OR :intIdRestaurante in 
+                                    (SELECT ipo.RESTAURANTE_ID FROM INFO_CLIENTE_PROMOCION_HISTORIAL icph 
+                                     INNER JOIN INFO_PROMOCION ipo on ipo.ID_PROMOCION =icph.PROMOCION_ID 
+                                     WHERE icph.ESTADO='PENDIENTE' AND icph.CLIENTE_ID = IC.ID_CLIENTE
+                                    )) ";
+                    $strSelect .= ",IFNULL(SUM(IF(IRES.ID_RESTAURANTE =:intIdRestaurante, ICP.CANTIDAD_PUNTOS, 0)),0) AS PUNTOS_RESTAURANTES
+                                   ,IF((SELECT ipo.RESTAURANTE_ID FROM INFO_CLIENTE_PROMOCION_HISTORIAL icph 
+                                    INNER JOIN INFO_PROMOCION ipo on ipo.ID_PROMOCION =icph.PROMOCION_ID 
+                                    WHERE icph.ESTADO='PENDIENTE' AND ipo.RESTAURANTE_ID = :intIdRestaurante AND icph.CLIENTE_ID = IC.ID_CLIENTE
+                                    LIMIT 1
+                                    ) IS NOT NULL, 'SI', 'NO') AS TENEDOR ";
                     $objQuery->setParameter("intIdRestaurante", $intIdRestaurante);
+                }
+                else
+                {
+                    $strSelect .= ",IFNULL(SUM(ICP.CANTIDAD_PUNTOS),0) AS PUNTOS_RESTAURANTES
+                                   ,IF((SELECT ipo.RESTAURANTE_ID FROM INFO_CLIENTE_PROMOCION_HISTORIAL icph 
+                                    INNER JOIN INFO_PROMOCION ipo on ipo.ID_PROMOCION =icph.PROMOCION_ID 
+                                    WHERE icph.ESTADO='PENDIENTE' 
+                                    AND icph.CLIENTE_ID = IC.ID_CLIENTE
+                                    LIMIT 1
+                                    ) IS NOT NULL, 'SI', 'NO') AS TENEDOR  ";
                 }
                 if(!empty($strNombres))
                 {
@@ -195,6 +215,7 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
                 $strWhere .= " AND IC.IDENTIFICACION =:IDENTIFICACION";
                 $objQuery->setParameter("IDENTIFICACION", $strIdentificacion);
                 }
+                $objRsmBuilder->addScalarResult('TENEDOR', 'TENEDOR', 'string');
                 $objRsmBuilder->addScalarResult('ID_CLIENTE', 'ID_CLIENTE', 'string');
                 $objRsmBuilder->addScalarResult('USUARIO_ID', 'USUARIO_ID', 'string');
                 $objRsmBuilder->addScalarResult('TIPO_CLIENTE_PUNTAJE_ID', 'TIPO_CLIENTE_PUNTAJE_ID', 'string');
@@ -214,6 +235,7 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
                 $objRsmBuilder->addScalarResult('USR_MODIFICACION', 'USR_MODIFICACION', 'string');
                 $objRsmBuilder->addScalarResult('FE_MODIFICACION', 'FE_MODIFICACION', 'date');
                 $strSql       = $strSelect.$strFrom.$strWhere.$strGroup.$strOrder;
+                error_log($strSql);
                 $objQuery->setSQL($strSql);
                 $arrayCliente['resultados'] = $objQuery->getResult();
             }

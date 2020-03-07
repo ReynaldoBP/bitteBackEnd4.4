@@ -251,14 +251,14 @@ class ApiMovilController extends FOSRestController
                 $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
                 $strAsunto         = $strWelcome.' Usuario Bitte';
 
-                $strMensajeCorreo = '<div style=\"font-family:Varela Round\">Hola '.$strNombreClt.' ,</div>
+                $strMensajeCorreo = '<div class="">Hola '.$strNombreClt.' ,</div>
                 <div class="">&nbsp;</div>
                 <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Has logrado con &eacute;xito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en tus restaurantes favoritos .&nbsp;</div>
+                <div class="">Has logrado con &eacute;xito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en nuestros restaurantes participantes.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">En Bitte es muy importante seguir las reglas para que tus puntos sean v&aacute;lidos y no los pierdas. Puedes disfrutar de nuestra aplicaci&oacute;n siguiendo estos pasos:&nbsp;</div>
-                <div class="">1. Abre la aplicaci&oacute;n y elige tomar foto.&nbsp;</div>
+                <div class="">1. Abre la aplicaci&oacute;n y elige tomar foto. Por GPS se ubica el restaurante donde estas y se autoriza para tomar la foto.&nbsp;</div>
                 <div class="">2. Solo se aceptan fotos de platos de comida.&nbsp;</div>
                 <div class="">3. Califica tu experiencia gastron&oacute;mica - GANASTE PUNTOS. &nbsp;</div>
                 <div class="">4. Comparte en redes sociales tu imagen si lo deseas - GANAS M&Aacute;S PUNTOS&nbsp;</div>
@@ -267,17 +267,10 @@ class ApiMovilController extends FOSRestController
                 <div class="">7. Tus puntos son v&aacute;lidos solo en el restaurante donde comiste y calificaste.&nbsp;</div>
                 <div class="">8. El restaurante tiene la potestad de eliminar tus puntos si ve que la foto no concuerda con su men&uacute;.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Para mayor informaci&oacute;n de los t&eacute;rminos y condiciones de uso.&nbsp;</div>
-                <div><a href='.$strUrlTermCond.' target="_blank" >Haz click aqu&iacute;</a></div>
-
-                <div class="">Para mayor informaci&oacute;n de los restaurantes participantes.&nbsp;</div>
-                <div><a href='.$strUrlRestaurante.' target="_blank" >Haz click aqu&iacute;</a></div>
-
-                <div class="">Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Buen provecho,&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Bitte.&nbsp;</div>
+                <div class="">Para mayor informaci&oacute;n consulta <a href='.$strUrlTermCond.' target="_blank" >aqu&iacute;</a> los t&eacute;rminos y condiciones de uso.&nbsp;</div>
+                <div class="">Para información de los restaurantes participantes has click <a href='.$strUrlRestaurante.' target="_blank" >aqu&iacute;</a>.&nbsp;</div>
+                <div class="">
+                Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">
                 <div>
@@ -286,7 +279,8 @@ class ApiMovilController extends FOSRestController
                 <div>&nbsp;</div>
                 </div>
                 </div>
-                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+                <div class="">&nbsp;</div>';
 
                 $strRemitente     = 'notificaciones@bitte.app';
                 $arrayParametros  = array('strAsunto'          => $strAsunto,
@@ -1678,20 +1672,19 @@ class ApiMovilController extends FOSRestController
                 $strMensajeCorreo = '
                 <div class=""><b>¡Hola! '.$strNombreUsuario.',</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class=""><i><b><p style="color:#0000FF";>FELICITACIONES!</p></b><i></div>
+                <div class=""><i><b><p style="color:#0000FF";>FELICITACIONES!!!</p></b><i></div>
                 <div class="">&nbsp;</div>
-                <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+                <div class="">Acabas de calificar <strong>y compartir tu foto en redes sociales de tu experiencia</strong> en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>. Has ganado '.$objParametroRes->getVALOR1().' puntos en este establecimiento.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Has ganado '.$objParametroRes->getVALOR1().' puntos por calificar y '.$objParametro->getVALOR1().' puntos por compartir. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+                <div class="">Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del <strong>Tenedor de Oro</strong> por comidas gratis de nuestros restaurantes participantes. Cada mes habr&aacute; un sorteo y el ganador ser&aacute; notificado por correo electr&oacute;nico y tambi&eacute;n aparecer&aacute; el <strong>Tenedor de Oro</strong> en la aplicaci&oacute;n, donde te permitir&aacute; reclamar tu premio en el restaurante asignado.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Tus puntos est&aacute;n en procesos de pendientes y en 24 horas se habilitan. Ingresa al app Bitte para que veas que promociones est&aacute;n vigentes y si has ganado suficientes puntos en este restaurante para canjear por comida o bebidas gratis. Para poder canjear comida o bebidas, debes estar en el restaurante e ingresar al app Bitte y elegir la promoci&oacute;n para redimirla.&nbsp;</div>
+                <div class="">Los puntos solo pueden ser canjeados por promociones dentro del Restaurante.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Recuerda siempre usar tu app Bitte para calificar tu experiencia gastron&oacute;mica, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+                <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
+                <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-                <div class="">&nbsp;</div>
                 <div class="">&nbsp;</div>';
                 $strRemitente     = 'notificaciones@bitte.app';
                 $arrayParametros  = array('strAsunto'        => $strAsunto,
@@ -2658,13 +2651,19 @@ class ApiMovilController extends FOSRestController
             <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
             <div class="">&nbsp;</div>
             <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-            <div class="">&nbsp;</div>
             <div class="">&nbsp;</div>';
             $strRemitente     = 'notificaciones@bitte.app';
             $arrayParametros  = array('strAsunto'        => $strAsunto,
                                       'strMensajeCorreo' => $strMensajeCorreo,
                                       'strRemitente'     => $strRemitente,
                                       'strDestinatario'  => $objCliente->getCORREO());
+             $objMessage =  (new \Swift_Message())
+                                        ->setSubject($strAsunto)
+                                        ->setFrom("notificaciones@bitte.app")
+                                        ->setTo($objCliente->getCORREO())
+                                        ->setBody($strMensajeCorreo,'text/html');
+      // error_log("paso".$objCliente->getCORREO()); 
+            $strRespuesta = $this->container->get('mailer')->send($objMessage);
             $objController    = new DefaultController();
             $objController->setContainer($this->container);
             $objController->enviaCorreo($arrayParametros);
