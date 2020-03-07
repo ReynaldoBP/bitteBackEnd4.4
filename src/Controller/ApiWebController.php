@@ -802,7 +802,7 @@ class ApiWebController extends FOSRestController
         $strApellidos      = $arrayData['apellidos'] ? $arrayData['apellidos']:'';
         $strContador       = $arrayData['strContador'] ? $arrayData['strContador']:'';
         $strCupoDisponible = $arrayData['strCupoDisponible'] ? $arrayData['strCupoDisponible']:'NO';
-        $strEstado         = $arrayData['estado'] ? $arrayData['estado']:'';
+        $strEstado         = $arrayData['strEstado'] ? $arrayData['strEstado']:'';
         $arrayCliente      = array();
         $strMensajeError   = '';
         $strStatus         = 400;
@@ -1473,13 +1473,14 @@ class ApiWebController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Acabas de canjear '.$objPromocion->getCANTIDADPUNTOS().' puntos en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' esperamos que tu premio est&eacute; delicioso.&nbsp;</div>
+                <div class="">Acabas de canjear '.$objPromocion->getCANTIDADPUNTOS().' puntos en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> esperamos que tu premio est&eacute; delicioso.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+                <div class="">&nbsp;</div>';
             }
             else if($strEstado == 'ELIMINADO' && !empty($objPromocionOro))
             {
@@ -1490,15 +1491,16 @@ class ApiWebController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div class="">¡LO SENTIMOS!&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Se han restado '.$objPromocion->getCANTIDADPUNTOS().' puntos en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un cup&oacute;n para el sorteo mensual de comidas gratuitas.&nbsp;</div>
+                <div class="">Se han restado '.$objPromocion->getCANTIDADPUNTOS().' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un  cup&oacute;n para el sorteo mensual de comidas gratuitas.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Sabemos que fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de calificar.&nbsp;</div>
+                <div class="">A lo mejor fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de tomar la foto y calificar. El objetivo de Bitte es que el Restaurante obtenga una critica constructiva acertada y para eso necesitamos que sigas las reglas de la aplicaci&oacute;n. Puedes guiarte en la secci&oacute;n de informaci&oacute;n de puntos que se encuentra dentro de la aplicaci&oacute;n Bitte.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+                <div class="">&nbsp;</div>';
             }
             $strRemitente            = 'notificaciones@bitte.app';
             $arrayParametros  = array('strAsunto'        => $strAsunto,
@@ -1665,17 +1667,20 @@ class ApiWebController extends FOSRestController
             $strMes                  = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][date("n") - 1];
             $strAsuntoOro            = 'TENEDOR DE ORO';
             $strNombreResUsOro       = $objUsuario->getNOMBRES() .' '.$objUsuario->getAPELLIDOS();
-            $strMensajeResCorreoOro  = '<div style=\"font-family:Varela Round\">Hola '.$strNombreResUsOro.' ,</div>
+            $strMensajeResCorreoOro  = '<div class="">Hola '.$strNombreResUsOro.' ,</div>
             <div class="">&nbsp;</div>
             <div class="">FELICITACIONES!!!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.', '.$strNombreUsuarioOro.' ha sido el/la ganador(a) del <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.', '.$strNombreUsuarioOro.' ha sido el/la ganador(a) del <strong>Tenedor de Oro</strong> en '.$objRestaurante->getNOMBRECOMERCIAL().'. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">Como administrador, una vez que el ganador est&eacute; en el restaurante y solicite por medio de app Bitte su Tenedor de Oro, podr&aacute;s ingresar a la plataforma web <a href=www.bitte.app target="_blank" >www.bitte.app</a> en la secci&oacute;n de puntos y buscar el nombre del ganador, para de esa forma aceptar la solicitud del Tenedor de Oro y as&iacute; conceder el premio a este ganador.&nbsp;</div>
+            <div class="">Como administrador, una vez que el ganador est&eacute; en el restaurante y solicite por medio de app Bitte su <strong>Tenedor de Oro</strong>, podr&aacute;s ingresar a la plataforma web <a href=www.bitte.app target="_blank" >www.bitte.app</a> en la secci&oacute;n de puntos y buscar el nombre del ganador, para de esa forma aceptar la solicitud del Tenedor de Oro y as&iacute; conceder el premio a este ganador.&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">Que bueno es poner contento a tus clientes.&nbsp;</div>
+            <div class="">Una ves que aceptes la solicitud de Tenedor de Oro del cliente, esta se elimina del sistema.&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
+            <div class="">Que bueno es poner contento a tus clientes!.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+            <div class="">&nbsp;</div>';
             $arrayParametrosResOro  = array('strAsunto'        => $strAsuntoOro,
                                             'strMensajeCorreo' => $strMensajeResCorreoOro,
                                             'strRemitente'     => $strRemitenteOro,
@@ -1685,19 +1690,20 @@ class ApiWebController extends FOSRestController
             $objControllerResOro->enviaCorreo($arrayParametrosResOro);
             sleep(1);
             /* cliente */
-            $strMensajeCorreoOro = '<div style=\"font-family:Varela Round\">Hola '.$strNombreUsuarioOro.' ,</div>
+            $strMensajeCorreoOro = '<div class="">Hola '.$strNombreUsuarioOro.' ,</div>
             <div class="">&nbsp;</div>
             <div class="">FELICITACIONES!!!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.' has sido el ganador de un <b>Tenedor de Oro</b> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de <b>mis puntos</b> encontrar&aacute;s el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' con el Tenedor de Oro asignado.&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.' has sido el ganador de un <strong>Tenedor de Oro</strong> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de <strong>mis puntos</strong> encontrar&aacute;s el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' con el <strong>Tenedor de Oro asignado</strong>.&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">Ahora solo ve, y disfruta tu premio. &nbsp;</div>
+            <div class="">Para obtener el <strong>Tenedor de Oro</strong>, debes de ir al Restaurante y solicitar al mesero tu premio. El restaurante confirmar&aacute; en nuestro sistema que t&uacute; eres el ganador y te entregar&aacute;n tu premio. El <strong>Tenedor de Oro</strong> solo puede ser concedido dentro del Restaurante.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
+            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+            <div class="">&nbsp;</div>';
 
             $arrayParametrosOroCliente  = array('strAsunto'     => $strAsuntoOro,
                                             'strMensajeCorreo' => $strMensajeCorreoOro,
