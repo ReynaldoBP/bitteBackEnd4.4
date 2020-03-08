@@ -1340,7 +1340,7 @@ class ApiWebController extends FOSRestController
                 throw new \Exception('Encuesta del cliente no existe.');
             }
             $objCliente         = $this->getDoctrine()
-                                       ->getRepository(InfoClienteEncuesta::class)
+                                       ->getRepository(InfoCliente::class)
                                        ->find($objClienteEncuesta->getCLIENTEID()->getId());
             if(!is_object($objCliente) || empty($objCliente))
             {
@@ -1375,6 +1375,14 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception('No existe el contenido con la descripción enviada por parámetro.');
             }
+            $objParametro    = $this->getDoctrine()
+                                    ->getRepository(AdmiParametro::class)
+                                    ->findOneBy(array('DESCRIPCION' => 'PUNTOS_PUBLICACION',
+                                                      'ESTADO'      => 'ACTIVO'));
+            if(!is_object($objParametro) || empty($objParametro))
+            {
+                throw new \Exception('No existe parametro con la descripción enviada por parámetro.');
+            }
             if(!empty($strEstado))
             {
                 $objContenido->setESTADO(strtoupper($strEstado));
@@ -1390,7 +1398,7 @@ class ApiWebController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class="">¡LO SENTIMOS!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">Se han restado '.$objPromocion->getCANTIDADPUNTOS().' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un  cup&oacute;n para el sorteo mensual de comidas gratuitas.&nbsp;</div>
+            <div class="">Se han restado '.$objParametro->getVALOR1().' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un cup&oacute;n para el sorteo mensual de comidas gratuitas.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">A lo mejor fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de tomar la foto y calificar. El objetivo de Bitte es que el Restaurante obtenga una critica constructiva acertada y para eso necesitamos que sigas las reglas de la aplicaci&oacute;n. Puedes guiarte en la secci&oacute;n de informaci&oacute;n de puntos que se encuentra dentro de la aplicaci&oacute;n Bitte.&nbsp;</div>
             <div class="">&nbsp;</div>

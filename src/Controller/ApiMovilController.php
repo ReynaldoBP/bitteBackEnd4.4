@@ -1673,7 +1673,7 @@ class ApiMovilController extends FOSRestController
                 $strMensajeCorreo = '
                 <div class=""><b>¡Hola! '.$strNombreUsuario.',</b>&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class=""><i><b><p style="color:#0000FF";>FELICITACIONES!!!</p></b><i></div>
+                <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Acabas de calificar <strong>y compartir tu foto en redes sociales de tu experiencia</strong> en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>. Has ganado '.$strTotalPuntos.' puntos en este establecimiento.&nbsp;</div>
                 <div class="">&nbsp;</div>
@@ -2639,7 +2639,7 @@ class ApiMovilController extends FOSRestController
             $strMensajeCorreo = '
             <div class=""><b>¡Hola! '.$strNombreUsuario.'.</b>&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class=""><i><b><p style="color:#0000FF";>FELICITACIONES!</p></b><i></div>
+            <div class="">FELICITACIONES!!!!&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
             <div class="">&nbsp;</div>
