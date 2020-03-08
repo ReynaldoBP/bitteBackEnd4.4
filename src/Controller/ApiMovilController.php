@@ -1667,6 +1667,7 @@ class ApiMovilController extends FOSRestController
             }
             else
             {
+                $strTotalPuntos       = intval($objParametroRes->getVALOR1()) + intval($objParametro->getVALOR1());
                 $strAsunto            = '¡GANASTE PUNTOS!';
                 $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
                 $strMensajeCorreo = '
@@ -1674,7 +1675,7 @@ class ApiMovilController extends FOSRestController
                 <div class="">&nbsp;</div>
                 <div class=""><i><b><p style="color:#0000FF";>FELICITACIONES!!!</p></b><i></div>
                 <div class="">&nbsp;</div>
-                <div class="">Acabas de calificar <strong>y compartir tu foto en redes sociales de tu experiencia</strong> en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>. Has ganado '.$objParametroRes->getVALOR1().' puntos en este establecimiento.&nbsp;</div>
+                <div class="">Acabas de calificar <strong>y compartir tu foto en redes sociales de tu experiencia</strong> en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>. Has ganado '.$strTotalPuntos.' puntos en este establecimiento.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del <strong>Tenedor de Oro</strong> por comidas gratis de nuestros restaurantes participantes. Cada mes habr&aacute; un sorteo y el ganador ser&aacute; notificado por correo electr&oacute;nico y tambi&eacute;n aparecer&aacute; el <strong>Tenedor de Oro</strong> en la aplicaci&oacute;n, donde te permitir&aacute; reclamar tu premio en el restaurante asignado.&nbsp;</div>
                 <div class="">&nbsp;</div>
