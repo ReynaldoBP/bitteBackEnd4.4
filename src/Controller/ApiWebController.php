@@ -24,6 +24,7 @@ use App\Entity\InfoRedesSociales;
 use App\Entity\InfoVistaPublicidad;
 use App\Entity\AdmiTipoRol;
 use App\Entity\InfoUsuarioRes;
+use App\Entity\InfoContenidoSubido;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -1312,6 +1313,10 @@ class ApiWebController extends FOSRestController
      * @version 1.0 15-10-2019
      * 
      * @return array  $objResponse
+     * 
+     * @author Kevin Baque
+     * @version 1.1 08-03-2020 - Se envía correo de perdiste puntos.
+     *
      */
     public function editClienteEncuesta($arrayData)
     {
@@ -1333,6 +1338,27 @@ class ApiWebController extends FOSRestController
             if(!is_object($objClienteEncuesta) || empty($objClienteEncuesta))
             {
                 throw new \Exception('Encuesta del cliente no existe.');
+            }
+            $objCliente         = $this->getDoctrine()
+                                       ->getRepository(InfoClienteEncuesta::class)
+                                       ->find($objClienteEncuesta->getCLIENTEID()->getId());
+            if(!is_object($objCliente) || empty($objCliente))
+            {
+                throw new \Exception('Cliente no existe.');
+            }
+            $objSucursal = $this->getDoctrine()
+                                ->getRepository(InfoSucursal::class)
+                                ->find($objClienteEncuesta->getSUCURSALID()->getId());
+            if(!is_object($objSucursal) || empty($objSucursal))
+            {
+                throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
+            }
+            $objRestaurante = $this->getDoctrine()
+                                    ->getRepository(InfoRestaurante::class)
+                                    ->find($objSucursal->getRESTAURANTEID()->getId());
+            if(!is_object($objRestaurante) || empty($objRestaurante))
+            {
+                throw new \Exception('No existe restaurante con la descripción enviada por parámetro.');
             }
             if(!empty($strEstado))
             {
@@ -1357,6 +1383,31 @@ class ApiWebController extends FOSRestController
             $objContenido->setFEMODIFICACION($strDatetimeActual);
             $em->persist($objContenido);
             $em->flush();
+            $strAsunto            = '¡PERDISTE PUNTOS!';
+            $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+            $strMensajeCorreo = '
+            <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">¡LO SENTIMOS!&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Se han restado '.$objPromocion->getCANTIDADPUNTOS().' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un  cup&oacute;n para el sorteo mensual de comidas gratuitas.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">A lo mejor fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de tomar la foto y calificar. El objetivo de Bitte es que el Restaurante obtenga una critica constructiva acertada y para eso necesitamos que sigas las reglas de la aplicaci&oacute;n. Puedes guiarte en la secci&oacute;n de informaci&oacute;n de puntos que se encuentra dentro de la aplicaci&oacute;n Bitte.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+            <div class="">&nbsp;</div>';
+            $strRemitente       = 'notificaciones@bitte.app';
+            $arrayParametros    = array('strAsunto'        => $strAsunto,
+                                        'strMensajeCorreo' => $strMensajeCorreo,
+                                        'strRemitente'     => $strRemitente,
+                                        'strDestinatario'  => $objCliente->getCORREO());
+            $objController      = new DefaultController();
+            $objController->setContainer($this->container);
+            $objController->enviaCorreo($arrayParametros);
             $strMensajeError = 'Encuesta del cliente y contenido editado con exito.!';
         }
         catch(\Exception $ex)

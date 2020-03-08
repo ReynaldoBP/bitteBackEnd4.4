@@ -55,6 +55,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                     ON A.ENCUESTA_ID = D.ID_ENCUESTA ";
             $strWhere       = "WHERE 
                                 EXTRACT(YEAR FROM A.FE_CREACION ) = :strAnio 
+                                AND A.ESTADO='ACTIVO'
                                 AND EXTRACT(MONTH FROM A.FE_CREACION ) = :strMes ".$strSubWhere."";
             $strOrderBy     = " ORDER BY A.FE_CREACION DESC ";
             $objQuery->setParameter("strMes", $strMes);
