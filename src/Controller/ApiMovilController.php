@@ -1176,6 +1176,10 @@ class ApiMovilController extends FOSRestController
      * @version 1.0 06-09-2019
      * 
      * @return array  $objResponse
+     *
+     * @author Kevin Baque
+     * @version 1.1 08-03-2020 - Se añade mensaje de retorno cuando el usuario aún no activa su cuenta.
+     *
      */
     public function getLoginMovil($arrayData)
     {
@@ -1190,39 +1194,47 @@ class ApiMovilController extends FOSRestController
         $objResponse        = new Response;
         try
         {
-            $arrayParametros = array('CORREO' => $strCorreo,
-                                     'ESTADO' => 'ACTIVO');
+            $arrayParametros = array('CORREO' => $strCorreo);
             if($strAutenticacionRS == 'N')
             {
                 $arrayParametros['CONTRASENIA'] = md5($strPass);
             }
             $objCliente   = $this->getDoctrine()
                                  ->getRepository(InfoCliente::class)
-                                 ->findBy($arrayParametros);
+                                 ->findOneBy($arrayParametros);
             if(empty($objCliente))
             {
                 $strStatus  = 404;
                 $strSucces  = false;
-                throw new \Exception('Cliente no existe.');
+                throw new \Exception('Usuario y/o contraseña incorrectos.');
             }
-            foreach($objCliente as $objItemCliente)
+            else
             {
-                $arrayCliente   = array('idCliente'       => $objItemCliente->getId(),
-                                        'autenticacionRS' => $objItemCliente->getAUTENTICACIONRS(),
-                                        'identificacion'  => $objItemCliente->getIDENTIFICACION(),
-                                        'nombre'          => $objItemCliente->getNOMBRE(),
-                                        'apellido'        => $objItemCliente->getAPELLIDO(),
-                                        'correo'          => $objItemCliente->getCORREO(),
-                                        'edad'            => $objItemCliente->getEDAD(),
-                                        'genero'          => $objItemCliente->getGENERO(),
-                                        'strEstado'       => $objItemCliente->getESTADO());
+                if($objCliente->getESTADO() != "ACTIVO" )
+                {
+                    $strStatus  = 404;
+                    $strSucces  = false;
+                    throw new \Exception('Estimado usuario su cuenta aún está inactiva por favor verifica tu correo con el asunto "Bienvenido Usuario Bitte" para activar tu cuenta.');
+                }
+                else
+                {
+                    $arrayCliente   = array('idCliente'       => $objCliente->getId(),
+                                            'autenticacionRS' => $objCliente->getAUTENTICACIONRS(),
+                                            'identificacion'  => $objCliente->getIDENTIFICACION(),
+                                            'nombre'          => $objCliente->getNOMBRE(),
+                                            'apellido'        => $objCliente->getAPELLIDO(),
+                                            'correo'          => $objCliente->getCORREO(),
+                                            'edad'            => $objCliente->getEDAD(),
+                                            'genero'          => $objCliente->getGENERO(),
+                                            'strEstado'       => $objCliente->getESTADO());
+                }
             }
         }
         catch(\Exception $ex)
         {
             $strStatus = 404;
-            $arrayCliente['error'] = $strMensaje;
             $strMensaje = $ex->getMessage();
+            $arrayCliente['error'] = $strMensaje;
         }
         $objResponse->setContent(json_encode(array(
                                             'status'    => $strStatus,
