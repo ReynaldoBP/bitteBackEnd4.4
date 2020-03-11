@@ -99,6 +99,8 @@ class ApiMovilController extends FOSRestController
               break;
               case 'generarPass':$arrayRespuesta = $this->generarPass($arrayData);
               break;
+              case 'generarClave':$arrayRespuesta = $this->generarClave($arrayData);
+              break;
               case 'envioCorreoCalificacion':$arrayRespuesta = $this->envioCorreoCalificacion($arrayData);
               break;
               case 'createPunto':$arrayRespuesta = $this->createPunto($arrayData);//Obsoleto
@@ -2526,6 +2528,69 @@ class ApiMovilController extends FOSRestController
         return $objResponse;
     }
     /**
+     * Documentación para la función 'generarClave'
+     * Método encargado de generar contraseña al clientes.
+     *
+     * @author Kevin Baque
+     * @version 1.0 11-03-2020
+     *
+     * @return array  $objResponse
+     */
+    public function generarClave($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strDestinatario  = $arrayData['strCorreo'] ? $arrayData['strCorreo']:'';
+        $strClave         = $arrayData['strClave'] ? $arrayData['strClave']:'';
+        $objResponse      = new Response;
+        $strRespuesta     = '';
+        $arrayParametros  = array();
+        $strStatus        = 400;
+        $em               = $this->getDoctrine()->getManager();
+        $strMensajeError  = '';
+        $boolSucces       = true;
+        try
+        {
+            $em->getConnection()->beginTransaction();
+            if(empty($strDestinatario))
+            {
+                throw new \Exception('Es necesario enviar el correo.');
+            }
+            $objCliente = $this->getDoctrine()
+                               ->getRepository(InfoCliente::class)
+                               ->findOneBy(array('CORREO'=>$strDestinatario));
+            if(!is_object($objCliente) && empty($objCliente))
+            {
+                throw new \Exception('Cliente no existente.');
+            }
+            if(empty($strClave))
+            {
+                throw new \Exception('Es necesario enviar la nueva clave.');
+            }
+            $objCliente->setCONTRASENIA(md5($strClave));
+            $em->persist($objCliente);
+            $em->flush();
+            $strMensajeError = 'Cambio de clave con éxito!';
+        }
+        catch(\Exception $ex)
+        {
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->rollback();
+                $em->getConnection()->close();
+            }
+            $strStatus       = 404;
+            $boolSucces      = false;
+            $strMensajeError = "Fallo al generar el cambio de clave, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $objResponse->setContent(json_encode(array(
+                                            'status'    => $strStatus,
+                                            'resultado' => $strMensajeError,
+                                            'succes'    => $boolSucces)
+                                        ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
      * Documentación para la función 'enviCorreoPrueba'
      * Método encargado de enviar correos de pruebas.
      *
@@ -2677,9 +2742,9 @@ class ApiMovilController extends FOSRestController
                                         ->setBody($strMensajeCorreo,'text/html');
       // error_log("paso".$objCliente->getCORREO()); 
             $strRespuesta = $this->container->get('mailer')->send($objMessage);
-            $objController    = new DefaultController();
+            /*$objController    = new DefaultController();
             $objController->setContainer($this->container);
-            $objController->enviaCorreo($arrayParametros);
+            $objController->enviaCorreo($arrayParametros);*/
         }
         catch(\Exception $ex)
         {

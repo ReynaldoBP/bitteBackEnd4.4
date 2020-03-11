@@ -1398,7 +1398,7 @@ class ApiWebController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class="">¡LO SENTIMOS!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">Se han restado '.$objParametro->getVALOR1().' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un cup&oacute;n para el sorteo mensual de comidas gratuitas.&nbsp;</div>
+            <div class="">Se han restado '.$objParametro->getVALOR1().' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> pues este establecimiento ha notado que tu foto no corresponde a un plato de comida de ellos y a su vez pierdes un cup&oacute;n para el sorteo mensual del <strong>Tenedor de Oro</strong>.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">A lo mejor fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de tomar la foto y calificar. El objetivo de Bitte es que el Restaurante obtenga una critica constructiva acertada y para eso necesitamos que sigas las reglas de la aplicaci&oacute;n. Puedes guiarte en la secci&oacute;n de informaci&oacute;n de puntos que se encuentra dentro de la aplicaci&oacute;n Bitte.&nbsp;</div>
             <div class="">&nbsp;</div>
