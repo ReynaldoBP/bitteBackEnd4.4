@@ -1523,8 +1523,10 @@ class ApiWebController extends FOSRestController
                                      ->getRepository(InfoPromocion::class)
                                      ->findOneBy(array('PREMIO'         => 'NO',
                                                        'id'             => $objPromocionHist->getPROMOCIONID()->getId()));
+            $boolEnviarCorreo = false;
             if($strEstado == 'COMPLETADO' && !empty($objPromocionOro))
             {
+                $boolEnviarCorreo = true;
                 $strAsunto            = '¡CANJEASTE PUNTOS!';
                 $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
                 $strMensajeCorreo = '
@@ -1543,6 +1545,7 @@ class ApiWebController extends FOSRestController
             }
             else if($strEstado == 'ELIMINADO' && !empty($objPromocionOro))
             {
+                $boolEnviarCorreo = true;
                 $strAsunto            = '¡PERDISTE PUNTOS!';
                 $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
                 $strMensajeCorreo = '
@@ -1561,15 +1564,18 @@ class ApiWebController extends FOSRestController
                 <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
                 <div class="">&nbsp;</div>';
             }
-            $strRemitente            = 'notificaciones@bitte.app';
-            $arrayParametros  = array('strAsunto'        => $strAsunto,
-                                        'strMensajeCorreo' => $strMensajeCorreo,
-                                        'strRemitente'     => $strRemitente,
-                                        'strDestinatario'  => $objCliente->getCORREO());
-            $objController    = new DefaultController();
-            $objController->setContainer($this->container);
-            $objController->enviaCorreo($arrayParametros);
-            
+            if($boolEnviarCorreo)
+            {
+                $strRemitente            = 'notificaciones@bitte.app';
+                $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                            'strMensajeCorreo' => $strMensajeCorreo,
+                                            'strRemitente'     => $strRemitente,
+                                            'strDestinatario'  => $objCliente->getCORREO());
+                $objController    = new DefaultController();
+                $objController->setContainer($this->container);
+                $objController->enviaCorreo($arrayParametros);
+            }
+
             $strMensajeError = 'Historial de la promoción editado con exito.!';
         }
         catch(\Exception $ex)
