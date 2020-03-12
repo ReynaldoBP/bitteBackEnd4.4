@@ -2539,7 +2539,7 @@ class ApiMovilController extends FOSRestController
     public function generarClave($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strDestinatario  = $arrayData['strCorreo'] ? $arrayData['strCorreo']:'';
+        $intIdCliente     = $arrayData['intIdCliente'] ? $arrayData['intIdCliente']:'';
         $strClave         = $arrayData['strClave'] ? $arrayData['strClave']:'';
         $objResponse      = new Response;
         $strRespuesta     = '';
@@ -2551,13 +2551,13 @@ class ApiMovilController extends FOSRestController
         try
         {
             $em->getConnection()->beginTransaction();
-            if(empty($strDestinatario))
+            if(empty($intIdCliente))
             {
-                throw new \Exception('Es necesario enviar el correo.');
+                throw new \Exception('Es necesario enviar el id del cliente.');
             }
             $objCliente = $this->getDoctrine()
                                ->getRepository(InfoCliente::class)
-                               ->findOneBy(array('CORREO'=>$strDestinatario));
+                               ->find($intIdCliente);
             if(!is_object($objCliente) && empty($objCliente))
             {
                 throw new \Exception('Cliente no existente.');
