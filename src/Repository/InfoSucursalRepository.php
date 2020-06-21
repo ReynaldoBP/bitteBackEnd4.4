@@ -138,6 +138,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         $strMetros             = $arrayParametros['metros'] ? $arrayParametros['metros']:5;
         $strEstado             = $arrayParametros['estado'] ? $arrayParametros['estado']:array('ACTIVO');
         $intIdCliente          = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $strCodigoSucursal     = $arrayParametros['codigoSucursal'] ? $arrayParametros['codigoSucursal']:'';
         $arraySucursal         = array();
         $strMensajeError       = '';
         $date                  = date('Y-m-d H:i:s');
@@ -172,7 +173,12 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
                                 FROM INFO_SUCURSAL ISU
                                 INNER JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID
                                 WHERE ISU.ESTADO in (:ESTADO)) T1 ";
-            $strWhere       = "WHERE T1.DISTANCIA < (:METROS/1000) ORDER BY T1.DISTANCIA ASC ";
+            $strWhere = "";
+            if(isset($strCodigoSucursal) && !empty($strCodigoSucursal))
+            {
+                $strWhere .= " WHERE T1.CODIGO_DIARIO = ".$strCodigoSucursal;
+            }
+            $strWhere      .= " ORDER BY T1.DISTANCIA ASC limit 10";
             $objQuery->setParameter("ESTADO", $strEstado);
             $objQuery->setParameter("LATITUD", $strLatitud);
             $objQuery->setParameter("LONGITUD", $strLongitud);
@@ -243,6 +249,51 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('DISTANCIA', 'DISTANCIA', 'string');
             $objRsmBuilder->addScalarResult('ID_SUCURSAL', 'ID_SUCURSAL', 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
+
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arraySucursal['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arraySucursal['error'] = $strMensajeError;
+        return $arraySucursal;
+    }
+
+    /**
+     * Documentación para la función 'getSucursales'
+     * Método encargado de retornar todas las sucursales.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 21-06-2020
+     * 
+     * @return array  $arraySucursal
+     * 
+     */
+    public function getSucursales()
+    {
+        $arraySucursal         = array();
+        $strMensajeError       = '';
+        $objRsmBuilder         = new ResultSetMappingBuilder($this->_em);
+        $objQuery              = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = "SELECT isu.ID_SUCURSAL,isu.DESCRIPCION,ires.NOMBRE_COMERCIAL, ius.NOMBRES, ius.APELLIDOS, ius.CORREO ";
+            $strFrom        = " FROM INFO_SUCURSAL isu
+                                join INFO_RESTAURANTE ires  on ires.id_restaurante = isu.restaurante_id
+                                join INFO_USUARIO_RES iresu on iresu.restaurante_id=ires.id_restaurante
+                                join INFO_USUARIO     ius   on ius.id_usuario=iresu.usuario_id ";
+            $strWhere       = " where isu.estado='ACTIVO' and isu.estado_facturacion = 'ACTIVO' ";
+
+
+            $objRsmBuilder->addScalarResult('ID_SUCURSAL', 'ID_SUCURSAL', 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
+            $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
+            $objRsmBuilder->addScalarResult('NOMBRES', 'NOMBRES', 'string');
+            $objRsmBuilder->addScalarResult('APELLIDOS', 'APELLIDOS', 'string');
+            $objRsmBuilder->addScalarResult('CORREO', 'CORREO', 'string');
 
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);

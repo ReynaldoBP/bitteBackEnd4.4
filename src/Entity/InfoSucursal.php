@@ -97,6 +97,13 @@ class InfoSucursal
     /**
      * @var string
      *
+     * @ORM\Column(name="CODIGO_DIARIO", type="string", length=50)
+     */
+    private $CODIGO_DIARIO;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="PAIS", type="string", length=100)
      */
     private $PAIS;
@@ -351,6 +358,30 @@ class InfoSucursal
     public function getLONGITUD()
     {
         return $this->LONGITUD;
+    }
+
+    /**
+     * Set CODIGO_DIARIO
+     *
+     * @param string $CODIGO_DIARIO
+     *
+     * @return InfoSucursal
+     */
+    public function setCODIGO_DIARIO($CODIGO_DIARIO)
+    {
+        $this->CODIGO_DIARIO = $CODIGO_DIARIO;
+
+        return $this;
+    }
+
+    /**
+     * Get CODIGO_DIARIO
+     *
+     * @return string
+     */
+    public function getCODIGO_DIARIO()
+    {
+        return $this->CODIGO_DIARIO;
     }
 
     /**

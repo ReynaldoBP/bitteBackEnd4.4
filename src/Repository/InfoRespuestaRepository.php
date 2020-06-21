@@ -55,7 +55,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                     ON A.ENCUESTA_ID = D.ID_ENCUESTA ";
             $strWhere       = "WHERE 
                                 EXTRACT(YEAR FROM A.FE_CREACION ) = :strAnio 
-                                AND A.ESTADO='ACTIVO'
+                                AND A.ESTADO in ('ACTIVO','PENDIENTE')
                                 AND EXTRACT(MONTH FROM A.FE_CREACION ) = :strMes ".$strSubWhere."";
             $strOrderBy     = " ORDER BY A.FE_CREACION DESC ";
             $objQuery->setParameter("strMes", $strMes);
@@ -230,7 +230,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
 
             if(!empty($strFechaIni) && !empty($strFechaFin))
             { 
-                $strWhere .= " AND ICE.FE_CREACION BETWEEN '".$strFechaIni."' AND '".$strFechaFin."' ";
+                $strWhere .= " AND ICE.FE_CREACION BETWEEN '".$strFechaIni." 00:00:00' AND '".$strFechaFin." 23:59:59' ";
             }
             if(!empty($strGenero))
             {
