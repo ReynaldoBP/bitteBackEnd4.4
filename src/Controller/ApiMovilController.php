@@ -111,6 +111,8 @@ class ApiMovilController extends FOSRestController
               break;
               case 'getEditInfoCltEncuestaPend':$arrayRespuesta = $this->getEditInfoCltEncuestaPend($arrayData);
               break;
+              case 'generaCodigoSucursal':$arrayRespuesta = $this->generaCodigoSucursal($arrayData);
+              break;
               default:
                $objResponse->setContent(json_encode(array(
                                                    'status'    => 400,
@@ -546,13 +548,15 @@ class ApiMovilController extends FOSRestController
         $strEstado         = $arrayData['estado'] ? $arrayData['estado']:'';
         $conImagen         = $arrayData['imagen'] ? $arrayData['imagen']:'NO';
         $intIdCliente      = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
+        $strCodigoSucursal = $arrayData['codigoSucursal'] ? $arrayData['codigoSucursal']:'';
+        $strDescripcion    = $arrayData['descripcion'] ? $arrayData['descripcion']:'';
         $arraySucursal     = array();
         $strMensajeError   = '';
         $strStatus         = 400;
         $strMetros         = 0;
         $intIterador       = 0;
         $objResponse       = new Response;
-        $strDescripcion    = 'CANTIDAD_DISTANCIA';
+        //$strDescripcion    = 'CANTIDAD_DISTANCIA';
         $boolError         = false;
         $boolSucces        = true;
         $arrayRespuesta    = array();
@@ -607,9 +611,9 @@ class ApiMovilController extends FOSRestController
                 
                 if($conImagen == 'SI')
                 {
-                    if(!empty($arrayRestaurante["resultados"]['IMAGEN']))
+                    if(!empty($arrayRestaurante["resultados"]["0"]["IMAGEN"]))
                     {
-                        $arraySucursal["resultados"][$intIterador]["IMAGEN"] = $objController->getImgBase64($arrayRestaurante["resultados"]['IMAGEN']);
+                        $arraySucursal["resultados"][$intIterador]["IMAGEN"] = $objController->getImgBase64($arrayRestaurante["resultados"]["0"]["IMAGEN"]);
                     }
                     else
                     {
@@ -2826,6 +2830,72 @@ class ApiMovilController extends FOSRestController
                                                     'resultado' => $strMensajeError,
                                                     'succes'    => $boolSucces)
                                             ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'generaCodigoSucursal'
+     * Método encargado de enviar correos de notificación indicando que se generó el codigo de sucursal.
+     *
+     * @author Kevin Baque
+     * @version 1.0 20-06-2020
+     *
+     * @return array  $objResponse
+     */
+    public function generaCodigoSucursal($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strRemitente       = 'notificaciones@bitte.app';
+        $objResponse        = new Response;
+        $strRespuesta       = '';
+        $arrayParametros    = array();
+        $strStatus          = 400;
+        $strMensajeError    = '';
+        $boolSucces         = true;
+        $em                 = $this->getDoctrine()->getManager();
+        try
+        {
+            $arraySucursal = $this->getDoctrine()->getRepository(InfoSucursal::class)->getSucursales();
+            foreach ($arraySucursal["resultados"] as $item)
+            {
+                $objSucursal = $this->getDoctrine()->getRepository(InfoSucursal::class)->find($item["ID_SUCURSAL"]);
+                if(!is_object($objSucursal) || empty($objSucursal))
+                {
+                    throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
+                }
+                $strAsunto        = 'CODIGO GENERADO';
+                $strCodigo        = substr(uniqid(rand(), true), 4, 4);
+                $strMensajeCorreo = '<div class="">Hola '.$item["NOMBRES"].' '.$item["APELLIDOS"].',</div>
+                <div class="">&nbsp;</div>
+                <div class="">Se acaba de generar el siguiente c&oacutedigo: '.$strCodigo.', para la sucursal: '.$item["DESCRIPCION"].'.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Que bueno es poner contento a tus clientes!.&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+                <div class="">&nbsp;</div>';
+                $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                          'strMensajeCorreo' => $strMensajeCorreo,
+                                          'strRemitente'     => $strRemitente,
+                                          'strDestinatario'  => $item["CORREO"]);
+                $objController    = new DefaultController();
+                $objController->setContainer($this->container);
+                $strMensajeError = $objController->enviaCorreo($arrayParametros);
+
+                $objSucursal->setCODIGO_DIARIO($strCodigo);
+                $em->persist($objSucursal);
+                $em->flush();
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $strStatus       = 404;
+            $boolSucces      = false;
+            $strMensajeError = "Fallo al generar el correo, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strCodigo,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }

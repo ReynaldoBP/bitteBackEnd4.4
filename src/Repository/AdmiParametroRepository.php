@@ -34,7 +34,7 @@ class AdmiParametroRepository extends \Doctrine\ORM\EntityRepository
             $strSubQuery =" AP.VALOR1 ";
             if(!empty($strDescripcion) && ($strDescripcion=='HORARIO'))
             {
-                $strSubQuery =" concat(AP.VALOR1,' ',AP.VALOR2,' - ',AP.VALOR3) AS VALOR1 ";
+                $strSubQuery =" concat(AP.VALOR1,' (',AP.VALOR2,' - ',AP.VALOR3,')') AS VALOR1 ";
             }
             else if ($strDescripcion=='EDAD')
             {

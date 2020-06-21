@@ -2062,6 +2062,15 @@ class ApiWebController extends FOSRestController
                     $strEdad = trim($arrayEdad[0]);
                  }
             }
+
+            if(!empty($strHorario))
+            {
+                 $arrayHorario = explode("(", $strHorario);
+                 if(is_array($arrayHorario))
+                 { 
+                    $strHorario = trim($arrayHorario[0]);
+                 }
+            }
             
             $objUsuario = $this->getDoctrine()
                                ->getRepository(InfoUsuario::class)
@@ -2164,6 +2173,16 @@ class ApiWebController extends FOSRestController
                  }
             }
 
+            if(!empty($strHorario))
+            {
+                 $arrayHorario = explode("(", $strHorario);
+                 if(is_array($arrayHorario))
+                 { 
+                    $strHorario = trim($arrayHorario[0]);
+                 }
+            }
+
+
             $arrayParametros = array("strMes"      => $strMes,
                                     "strAnio"      => $strAnio,
                                     "strGenero"    => $strGenero,
@@ -2234,6 +2253,15 @@ class ApiWebController extends FOSRestController
                  }
             }
 
+            if(!empty($strHorario))
+            {
+                 $arrayHorario = explode("(", $strHorario);
+                 if(is_array($arrayHorario))
+                 { 
+                    $strHorario = trim($arrayHorario[0]);
+                 }
+            }
+
             $arrayParametros = array("strMes"      => $strMes,
                                     "strAnio"      => $strAnio,
                                     "strGenero"    => $strGenero,
@@ -2301,6 +2329,15 @@ class ApiWebController extends FOSRestController
                  if(is_array($arrayEdad))
                  { 
                     $strEdad = trim($arrayEdad[0]);
+                 }
+            }
+
+            if(!empty($strHorario))
+            {
+                 $arrayHorario = explode("(", $strHorario);
+                 if(is_array($arrayHorario))
+                 { 
+                    $strHorario = trim($arrayHorario[0]);
                  }
             }
 
