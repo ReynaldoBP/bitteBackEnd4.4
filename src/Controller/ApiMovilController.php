@@ -2895,7 +2895,7 @@ class ApiMovilController extends FOSRestController
             $strMensajeError = "Fallo al generar el correo, intente nuevamente.\n ". $ex->getMessage();
         }
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
-                                                   'resultado' => $strCodigo,
+                                                   'resultado' => $strMensajeError,
                                                    'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
