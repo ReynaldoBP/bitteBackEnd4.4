@@ -138,7 +138,8 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         $strMetros             = $arrayParametros['metros'] ? $arrayParametros['metros']:5;
         $strEstado             = $arrayParametros['estado'] ? $arrayParametros['estado']:array('ACTIVO');
         $intIdCliente          = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
-        $strCodigoSucursal     = $arrayParametros['codigoSucursal'] ? $arrayParametros['codigoSucursal']:'';
+        $strCodigoSucursal     = $arrayParametros['strCodigoSucursal'] ? $arrayParametros['strCodigoSucursal']:'';
+        $strDescripcion        = $arrayParametros['strDescripcion'] ? $arrayParametros['strDescripcion']:'';
         $arraySucursal         = array();
         $strMensajeError       = '';
         $date                  = date('Y-m-d H:i:s');
@@ -173,16 +174,20 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
                                 FROM INFO_SUCURSAL ISU
                                 INNER JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID
                                 WHERE ISU.ESTADO in (:ESTADO)) T1 ";
-            $strWhere = "";
-            if(isset($strCodigoSucursal) && !empty($strCodigoSucursal))
+
+            if((isset($strCodigoSucursal) && !empty($strCodigoSucursal)) && ($strDescripcion == "CODIGO" && !empty($strDescripcion)))
             {
-                $strWhere .= " WHERE T1.CODIGO_DIARIO = ".$strCodigoSucursal;
+                $strWhere = " WHERE T1.CODIGO_DIARIO = ".$strCodigoSucursal;
             }
-            $strWhere      .= " ORDER BY T1.DISTANCIA ASC limit 10";
+            else
+            {
+                $strWhere = " WHERE T1.DISTANCIA < (:METROS/1000) ";
+                $objQuery->setParameter("METROS", $strMetros);
+            }
+            $strOrder = " ORDER BY T1.DISTANCIA ASC limit 10 ";
             $objQuery->setParameter("ESTADO", $strEstado);
             $objQuery->setParameter("LATITUD", $strLatitud);
             $objQuery->setParameter("LONGITUD", $strLongitud);
-            $objQuery->setParameter("METROS", $strMetros);
             $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
             $objRsmBuilder->addScalarResult('ID_SUCURSAL', 'ID_SUCURSAL', 'string');
             $objRsmBuilder->addScalarResult('RESTAURANTE_ID', 'RESTAURANTE_ID', 'string');
@@ -195,7 +200,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('DISTANCIA', 'DISTANCIA', 'string');
             $objRsmBuilder->addScalarResult('VALOR', 'VALOR', 'string');
 
-            $strSql       = $strSelect.$strFrom.$strWhere;
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
             $objQuery->setSQL($strSql);
             $arraySucursal['resultados'] = $objQuery->getResult();
         }
