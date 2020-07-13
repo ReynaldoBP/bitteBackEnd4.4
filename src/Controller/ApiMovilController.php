@@ -2854,9 +2854,9 @@ class ApiMovilController extends FOSRestController
                 $strMensajeCorreo = '
                 <div class="">Hola '.$item["NOMBRE_COMERCIAL"].'&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">C&oacutedigo de '.$strMes.': <strong>'.$strCodigo.'</strong>.&nbsp;</div>
+                <div class="">C&oacute;digo de '.$strMes.': <strong>'.$strCodigo.'</strong>.&nbsp;</div>
                 <div class="">Sucursal: <strong>'.$item["DESCRIPCION"].'</strong>.&nbsp;</div>
-                <div class="">Este c&oacutedigo es para comensales qu&eacute prefieren no habilitar el GPS en su dispositivo m&oacutevil y le van a solicitar al restaurante este c&oacutedigo para poder tomar foto, calificar y compartir la foto en redes sociales. De esta manera podr&aacuten ganar puntos por consumir en su restaurante.&nbsp;</div>
+                <div class="">Este c&oacute;digo es para comensales qu&eacute; prefieren no habilitar el GPS en su dispositivo m&oacute;vil y le van a solicitar al restaurante este c&oacute;digo para poder tomar foto, calificar y compartir la foto en redes sociales. De esta manera podr&aacute;n ganar puntos por consumir en su restaurante.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Que bueno es poner contento a tus clientes!.&nbsp;</div>
                 <div class="">&nbsp;</div>
