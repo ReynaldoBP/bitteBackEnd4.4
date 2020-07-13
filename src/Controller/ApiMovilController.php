@@ -2858,8 +2858,6 @@ class ApiMovilController extends FOSRestController
                 <div class="">Sucursal: <strong>'.$item["DESCRIPCION"].'</strong>.&nbsp;</div>
                 <div class="">Este c&oacute;digo es para comensales qu&eacute; prefieren no habilitar el GPS en su dispositivo m&oacute;vil y le van a solicitar al restaurante este c&oacute;digo para poder tomar foto, calificar y compartir la foto en redes sociales. De esta manera podr&aacute;n ganar puntos por consumir en su restaurante.&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Que bueno es poner contento a tus clientes!.&nbsp;</div>
-                <div class="">&nbsp;</div>
                 <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
                 <div class="">&nbsp;</div>';
                 $arrayParametros  = array('strAsunto'        => $strAsunto,
