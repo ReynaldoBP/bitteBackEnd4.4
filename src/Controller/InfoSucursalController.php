@@ -146,6 +146,7 @@ class InfoSucursalController extends Controller
             $entitySucursal->setPAIS($strPais);
             $entitySucursal->setPROVINCIA($strProvincia);
             $entitySucursal->setCIUDAD($strCiudad);
+            $entitySucursal->setCODIGO_DIARIO("");
             $entitySucursal->setPARROQUIA($strParroquia);
             $entitySucursal->setUSRCREACION($strUsuarioCreacion);
             $entitySucursal->setFECREACION($strDatetimeActual);
@@ -154,7 +155,7 @@ class InfoSucursalController extends Controller
             $strMensajeError = 'Sucursal creado con exito.!';
         }
         catch(\Exception $ex)
-        {
+        {error_log($ex->getMessage());
             if ($em->getConnection()->isTransactionActive())
             {
                 $strStatus = 404;

@@ -121,7 +121,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             {
                 $strWhere .= " AND IRE.CLT_ENCUESTA_ID =:CLT_ENCUESTA_ID";
                 $objQuery->setParameter("CLT_ENCUESTA_ID", $intIdCltEncuesta);
-                $objQueryCount->setParameter("CLT_ENCUESTA_ID", $intIdCltEncuesta);
+                $objQueryCount->setParameter("CLT_ENCUESTA_ID", $intIdCltEncuesta);error_log($intIdCltEncuesta);
             }
             if(!empty($intIdPregunta))
             {

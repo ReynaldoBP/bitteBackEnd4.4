@@ -216,16 +216,7 @@ class ApiMovilController extends FOSRestController
             $em->persist($entityCliente);
             $em->flush();
             $strMensajeError = 'Usuario creado con exito.!';
-        }
-        catch(\Exception $ex)
-        {
-            if ($em->getConnection()->isTransactionActive())
-            {
-                $strStatus = 404;
-                $em->getConnection()->rollback();
-            }
-            $strMensajeError ="Fallo al crear el cliente, intente nuevamente.\n ". $ex->getMessage();
-        }
+       
         if ($em->getConnection()->isTransactionActive())
         {
             $em->getConnection()->commit();
@@ -286,34 +277,26 @@ class ApiMovilController extends FOSRestController
                 <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
                 <div class="">&nbsp;</div>';
 
-                $strRemitente     = 'notificaciones@bitte.app';
-                $arrayParametros  = array('strAsunto'          => $strAsunto,
-                                            'strMensajeCorreo' => $strMensajeCorreo,
-                                            'strRemitente'     => $strRemitente,
-                                            'strDestinatario'  => $strCorreo);
-
-               $transport =( new \Swift_SmtpTransport('gator3009.hostgator.com',26))
-                                           ->setUsername('notificaciones@bitte.app')
-                                           ->setPassword('Bitte2019');
-
-                $mailer = new \Swift_Mailer($transport);
-
-                $objMessage =  (new \Swift_Message())
-                                        ->setSubject($strAsunto)
-                                        ->setFrom("notificaciones@bitte.app")
-                                        ->setTo($strCorreo)
-                                        ->setBody($strMensajeCorreo,'text/html');
-                $strRespuesta =  $mailer->send($objMessage);
-
-                /*$arrayParametros  = array('strAsunto'        => $strAsunto,
+                $arrayParametros  = array('strAsunto'        => $strAsunto,
                                           'strMensajeCorreo' => $strMensajeCorreo,
-                                          'strRemitente'     => $strRemitente,
+                                          'strRemitente'     => "notificaciones@bitte.app",
                                           'strDestinatario'  => $strCorreo);
                 $objController    = new DefaultController();
                 $objController->setContainer($this->container);
-                $objController->enviaCorreo($arrayParametros);*/
+                $objController->enviaCorreo($arrayParametros);
             }
         }
+        }
+        catch(\Exception $ex)
+        {
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 404;
+                $em->getConnection()->rollback();
+            }
+            $strMensajeError ="Fallo al crear el cliente, intente nuevamente.\n ". $ex->getMessage();
+        }
+
         $arrayCliente['mensaje'] = $strMensajeError;
         $objResponse->setContent(json_encode(array(
                                             'status'    => $strStatus,
@@ -2867,9 +2850,13 @@ class ApiMovilController extends FOSRestController
                 }
                 $strAsunto        = 'CODIGO GENERADO';
                 $strCodigo        = substr(uniqid(rand(), true), 4, 4);
-                $strMensajeCorreo = '<div class="">Hola '.$item["NOMBRES"].' '.$item["APELLIDOS"].',</div>
+                $strMes           = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][date("n") - 1];
+                $strMensajeCorreo = '
+                <div class="">Hola '.$item["NOMBRE_COMERCIAL"].'&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Se acaba de generar el siguiente c&oacutedigo: '.$strCodigo.', para la sucursal: '.$item["DESCRIPCION"].'.&nbsp;</div>
+                <div class="">C&oacutedigo de '.$strMes.': <strong>'.$strCodigo.'</strong>.&nbsp;</div>
+                <div class="">Sucursal: <strong>'.$item["DESCRIPCION"].'</strong>.&nbsp;</div>
+                <div class="">Este c&oacutedigo es para comensales qu&eacute prefieren no habilitar el GPS en su dispositivo m&oacutevil y le van a solicitar al restaurante este c&oacutedigo para poder tomar foto, calificar y compartir la foto en redes sociales. De esta manera podr&aacuten ganar puntos por consumir en su restaurante.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">Que bueno es poner contento a tus clientes!.&nbsp;</div>
                 <div class="">&nbsp;</div>
