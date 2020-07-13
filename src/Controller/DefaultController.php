@@ -46,21 +46,21 @@ class DefaultController extends Controller
         $strRespuesta     = 'Procesando';
         try
         {
-            $php = 'php';
+           /* $php = 'php';
             $console = 'bin/console'; 
             $command = 'app:enviarCorreo';
             $proceso = $php.' '.$console.' '.$command.'  "'.$strDestinatario.'" "'.$strMensajeCorreo.'" "'.$strAsunto.'"';
             $process =  new Process($proceso);
             $process->setWorkingDirectory(getcwd() . "/../");
             $process->start();
-/*
+error_log(print_r($arrayParametros,1));*/
         $objMessage =  (new \Swift_Message())
                                         ->setSubject($strAsunto)
                                         ->setFrom($strRemitente)
                                         ->setTo($strDestinatario)
                                         ->setBody($strMensajeCorreo, 'text/html');
         $strRespuesta = $this->get('mailer')->send($objMessage);
-*/
+
         } catch (\Exception $e) {
            return  $e->getMessage();
         }

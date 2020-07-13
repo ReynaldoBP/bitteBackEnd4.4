@@ -150,7 +150,7 @@ class UsuarioController extends Controller
             $objUsuario         = $this->getDoctrine()
                                        ->getRepository(InfoUsuario::class)
                                        ->findOneBy(array('IDENTIFICACION'=>$strIdentificacion));
-            if(is_object($objUsuario) && !empty($objUsuario))
+             if(is_object($objUsuario) && !empty($objUsuario))
             {
                 throw new \Exception('Usuario ya existente.');
             }
@@ -166,10 +166,10 @@ class UsuarioController extends Controller
             $entityUsuario->setIDENTIFICACION($strIdentificacion);
             $entityUsuario->setNOMBRES($strNombres);
             $entityUsuario->setAPELLIDOS($strApellidos);
-            if(!empty($strContrasenia))
-            {
+            //if(!empty($strContrasenia))
+            //{
                 $entityUsuario->setCONTRASENIA(md5($strContrasenia));
-            }
+            //}
             $entityUsuario->setIMAGEN($strImagen);
             $entityUsuario->setCORREO($strCorreo);
             $entityUsuario->setESTADO(strtoupper($strEstado));

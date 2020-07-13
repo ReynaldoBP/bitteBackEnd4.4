@@ -1732,11 +1732,10 @@ class ApiWebController extends FOSRestController
             $strMes                  = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][date("n") - 1];
             $strAsuntoOro            = 'TENEDOR DE ORO';
             $strNombreResUsOro       = $objUsuario->getNOMBRES() .' '.$objUsuario->getAPELLIDOS();
-            $strMensajeResCorreoOro  = '<div class="">Hola '.$strNombreResUsOro.' ,</div>
+            $strMensajeResCorreoOro  = '
+            <div class="">Hola '.$objRestaurante->getNOMBRECOMERCIAL().'&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">FELICITACIONES!!!&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.', '.$strNombreUsuarioOro.' ha sido el/la ganador(a) del <strong>Tenedor de Oro</strong> en '.$objRestaurante->getNOMBRECOMERCIAL().'. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.', '.$strNombreUsuarioOro.' ha sido el/la ganador(a) del <strong>Tenedor de Oro</strong>. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">Como administrador, una vez que el ganador est&eacute; en el restaurante y solicite por medio de app Bitte su <strong>Tenedor de Oro</strong>, podr&aacute;s ingresar a la plataforma web <a href=www.bitte.app target="_blank" >www.bitte.app</a> en la secci&oacute;n de puntos y buscar el nombre del ganador, para de esa forma aceptar la solicitud del Tenedor de Oro y as&iacute; conceder el premio a este ganador.&nbsp;</div>
             <div class="">&nbsp;</div>

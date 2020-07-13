@@ -173,7 +173,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
                                     ) AS DISTANCIA
                                 FROM INFO_SUCURSAL ISU
                                 INNER JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID
-                                WHERE ISU.ESTADO in (:ESTADO)) T1 ";
+                                WHERE ISU.ESTADO_FACTURACION in (:ESTADO)) T1 ";
 
             if((isset($strCodigoSucursal) && !empty($strCodigoSucursal)) && ($strDescripcion == "CODIGO" && !empty($strDescripcion)))
             {
