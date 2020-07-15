@@ -8,6 +8,8 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Entity\InfoUsuario;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Process\Process;
+//use App\Controller\InfoContenidoSubido;
+use App\Entity\InfoContenidoSubido;
 class DefaultController extends Controller
 {
     /**
@@ -79,7 +81,7 @@ error_log(print_r($arrayParametros,1));*/
      * @version 1.1 09-12-2019 - Se agrega logica para subir imagen de manera asincrona.
      *
      */
-    public function subirficheroMovil($arrayParametros)
+    /*public function subirficheroMovil($arrayParametros)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
 
@@ -98,12 +100,54 @@ error_log(print_r($arrayParametros,1));*/
         $process->start();
 //        $process->run();
         //--------------
-        /*$process = new PhpProcess('<?php ' . file_put_contents($strRutaImagen,$data));
-        $process->run();
-        $output = $process->getOutput();
-        $strRespuesta = json_decode($output);*/
+        //$process = new PhpProcess('<?php ' . file_put_contents($strRutaImagen,$data));
+        //$process->run();
+        //$output = $process->getOutput();
+        //$strRespuesta = json_decode($output)
         //--------------
         return $strRespuesta;
+    }*/
+
+    public function subirficheroMovil($arrayParametros)
+    {
+        $imgBase64     = $arrayParametros['strImagen'] ? $arrayParametros['strImagen']:'';
+        $idContenido   = $arrayParametros['intIdContenido'] ? $arrayParametros['intIdContenido']:'';
+        try
+        {
+        $base_to_php   = explode(',', $imgBase64);
+        $data          = base64_decode($base_to_php[1]);
+        $ext           = explode("/",explode(";",$base_to_php[0])[0])[1];
+        $pos           = strpos($ext, "ico");
+        if($pos > 0)
+        {
+            $ext = "ico";
+        }
+        $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
+        $strRutaImagen = (dirname(__FILE__)."/../../public/images"."/".$nombreImg);
+        //$strRutaImagen = $nombreImg;
+        file_put_contents($strRutaImagen,$data);
+
+        $em = $this->container->get('doctrine')->getManager();
+        $em->getConnection()->beginTransaction();
+
+        $objContenido = $this->container->get('doctrine')
+                                    ->getRepository(InfoContenidoSubido::class)
+                                    ->find($idContenido);
+        if(!is_object($objContenido) || empty($objContenido))
+        {
+            throw new \Exception('No existe el contenido con identificador enviada por parámetro.');
+        }
+        else
+        {
+            $objContenido->setIMAGEN($nombreImg);
+            $em->persist($objContenido);
+            $em->flush();
+        }
+        } catch (\Exception $e) {
+         error_log($e->getMessage());
+           return  $e->getMessage();
+        }
+        return $nombreImg;
     }
 
     /**
