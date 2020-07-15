@@ -2850,11 +2850,13 @@ class ApiMovilController extends FOSRestController
                 }
                 $strAsunto        = 'CODIGO GENERADO';
                 $strCodigo        = substr(uniqid(rand(), true), 4, 4);
+                $strDia           = date("d");
+                $strAnio          = date("Y");
                 $strMes           = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][date("n") - 1];
                 $strMensajeCorreo = '
                 <div class="">Hola '.$item["NOMBRE_COMERCIAL"].'&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">C&oacute;digo de '.$strMes.': <strong>'.$strCodigo.'</strong>.&nbsp;</div>
+                <div class="">C&oacute;digo del '.$strDia.'/'.$strMes.'/'.$strAnio.': <strong>'.$strCodigo.'</strong>.&nbsp;</div>
                 <div class="">Sucursal: <strong>'.$item["DESCRIPCION"].'</strong>.&nbsp;</div>
                 <div class="">Este c&oacute;digo es para comensales qu&eacute; prefieren no habilitar el GPS en su dispositivo m&oacute;vil y le van a solicitar al restaurante este c&oacute;digo para poder tomar foto, calificar y compartir la foto en redes sociales. De esta manera podr&aacute;n ganar puntos por consumir en su restaurante.&nbsp;</div>
                 <div class="">&nbsp;</div>
