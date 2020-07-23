@@ -116,6 +116,9 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.1 10-11-2019 Se agrega filtro por restaurante.
      * 
+     * @author Kevin Baque
+     * @version 1.2 23-07-2020  - Se agrega filtro por promocion tipo tenedor de oro.
+     *
      * @return array  $arrayCliente
      * 
      */
@@ -186,6 +189,8 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
                                    ,IF((SELECT ipo.RESTAURANTE_ID FROM INFO_CLIENTE_PROMOCION_HISTORIAL icph 
                                     INNER JOIN INFO_PROMOCION ipo on ipo.ID_PROMOCION =icph.PROMOCION_ID 
                                     WHERE icph.ESTADO='PENDIENTE' AND ipo.RESTAURANTE_ID = :intIdRestaurante AND icph.CLIENTE_ID = IC.ID_CLIENTE
+                                    AND ipo.DESCRIPCION_TIPO_PROMOCION='Tenedor de Oro'
+                                    AND ipo.ESTADO='Activo'
                                     LIMIT 1
                                     ) IS NOT NULL, 'SI', 'NO') AS TENEDOR ";
                     $objQuery->setParameter("intIdRestaurante", $intIdRestaurante);
