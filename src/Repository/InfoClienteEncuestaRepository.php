@@ -86,7 +86,12 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
 
         try
         {
-            $strSelect      = "SELECT COUNT(IE.ID_CLT_ENCUESTA) AS CANTIDAD ";
+            $strSelect      = "SELECT (COUNT(IE.ID_CLT_ENCUESTA) + 
+                               (SELECT COUNT(ics.ID_CONTENIDO_SUBIDO ) FROM INFO_CONTENIDO_SUBIDO ics 
+                               WHERE ics.CLIENTE_ID = IE.CLIENTE_ID AND ics.ESTADO in (ESTADO)
+                               AND REDES_SOCIALES_ID =2
+                               AND IE.FE_CREACION >= :FECHA 
+                               )) AS CANTIDAD ";
             $strFrom        = "FROM INFO_CLIENTE_ENCUESTA IE ";
             $strWhere       = "WHERE IE.ESTADO in (:ESTADO) AND IE.CLIENTE_ID = :IDCLIENTE 
                                AND IE.FE_CREACION >= :FECHA ";
@@ -420,9 +425,9 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
         {
             $strSelect      = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE ";
-            $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') < 24 
-                                    AND ICE.CLIENTE_ID  = :CLIENTE_ID
-                                    AND ICE.SUCURSAL_ID = :SUCURSAL_ID ";
+            $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,CONVERT_TZ(now(),'+00:00','-05:00')) >= 24 ".
+                                  "  AND ICE.CLIENTE_ID  = :CLIENTE_ID ".
+                                  "  AND ICE.SUCURSAL_ID = :SUCURSAL_ID ";
             $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
             $objQuery->setParameter("SUCURSAL_ID",$intIdSucursal);
 
@@ -484,14 +489,15 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
                                     FROM INFO_CLIENTE_PUNTO ICP 
                                     WHERE CLIENTE_ID = :CLIENTE_ID 
                                         AND ICP.RESTAURANTE_ID = IRE.ID_RESTAURANTE) AS CANT_PUNTOS ";
-                $strSelect .= ", (SELECT IFNULL(SUM(ICEP.CANTIDAD_PUNTOS+ICSP.CANTIDAD_PUNTOS),0) 
+                $strSelect .= ", (SELECT IFNULL(SUM((CASE WHEN ICEP.ESTADO != 'PENDIENTE' THEN 0 ELSE ICEP.CANTIDAD_PUNTOS END)+
+                                  (CASE WHEN ICSP.ESTADO != 'PENDIENTE' THEN 0 ELSE ICSP.CANTIDAD_PUNTOS END)),0) 
                                   FROM INFO_CLIENTE_ENCUESTA ICEP 
                                     JOIN INFO_CONTENIDO_SUBIDO ICSP ON ICSP.ID_CONTENIDO_SUBIDO = ICEP.CONTENIDO_ID 
                                     JOIN INFO_SUCURSAL ISURP        ON ISURP.ID_SUCURSAL        = ICEP.SUCURSAL_ID
-                                  WHERE ICEP.ESTADO          ='PENDIENTE' 
-                                    AND ICEP.CLIENTE_ID      = :CLIENTE_ID 
+                                  WHERE  
+                                    ICEP.CLIENTE_ID      = :CLIENTE_ID 
                                     AND ISURP.RESTAURANTE_ID = IRE.ID_RESTAURANTE
-                                    AND ICSP.ESTADO='PENDIENTE') AS CANT_PUNTOS_PENDIENTE ";
+                                    ) AS CANT_PUNTOS_PENDIENTE ";
                 $strWhere .= " AND ICE.CLIENTE_ID= :CLIENTE_ID ";
                 $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
             }
@@ -538,7 +544,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
            
             $strSelect      = "SELECT ICE.ID_CLT_ENCUESTA AS ID_CLT_ENCUESTA ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE ";
-            $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,'".$date."') > 24
+            $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICE.FE_CREACION,CONVERT_TZ(now(),'+00:00','-05:00')) >= 24 
                                     AND ICE.ESTADO  = :ESTADO ";
             $objQuery->setParameter("ESTADO",$strEstado);
 
