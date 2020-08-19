@@ -300,6 +300,14 @@ class InfoRestauranteController extends Controller
                 $strStatus  = 404;
                 throw new \Exception($arrayRestaurantes['error']);
             }
+            foreach ($arrayRestaurantes['resultados'] as &$item)
+            {
+                if($item['CODIGO'])
+                {
+                    $item['CODIGO'] = ($item['CODIGO'] == "SI") ? true:false;
+                }
+            }
+
         }
         catch(\Exception $ex)
         {
