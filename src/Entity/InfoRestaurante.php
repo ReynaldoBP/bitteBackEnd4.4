@@ -111,6 +111,13 @@ class InfoRestaurante
     /**
      * @var string
      *
+     * @ORM\Column(name="CODIGO", type="string", length=2, nullable=true)
+     */
+    private $CODIGO;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="USR_CREACION", type="string", length=255)
      */
     private $USRCREACION;
@@ -361,6 +368,30 @@ class InfoRestaurante
     public function getESTADO()
     {
         return $this->ESTADO;
+    }
+
+    /**
+     * Set CODIGO
+     *
+     * @param string $CODIGO
+     *
+     * @return InfoRestaurante
+     */
+    public function setCODIGO($CODIGO)
+    {
+        $this->CODIGO = $CODIGO;
+
+        return $this;
+    }
+
+    /**
+     * Get CODIGO
+     *
+     * @return string
+     */
+    public function getCODIGO()
+    {
+        return $this->CODIGO;
     }
 
     /**

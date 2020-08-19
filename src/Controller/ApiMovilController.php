@@ -31,6 +31,7 @@ use App\Entity\InfoPromocionHistorial;
 use App\Entity\InfoVistaPublicidad;
 use App\Entity\AdmiTipoComida;
 use App\Entity\InfoClienteInfluencer;
+use App\Entity\InfoCodigoPromocion;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -2109,6 +2110,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 29-09-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 17-08-2020 - Se agrega logica para canjear código.
+     * 
      * @return array  $objResponse
      */
     public function createPromocionHistorial($arrayData)
@@ -2137,6 +2141,13 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe el cliente con identificador enviada por parámetro.');
             }
+            $objRestaurante = $this->getDoctrine()
+                                   ->getRepository(InfoRestaurante::class)
+                                   ->find($intIdRestaurante);
+            if(!is_object($objRestaurante) || empty($objRestaurante))
+            {
+                throw new \Exception('No existe restaurante con identificador enviado por parámetro.');
+            }
             //consultar el estado a buscar
             $arrayCltPunto = $this->getDoctrine()
                                   ->getRepository(InfoClientePunto::class)
@@ -2160,6 +2171,53 @@ class ApiMovilController extends FOSRestController
             $intCantPuntospromo = $objPromocion->getCANTIDADPUNTOS();
             if($intCantPuntospromo<=$intCantidadPuntos)
             {
+                if($objPromocion->getCODIGO() == "SI")
+                {
+                    $arrayParametrosCodigo = array("PROMOCION_ID"=> $objPromocion->getId(),
+                                                   "ESTADO"      => "ACTIVO");
+                    $objCodigoPromocion    = $this->getDoctrine()
+                                                  ->getRepository(InfoCodigoPromocion::class)
+                                                  ->findOneBy($arrayParametrosCodigo);
+                    if(!is_object($objCodigoPromocion) || empty($objCodigoPromocion))
+                    {
+                        throw new \Exception("No existe código válido");
+                    }
+                    $strNombreUsuario = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+                    $strDestinatario  = $objCliente->getCORREO();
+                    $strAsunto        = 'CANJEAR PROMOCION';
+                    $strMensajeCorreo = '
+                    <div class=""><b>¡Hola! '.$strNombreUsuario.'.</b>&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">FELICITACIONES!!!!&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Acabas de canjear '.$intCantPuntospromo.' puntos en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div><strong>Presenta este código '.$objCodigoPromocion->getCODIGO().' al momento de realizar tu pedido al cajero. Esperamos que tu premio est&eacute; delicioso.&nbsp;</strong></div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Recuerda siempre usar tu app Bitte para calificar tu experiencia gastron&oacute;mica, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+                    <div class="">&nbsp;</div>';
+                    $strRemitente     = 'notificaciones@bitte.app';
+
+                    $arrayParametrosCorreo = array('strAsunto'        => $strAsunto,
+                                                   'strMensajeCorreo' => $strMensajeCorreo,
+                                                   'strRemitente'     => $strRemitente,
+                                                   'strDestinatario'  => $strDestinatario);
+                    $objController    = new DefaultController();
+                    $objController->setContainer($this->container);
+                    $objController->enviaCorreo($arrayParametrosCorreo);
+
+                    $objCodigoPromocion->setESTADO("CANJEADO");
+                    $entityCodigoPromocionHist = new InfoCodigoPromocionHistorial();
+                    $entityCodigoPromocionHist->setCODIGO_PROMOCION_ID($objCodigoPromocion);
+                    $entityCodigoPromocionHist->setESTADO("CANJEADO");
+                    $entityCodigoPromocionHist->setCLIENTEID($objCliente);
+                    $entityCodigoPromocionHist->setUSRCREACION($strUsuarioCreacion);
+                    $entityCodigoPromocionHist->setFECREACION($strDatetimeActual);
+                    $em->persist($entityCodigoPromocionHist);
+                    $em->flush();
+                }
                 $arrayPromociones   = $this->getDoctrine()
                                            ->getRepository(InfoPromocionHistorial::class)
                                            ->getPromoHistorialCriterio(array('intIdCliente'=>$intIdCliente,

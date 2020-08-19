@@ -39,13 +39,14 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSelect      = "SELECT PR.ID_PROMOCION,PR.DESCRIPCION_TIPO_PROMOCION, PR.CANTIDAD_PUNTOS, PR.ACEPTA_GLOBAL,
-                               PR.ESTADO,PR.USR_CREACION,PR.FE_CREACION,PR.USR_MODIFICACION,PR.FE_MODIFICACION, 
+                               PR.CODIGO,PR.ESTADO,PR.USR_CREACION,PR.FE_CREACION,PR.USR_MODIFICACION,PR.FE_MODIFICACION, 
                                PR.PREMIO,PR.IMAGEN,
                                IRE.ID_RESTAURANTE,IRE.IDENTIFICACION,IRE.RAZON_SOCIAL,IRE.NOMBRE_COMERCIAL ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM INFO_PROMOCION PR 
                                 JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE=PR.RESTAURANTE_ID ";
             $strWhere       = "WHERE PR.ESTADO in (:ESTADO) ";
+            $strOrder       = " order by PR.ESTADO ASC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
             if(!empty($intIdPromocion))
@@ -97,6 +98,7 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('DESCRIPCION_TIPO_PROMOCION', 'DESCRIPCION_TIPO_PROMOCION', 'string');
             $objRsmBuilder->addScalarResult('CANTIDAD_PUNTOS', 'CANTIDAD_PUNTOS', 'string');
             $objRsmBuilder->addScalarResult('ACEPTA_GLOBAL', 'ACEPTA_GLOBAL', 'string');
+            $objRsmBuilder->addScalarResult('CODIGO', 'CODIGO', 'string');
             $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
             $objRsmBuilder->addScalarResult('USR_CREACION', 'USR_CREACION', 'string');
             $objRsmBuilder->addScalarResult('FE_CREACION', 'FE_CREACION', 'date');
@@ -109,9 +111,9 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('RAZON_SOCIAL', 'RAZON_SOCIAL', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
             $objRsmBuilderCount->addScalarResult('CANTIDAD', 'Cantidad', 'integer');
-            $strSql       = $strSelect.$strFrom.$strWhere;
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
             $objQuery->setSQL($strSql);
-            $strSqlCount  = $strSelectCount.$strFrom.$strWhere;
+            $strSqlCount  = $strSelectCount.$strFrom.$strWhere.$strOrder;;
             $objQueryCount->setSQL($strSqlCount);
             $arrayPromocion['cantidad']   = $objQueryCount->getSingleScalarResult();
             $arrayPromocion['resultados'] = $objQuery->getResult();

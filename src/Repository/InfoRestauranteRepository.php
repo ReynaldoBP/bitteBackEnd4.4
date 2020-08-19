@@ -55,11 +55,12 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             {
                 $strSelect      = "SELECT IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
                                 IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,ATC.DESCRIPCION_TIPO_COMIDA, 
-                                IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.NUMERO_CONTACTO, IR.ESTADO, IR.IMAGEN, IR.ICONO ";
+                                IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.NUMERO_CONTACTO, IR.ESTADO, IR.CODIGO, IR.IMAGEN, IR.ICONO ";
                 $strFrom        = "FROM INFO_RESTAURANTE IR
                                     JOIN ADMI_TIPO_COMIDA ATC
                                     ON IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
                 $strWhere       = "WHERE IR.ESTADO in (:ESTADO) ";
+                $strOrder       = " order by IR.ESTADO ASC ";
                 $objQuery->setParameter("ESTADO", $strEstado);
                 if(!empty($strRazonSocial))
                 {
@@ -105,9 +106,10 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                 $objRsmBuilder->addScalarResult('URL_CATALOGO', 'URL_CATALOGO', 'string');
                 $objRsmBuilder->addScalarResult('NUMERO_CONTACTO', 'NUMERO_CONTACTO', 'string');
                 $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
+                $objRsmBuilder->addScalarResult('CODIGO', 'CODIGO', 'string');
                 $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
                 $objRsmBuilder->addScalarResult('ICONO', 'ICONO', 'string');
-                $strSql       = $strSelect.$strFrom.$strWhere;
+                $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
                 $objQuery->setSQL($strSql);
                 $arrayRestaurante['resultados'] = $objQuery->getResult();
             }

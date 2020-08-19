@@ -25,6 +25,7 @@ use App\Entity\InfoVistaPublicidad;
 use App\Entity\AdmiTipoRol;
 use App\Entity\InfoUsuarioRes;
 use App\Entity\InfoContenidoSubido;
+use App\Entity\InfoCodigoPromocion;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -100,6 +101,12 @@ class ApiWebController extends FOSRestController
                 break;
                 case 'getVistasPublicidades':$arrayRespuesta = $this->getVistasPublicidades($arrayData);
                 break;
+                case 'createCodigoPromocion':$arrayRespuesta = $this->createCodigoPromocion($arrayData);
+                break;
+                case 'editCodigoPromocion':$arrayRespuesta = $this->editCodigoPromocion($arrayData);
+                break;
+                case 'getCodigoPromocion':$arrayRespuesta = $this->getCodigoPromocion($arrayData);
+                break;
                  $objResponse->setContent(json_encode(array(
                                                      'status'    => 400,
                                                      'resultado' => "No existe método con la descripción enviado por parámetro",
@@ -119,6 +126,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 09-09-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 17-08-2020 - Se agrega la creación de codigo en el restaurante.
+     *
      * @return array  $objResponse
      */
     public function createRestaurante($arrayData)
@@ -135,6 +145,7 @@ class ApiWebController extends FOSRestController
         $strUrlCatalogo         = $arrayData['urlCatalogo'] ? $arrayData['urlCatalogo']:'';
         $strNumeroContacto      = $arrayData['numeroContacto'] ? $arrayData['numeroContacto']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
+        $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $imgBase64              = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
         $icoBase64              = $arrayData['rutaIcono'] ? $arrayData['rutaIcono']:'';
@@ -198,6 +209,7 @@ class ApiWebController extends FOSRestController
             $entityRestaurante->setICONO($strRutaIcono);
             $entityRestaurante->setNUMEROCONTACTO($strNumeroContacto);
             $entityRestaurante->setESTADO(strtoupper($strEstado));
+            $entityRestaurante->setCODIGO(strtoupper($strCodigo));
             $entityRestaurante->setUSRCREACION($strUsuarioCreacion);
             $entityRestaurante->setFECREACION($strDatetimeActual);
             $em->persist($entityRestaurante);
@@ -234,6 +246,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 01-08-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 17-08-2020 - Se agrega la edición de codigo en el restaurante.
+     * 
      * @return array  $objResponse
      */
     public function editRestaurante($arrayData)
@@ -250,6 +265,7 @@ class ApiWebController extends FOSRestController
         $strUrlCatalogo         = $arrayData['urlCatalogo'] ? $arrayData['urlCatalogo']:'';
         $strNumeroContacto      = $arrayData['numeroContacto'] ? $arrayData['numeroContacto']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
+        $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $imgBase64              = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
         $icoBase64              = $arrayData['rutaIcono'] ? $arrayData['rutaIcono']:'';
@@ -340,6 +356,10 @@ class ApiWebController extends FOSRestController
             if(!empty($strEstado))
             {
                 $objRestaurante->setESTADO(strtoupper($strEstado));
+            }
+            if(!empty($strCodigo))
+            {
+                $objRestaurante->setCODIGO(strtoupper($strCodigo));
             }
             if(!empty($strRutaImagen))
             {
@@ -598,6 +618,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque Se cambia la sucursalID por RestauranteID
      * @version 1.1 08-11-2019
      * 
+     * @author Kevin Baque
+     * @version 1.2 17-08-2020 - Se agrega la creación de codigo en la promoción.
+     * 
      * @return array  $objResponse
      */
     public function createPromocion($arrayData)
@@ -606,9 +629,11 @@ class ApiWebController extends FOSRestController
         $intIdRestaurante       = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
         $strDescrPromocion      = $arrayData['descrPromocion'] ? $arrayData['descrPromocion']:'';
         $imgBase64              = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
-        $intCantPuntos          = $arrayData['cantPuntos'] ? $arrayData['cantPuntos']:'';
+        $intCantPuntos          = ($arrayData['cantPuntos']<0 && $arrayData['cantPuntos'] !="")?0:$arrayData['cantPuntos'];
         $strAceptaGlobal        = $arrayData['aceptaGlobal'] ? $arrayData['aceptaGlobal']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
+        $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
+        $strExcel               = $arrayData['excel'] ? $arrayData['excel']:'';
         $strPremio              = $arrayData['premio'] ? $arrayData['premio']:'NO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
@@ -634,6 +659,38 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
             }
+            $strRestauranteCodigo = $objRestaurante->getCODIGO();
+            if(!empty($strCodigo) && $strCodigo != "NO" && $strRestauranteCodigo == "NO")
+            {
+                $strStatus = 409;
+                throw new \Exception('El restaurante seleccionado no permite el ingreso de códigos.');
+            }
+            if( (!empty($strRestauranteCodigo) && $strRestauranteCodigo == "SI")&&(!empty($strCodigo) && $strCodigo!="NO") )
+            {
+                $objBaseToPhp  = explode(',', $strExcel);
+                $arrayDataTemp = base64_decode($objBaseToPhp[1]);
+                $arrayData     = explode("\n", $arrayDataTemp);
+                if(!empty($strExcel))
+                {
+                    $strRutaExcel = $objController->subirfichero($strExcel);
+                }
+                for($intCont =0; $intCont<sizeof($arrayData); $intCont ++)
+                {
+                    if($arrayData[$intCont]!="" && $arrayData[$intCont]!=null)
+                    {
+                        $entityCodigoPromocion = new InfoCodigoPromocion();
+                        $entityCodigoPromocion->setRESTAURANTEID($objRestaurante);
+                        $entityCodigoPromocion->setPROMOCIONID($objPromocion);
+                        $entityCodigoPromocion->setESTADO(strtoupper($strEstado));
+                        $entityCodigoPromocion->setEXCEL($strRutaExcel);
+                        $entityCodigoPromocion->setCODIGO(trim($arrayData[$intCont]));
+                        $entityCodigoPromocion->setUSRCREACION($strUsuarioCreacion);
+                        $entityCodigoPromocion->setFECREACION($strDatetimeActual);
+                        $em->persist($entityCodigoPromocion);
+                        $em->flush();
+                    }
+                }
+            }
             $entityPromocion = new InfoPromocion();
             $entityPromocion->setRESTAURANTEID($objRestaurante);
             $entityPromocion->setDESCRIPCIONTIPOPROMOCION($strDescrPromocion);
@@ -642,6 +699,7 @@ class ApiWebController extends FOSRestController
             $entityPromocion->setCANTIDADPUNTOS($intCantPuntos);
             $entityPromocion->setACEPTAGLOBAL($strAceptaGlobal);
             $entityPromocion->setESTADO(strtoupper($strEstado));
+            $entityPromocion->setCODIGO(strtoupper($strCodigo));
             $entityPromocion->setUSRCREACION($strUsuarioCreacion);
             $entityPromocion->setFECREACION($strDatetimeActual);
             $em->persist($entityPromocion);
@@ -650,12 +708,19 @@ class ApiWebController extends FOSRestController
         }
         catch(\Exception $ex)
         {
-            if ($em->getConnection()->isTransactionActive())
+            $strMensajeError = "Fallo al crear una Promoción, intente nuevamente.\n ". $ex->getMessage();
+            if($strStatus == 409)
+            {
+                $strMensajeError = $ex->getMessage();
+            }
+            else
             {
                 $strStatus = 404;
+            }
+            if ($em->getConnection()->isTransactionActive())
+            {
                 $em->getConnection()->rollback();
             }
-            $strMensajeError = "Fallo al crear una Promoción, intente nuevamente.\n ". $ex->getMessage();
         }
         if ($em->getConnection()->isTransactionActive())
         {
@@ -681,6 +746,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque Se cambia la sucursalID por RestauranteID.
      * @version 1.1 08-11-2019
      * 
+     * @author Kevin Baque
+     * @version 1.2 17-08-2020 - Se agrega el ingreso de códigos en la promoción.
+     *
      * @return array  $objResponse
      */
     public function editPromocion($arrayData)
@@ -690,9 +758,11 @@ class ApiWebController extends FOSRestController
         $intIdRestaurante       = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
         $strDescrPromocion      = $arrayData['descrPromocion'] ? $arrayData['descrPromocion']:'';
         $imgBase64              = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
-        $intCantPuntos          = $arrayData['cantPuntos'] ? $arrayData['cantPuntos']:'';
+        $intCantPuntos          = ($arrayData['cantPuntos']<0 && $arrayData['cantPuntos'] !="")?0:$arrayData['cantPuntos'];
         $strAceptaGlobal        = $arrayData['aceptaGlobal'] ? $arrayData['aceptaGlobal']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
+        $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
+        $strExcel               = $arrayData['excel'] ? $arrayData['excel']:'';
         $strPremio              = $arrayData['premio'] ? $arrayData['premio']:'NO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
@@ -708,6 +778,10 @@ class ApiWebController extends FOSRestController
             if(!empty($imgBase64))
             {
                 $strRutaImagen = $objController->subirfichero($imgBase64);
+            }
+            else
+            {
+                $strRutaImagen = "";
             }
             $objPromocion = $this->getDoctrine()
                                  ->getRepository(InfoPromocion::class)
@@ -726,24 +800,51 @@ class ApiWebController extends FOSRestController
                 {
                     throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
                 }
+                $strRestauranteCodigo = $objRestaurante->getCODIGO();
+                if(!empty($strCodigo) && $strCodigo != "NO" && $strRestauranteCodigo == "NO")
+                {
+                    $strStatus = 409;
+                    throw new \Exception('El restaurante seleccionado no permite el ingreso de códigos.');
+                }
+                if( (!empty($strRestauranteCodigo) && $strRestauranteCodigo == "SI")&&(!empty($strCodigo) && $strCodigo!="NO") )
+                {
+                    $objBaseToPhp  = explode(',', $strExcel);
+                    $arrayDataTemp = base64_decode($objBaseToPhp[1]);
+                    $arrayData     = explode("\n", $arrayDataTemp);
+                    if(!empty($strExcel))
+                    {
+                        $strRutaExcel = $objController->subirfichero($strExcel);
+                    }
+                    for($intCont =0; $intCont<sizeof($arrayData); $intCont ++)
+                    {
+                        if($arrayData[$intCont]!="" && $arrayData[$intCont]!=null)
+                        {
+                            $entityCodigoPromocion = new InfoCodigoPromocion();
+                            $entityCodigoPromocion->setRESTAURANTEID($objRestaurante);
+                            $entityCodigoPromocion->setPROMOCIONID($objPromocion);
+                            $entityCodigoPromocion->setEXCEL($strRutaExcel);
+                            $entityCodigoPromocion->setESTADO(strtoupper($strEstado));
+                            $entityCodigoPromocion->setCODIGO(trim($arrayData[$intCont]));
+                            $entityCodigoPromocion->setUSRCREACION($strUsuarioCreacion);
+                            $entityCodigoPromocion->setFECREACION($strDatetimeActual);
+                            $em->persist($entityCodigoPromocion);
+                            $em->flush();
+                        }
+                    }
+                }
                 $objPromocion->setRESTAURANTEID($objRestaurante);
             }
             if(!empty($strDescrPromocion))
             {
                 $objPromocion->setDESCRIPCIONTIPOPROMOCION($strDescrPromocion);
             }
-            if(!empty($strRutaImagen))
-            {
-                $objPromocion->setIMAGEN($strRutaImagen);
-            }
+            $objPromocion->setIMAGEN($strRutaImagen);
             if(!empty($strPremio))
             {
                 $objPromocion->setPREMIO($strPremio);
             }
-            if(!empty($intCantPuntos))
-            {
-                $objPromocion->setCANTIDADPUNTOS($intCantPuntos);
-            }
+            $objPromocion->setCANTIDADPUNTOS($intCantPuntos);
+            
             if(!empty($strAceptaGlobal))
             {
                 $objPromocion->setACEPTAGLOBAL($strAceptaGlobal);
@@ -751,6 +852,10 @@ class ApiWebController extends FOSRestController
             if(!empty($strEstado))
             {
                 $objPromocion->setESTADO(strtoupper($strEstado));
+            }
+            if(!empty($strCodigo))
+            {
+                $objPromocion->setCODIGO(strtoupper($strCodigo));
             }
             $objPromocion->setUSRMODIFICACION($strUsuarioCreacion);
             $objPromocion->setFEMODIFICACION($strDatetimeActual);
@@ -760,13 +865,19 @@ class ApiWebController extends FOSRestController
         }
         catch(\Exception $ex)
         {
-            if ($em->getConnection()->isTransactionActive())
+            $strMensajeError = "Fallo al editar un Promoción, intente nuevamente.\n ". $ex->getMessage();
+            if($strStatus == 409)
+            {
+                $strMensajeError = $ex->getMessage();
+            }
+            else
             {
                 $strStatus = 404;
+            }
+            if ($em->getConnection()->isTransactionActive())
+            {
                 $em->getConnection()->rollback();
             }
-            
-            $strMensajeError = "Fallo al editar un Promoción, intente nuevamente.\n ". $ex->getMessage();
         }
         if ($em->getConnection()->isTransactionActive())
         {
@@ -2658,4 +2769,239 @@ class ApiWebController extends FOSRestController
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
+    /**
+     * Documentación para la función 'createCodigoPromocion'
+     * Método encargado de crear los codigos de las promociones según los parámetros recibidos.
+     *
+     * @author Kevin Baque
+     * @version 1.0 09-09-2019
+     *
+     * @return array  $objResponse
+     */
+    public function createCodigoPromocion($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdRestaurante       = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
+        $intIdPromocion         = $arrayData['intIdPromocion'] ? $arrayData['intIdPromocion']:'';
+        $strEstado              = $arrayData['strEstado'] ? $arrayData['strEstado']:'';
+        $strCodigo              = $arrayData['strCodigo'] ? $arrayData['strCodigo']:'';
+        $strUsuarioCreacion     = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $strDatetimeActual      = new \DateTime('now');
+        $strMensajeError        = '';
+        $strStatus              = 400;
+        $objResponse            = new Response;
+        $strDatetimeActual      = new \DateTime('now');
+        $em                     = $this->getDoctrine()->getManager();
+        try
+        {
+            $em->getConnection()->beginTransaction();
+            $objRestaurante = $this->getDoctrine()
+                                  ->getRepository(InfoRestaurante::class)
+                                  ->find($intIdRestaurante);
+            if(!is_object($objRestaurante) || empty($objRestaurante))
+            {
+                throw new \Exception('No existe restaurante con la parámetros enviados.');
+            }
+            $objPromocion = $this->getDoctrine()
+                                  ->getRepository(InfoPromocion::class)
+                                  ->find($intIdPromocion);
+            if(!is_object($objPromocion) || empty($objPromocion))
+            {
+                throw new \Exception('No existe la promoción con identificador enviada por parámetro.');
+            }
+            $entityCodigoPromocion = new InfoCodigoPromocion();
+            $entityCodigoPromocion->setRESTAURANTEID($objRestaurante);
+            $entityCodigoPromocion->setPROMOCIONID($objPromocion);
+            $entityCodigoPromocion->setESTADO(strtoupper($strEstado));
+            $entityCodigoPromocion->setCODIGO($strCodigo);
+            $entityCodigoPromocion->setUSRCREACION($strUsuarioCreacion);
+            $entityCodigoPromocion->setFECREACION($strDatetimeActual);
+            $em->persist($entityCodigoPromocion);
+            $em->flush();
+            $strMensajeError = 'Código creado con exito.!';
+        }
+        catch(\Exception $ex)
+        {
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 404;
+                $em->getConnection()->rollback();
+            }
+            $strMensajeError = "Fallo al crear un Código, intente nuevamente.\n ". $ex->getMessage();
+        }
+        if ($em->getConnection()->isTransactionActive())
+        {
+            $em->getConnection()->commit();
+            $em->getConnection()->close();
+        }
+        $objResponse->setContent(json_encode(array(
+                                            'status'    => $strStatus,
+                                            'resultado' => $strMensajeError,
+                                            'succes'    => true
+                                            )
+                                        ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'editCodigoPromocion'
+     * Método encargado de editar los codigos según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 01-08-2019
+     *
+     * @return array  $objResponse
+     */
+    public function editCodigoPromocion($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdCodigoPromocion   = $arrayData['intIdCodigoPromocion'] ? $arrayData['intIdCodigoPromocion']:'';
+        $strAccion              = $arrayData['strAccion'] ? $arrayData['strAccion']:'';
+        $intIdPromocion         = $arrayData['idPromocion'] ? $arrayData['idPromocion']:'';
+        $strCodigo              = $arrayData['strCodigo'] ? $arrayData['strCodigo']:'';
+        $strEstado              = $arrayData['strEstado'] ? $arrayData['strEstado']:'';
+        $strUsuarioCreacion     = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $strMensajeError        = '';
+        $strStatus              = 400;
+        $objResponse            = new Response;
+        $strDatetimeActual      = new \DateTime('now');
+        $em                     = $this->getDoctrine()->getManager();
+        try
+        {
+            $em->getConnection()->beginTransaction();
+            if($strAccion=="DELETE_ALL" && !empty($intIdPromocion))
+            {
+                $strEstado        = "ELIMINADO";
+                $arrayCodigoPromo = $this->getDoctrine()
+                                         ->getRepository(InfoCodigoPromocion::class)
+                                         ->findby(array("PROMOCION_ID"=>$intIdPromocion,
+                                                        "ESTADO"=>"ACTIVO"));
+                foreach($arrayCodigoPromo as $arrayItem)
+                {
+                    error_log($arrayItem->getId());
+                    $objCodigoPromo = $this->getDoctrine()
+                                        ->getRepository(InfoCodigoPromocion::class)
+                                        ->find($arrayItem->getId());
+                    if(is_object($objCodigoPromo) && !empty($objCodigoPromo))
+                    {
+                        
+                        $objCodigoPromo->setESTADO(strtoupper($strEstado));
+                        $objCodigoPromo->setUSRMODIFICACION($strUsuarioCreacion);
+                        $objCodigoPromo->setFEMODIFICACION($strDatetimeActual);
+                        $em->persist($objCodigoPromo);
+                        $em->flush();
+                    }
+                }
+                $strMensajeError = 'Se eliminaron todos los códigos.';
+            }
+            else
+            {
+                $strEstado = (!empty($strAccion) && $strAccion == "ACTIVAR" ? "ACTIVO":"ELIMINADO");
+                $objCodigoPromo = $this->getDoctrine()
+                                     ->getRepository(InfoCodigoPromocion::class)
+                                    ->find($intIdCodigoPromocion);
+
+                if(!is_object($objCodigoPromo) || empty($objCodigoPromo))
+                {
+                    throw new \Exception('Código no existe.');
+                }
+                if($objCodigoPromo->getESTADO()=="CANJEADO")
+                {
+                    $strStatus = 409;
+                    throw new \Exception("Solo se puede Activar/Eliminar, códigos que no estén en estado: 'CANJEADO'.");
+                }
+                if(!empty($strEstado))
+                {
+                    $objCodigoPromo->setESTADO(strtoupper($strEstado));
+                }
+                $objCodigoPromo->setUSRMODIFICACION($strUsuarioCreacion);
+                $objCodigoPromo->setFEMODIFICACION($strDatetimeActual);
+                $em->persist($objCodigoPromo);
+                $em->flush();
+                $strMensajeError = 'Código editado con exito.!';
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = "Fallo al crear un Código, intente nuevamente.\n ". $ex->getMessage();
+            if($strStatus == 409)
+            {
+                $strMensajeError = $ex->getMessage();
+            }
+            else
+            {
+                $strStatus = 404;
+            }
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->rollback();
+            }
+        }
+        if ($em->getConnection()->isTransactionActive())
+        {
+            $em->getConnection()->commit();
+            $em->getConnection()->close();
+        }
+        $objResponse->setContent(json_encode(array(
+                                            'status'    => $strStatus,
+                                            'resultado' => $strMensajeError,
+                                            'succes'    => true
+                                            )
+                                        ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'getCodigoPromocion'
+     * Método encargado de retornar los codigos según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 01-08-2020
+     *
+     * @return array  $objResponse
+     */
+    public function getCodigoPromocion($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdPromocion         = $arrayData['idPromocion'] ? $arrayData['idPromocion']:'';
+        $intIdRestaurante       = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
+        $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $strMensajeError        = '';
+        $strStatus              = 400;
+        $objResponse            = new Response;
+        $strDatetimeActual      = new \DateTime('now');
+        $em                     = $this->getDoctrine()->getManager();
+        try
+        {
+            $em->getConnection()->beginTransaction();
+
+            $arrayParametros = array('intIdPromocion'   => $intIdPromocion,
+                                     'intIdRestaurante' => $intIdRestaurante);
+
+            $arrayCodigo   = $this->getDoctrine()
+                                   ->getRepository(InfoCodigoPromocion::class)
+                                   ->getCodigoPromocionCriterio($arrayParametros);
+            if(isset($arrayCodigo['error']) && !empty($arrayCodigo['error']))
+            {
+                $strStatus  = 404;
+                throw new \Exception($arrayCodigo['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $strStatus  = 404;
+            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayCodigo['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array(
+                                            'status'    => $strStatus,
+                                            'resultado' => $arrayCodigo,
+                                            'succes'    => true
+                                            )
+                                        ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
 }
