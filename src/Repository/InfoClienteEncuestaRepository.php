@@ -147,6 +147,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
                                             FROM INFO_CLIENTE_ENCUESTA ICE
                                             ".$strSubSelect."
                                             WHERE ICE.ENCUESTA_ID = IE.ID_ENCUESTA 
+AND ICE.ESTADO != 'ELIMINADO'
                                             ".$strSubWhere."
                                             AND EXTRACT(MONTH FROM ICE.FE_CREACION) = :strMes
                                             AND EXTRACT(YEAR  FROM ICE.FE_CREACION) = :strAnio
@@ -207,7 +208,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 ".$strSubSelect."
                                     INNER JOIN INFO_ENCUESTA IE ON ICE.ENCUESTA_ID = IE.ID_ENCUESTA ";
-            $strWhere       = " WHERE IE.ESTADO in (:ESTADO) ".$strSubWhere." ";
+            $strWhere       = " WHERE IE.ESTADO in (:ESTADO) AND ICE.ESTADO!='ELIMINADO' ".$strSubWhere." ";
             $strGroup       = " GROUP BY ICE.ENCUESTA_ID,EXTRACT(MONTH FROM ICE.FE_CREACION),EXTRACT(YEAR  FROM ICE.FE_CREACION) ";
             $strOrder       = " ORDER BY ICE.FE_CREACION DESC ";
             $strLimit       = " LIMIT ".$strLimite." ";
@@ -267,7 +268,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 ".$strSubSelect."
                                     INNER JOIN INFO_ENCUESTA IE ON ICE.ENCUESTA_ID = IE.ID_ENCUESTA ";
-            $strWhere       = " WHERE IE.ESTADO in (:ESTADO) ".$strSubWhere." ";
+            $strWhere       = " WHERE IE.ESTADO in (:ESTADO) AND ICE.ESTADO != 'ELIMINADO' ".$strSubWhere." ";
             $strGroup       = " GROUP BY ICE.ENCUESTA_ID,WEEK(ICE.FE_CREACION),EXTRACT(YEAR  FROM ICE.FE_CREACION) ";
             $strOrder       = " ORDER BY ICE.FE_CREACION DESC ";
             $strLimit       = " LIMIT ".$strLimite." ";
@@ -323,7 +324,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 ".$strSubSelect."
                                 INNER JOIN INFO_CLIENTE IC ON ICE.CLIENTE_ID = IC.ID_CLIENTE ";
-            $strWhere       = " WHERE EXTRACT(MONTH FROM ICE.FE_CREACION)  = :MES
+            $strWhere       = " WHERE ICE.ESTADO !='ELIMINADO' AND EXTRACT(MONTH FROM ICE.FE_CREACION)  = :MES
                                     AND EXTRACT(YEAR FROM ICE.FE_CREACION) = :ANIO ".$strSubWhere."";
             $strGroup       = " GROUP BY IC.GENERO ";
             $objQuery->setParameter("MES",$strMes);
@@ -382,7 +383,7 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
                                 ".$strSubSelect."
                                     INNER JOIN INFO_CLIENTE IC 
                                         ON ICE.CLIENTE_ID = IC.ID_CLIENTE ";
-            $strWhere       = " WHERE EXTRACT(MONTH FROM ICE.FE_CREACION)  = :MES
+            $strWhere       = " WHERE ICE.ESTADO != 'ELIMINADO' AND EXTRACT(MONTH FROM ICE.FE_CREACION)  = :MES
                                     AND EXTRACT(YEAR FROM ICE.FE_CREACION) = :ANIO ".$strSubWhere."";
             $strGroup       = " GROUP BY GENERACION ";
             $objQuery->setParameter("MES",$strMes);

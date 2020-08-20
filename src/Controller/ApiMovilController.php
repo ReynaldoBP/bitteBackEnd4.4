@@ -682,7 +682,8 @@ class ApiMovilController extends FOSRestController
                                     'strTipoIdentificacion' => $strTipoIdentificacion,
                                     'strIdentificacion'     => $strIdentificacion,
                                     'strRazonSocial'        => $strRazonSocial,
-                                    'strEstado'             => $strEstado
+                                    'strEstado'             => $strEstado,
+                                    'intEsRestaurante'      => '1'
                                     );
             $arrayRestaurante   = (array) $this->getDoctrine()
                                                ->getRepository(InfoRestaurante::class)

@@ -140,6 +140,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
         $strTipoIdentificacion = $arrayParametros['strTipoIdentificacion'] ? $arrayParametros['strTipoIdentificacion']:'';
         $strRazonSocial        = $arrayParametros['strRazonSocial'] ? $arrayParametros['strRazonSocial']:'';
         $strEstado             = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
+        $intEsRestaurante      = $arrayParametros['intEsRestaurante'] ? $arrayParametros['intEsRestaurante']:'';
         $arrayRestaurante      = array();
         $strMensajeError       = '';
         $objRsmBuilder         = new ResultSetMappingBuilder($this->_em);
@@ -167,8 +168,11 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                                                     AND SUB_ISU.RESTAURANTE_ID = IR.ID_RESTAURANTE) AS PRO_ENCUESTAS ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM INFO_RESTAURANTE IR,ADMI_TIPO_COMIDA ATC ";
-            $strWhere       = "WHERE IR.ESTADO in (:ESTADO) AND IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA
-                                AND IR.ID_RESTAURANTE != 28 ";
+            $strWhere       = "WHERE IR.ESTADO in (:ESTADO) AND IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
+            if(!empty($intEsRestaurante))
+            {
+                $strWhere = $strWhere." AND IR.ID_RESTAURANTE != 28 ";
+            }
             $objQuery->setParameter("ESTADO", $strEstado);
             $objQueryCount->setParameter("ESTADO", $strEstado);
             if(!empty($intIdCliente))

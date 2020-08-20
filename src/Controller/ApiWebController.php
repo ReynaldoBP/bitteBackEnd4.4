@@ -2300,12 +2300,39 @@ class ApiWebController extends FOSRestController
         $strParroquia       = $arrayData['strParroquia'] ? $arrayData['strParroquia']:'';
         $intIdPregunta      = $arrayData['intIdPregunta'] ? $arrayData['intIdPregunta']:'';
         $intLimite          = $arrayData['intLimite'] ? $arrayData['intLimite']:'';
+        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
+        $intIdRestaurante   = '';
         $strStatus          = 400;
         $objResponse        = new Response;
         try
         {
+            $objUsuario = $this->getDoctrine()
+                               ->getRepository(InfoUsuario::class)
+                               ->find($intIdUsuario);
+            if(!empty($objUsuario) && is_object($objUsuario))
+            {
+                $objTipoRol = $this->getDoctrine()
+                                    ->getRepository(AdmiTipoRol::class)
+                                    ->find($objUsuario->getTIPOROLID()->getId());
+                if(!empty($objTipoRol) && is_object($objTipoRol))
+                {
+                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    {
+                        $intIdRestaurante = '';
+                    }
+                    else
+                    {
+                        $objUsuarioRes = $this->getDoctrine()
+                                              ->getRepository(InfoUsuarioRes::class)
+                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                    }
+                }
+            }
+
             if(!empty($strEdad))
             {
                  $arrayEdad = explode("(", $strEdad);
@@ -2335,6 +2362,7 @@ class ApiWebController extends FOSRestController
                                     "strProvincia" => $strProvincia,
                                     "intLimite"    => $intLimite,
                                     "intIdPregunta" => $intIdPregunta,
+                                    "intIdRestaurante"=>$intIdRestaurante,
                                     "strParroquia" => $strParroquia);
             $arrayRespuesta   = $this->getDoctrine()
                                      ->getRepository(InfoRespuesta::class)
@@ -2380,12 +2408,38 @@ class ApiWebController extends FOSRestController
         $strProvincia       = $arrayData['strProvincia'] ? $arrayData['strProvincia']:'';
         $strParroquia       = $arrayData['strParroquia'] ? $arrayData['strParroquia']:'';
         $intLimite          = $arrayData['intLimite'] ? $arrayData['intLimite']:'';
+        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
+        $intIdRestaurante   = '';
         $strStatus          = 400;
         $objResponse        = new Response;
         try
         {
+            $objUsuario = $this->getDoctrine()
+                               ->getRepository(InfoUsuario::class)
+                               ->find($intIdUsuario);
+            if(!empty($objUsuario) && is_object($objUsuario))
+            {
+                $objTipoRol = $this->getDoctrine()
+                                    ->getRepository(AdmiTipoRol::class)
+                                    ->find($objUsuario->getTIPOROLID()->getId());
+                if(!empty($objTipoRol) && is_object($objTipoRol))
+                {
+                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    {
+                        $intIdRestaurante = '';
+                    }
+                    else
+                    {
+                        $objUsuarioRes = $this->getDoctrine()
+                                              ->getRepository(InfoUsuarioRes::class)
+                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                    }
+                }
+            }
             if(!empty($strEdad))
             {
                  $arrayEdad = explode("(", $strEdad);
@@ -2413,6 +2467,7 @@ class ApiWebController extends FOSRestController
                                     "strCiudad"    => $strCiudad,
                                     "strProvincia" => $strProvincia,
                                     "intLimite"    => $intLimite,
+                                    "intIdRestaurante"=>$intIdRestaurante,
                                     "strParroquia" => $strParroquia);
             $arrayRespuesta   = $this->getDoctrine()
                                      ->getRepository(InfoRespuesta::class)
@@ -2459,12 +2514,38 @@ class ApiWebController extends FOSRestController
         $strCiudad          = $arrayData['strCiudad'] ? $arrayData['strCiudad']:'';
         $strProvincia       = $arrayData['strProvincia'] ? $arrayData['strProvincia']:'';
         $strParroquia       = $arrayData['strParroquia'] ? $arrayData['strParroquia']:'';
+        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
+        $intIdRestaurante   = '';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $strStatus          = 400;
         $objResponse        = new Response;
         try
         {
+            $objUsuario = $this->getDoctrine()
+                               ->getRepository(InfoUsuario::class)
+                               ->find($intIdUsuario);
+            if(!empty($objUsuario) && is_object($objUsuario))
+            {
+                $objTipoRol = $this->getDoctrine()
+                                    ->getRepository(AdmiTipoRol::class)
+                                    ->find($objUsuario->getTIPOROLID()->getId());
+                if(!empty($objTipoRol) && is_object($objTipoRol))
+                {
+                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    {
+                        $intIdRestaurante = '';
+                    }
+                    else
+                    {
+                        $objUsuarioRes = $this->getDoctrine()
+                                              ->getRepository(InfoUsuarioRes::class)
+                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                    }
+                }
+            }
             if(!empty($strEdad))
             {
                  $arrayEdad = explode("(", $strEdad);
@@ -2493,6 +2574,7 @@ class ApiWebController extends FOSRestController
                                     "strPais"      => $strPais,
                                     "strCiudad"    => $strCiudad,
                                     "strProvincia" => $strProvincia,
+                                    "intIdRestaurante"=>$intIdRestaurante,
                                     "strParroquia" => $strParroquia);
             $arrayRespuesta   = $this->getDoctrine()
                                      ->getRepository(InfoRespuesta::class)
@@ -2732,17 +2814,44 @@ class ApiWebController extends FOSRestController
         $strGlobal          = $arrayData['strGlobal'] ? $arrayData['strGlobal']:'';
         $strFechaIni        = $arrayData['strFechaIni'] ? $arrayData['strFechaIni']:'';
         $strFechaFin        = $arrayData['strFechaFin'] ? $arrayData['strFechaFin']:'';
+        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
+        $intIdRestaurante   = '';
         $strStatus          = 400;
         $boolSucces         = true;
         $objResponse        = new Response;
         try
         {
+            $objUsuario = $this->getDoctrine()
+                               ->getRepository(InfoUsuario::class)
+                               ->find($intIdUsuario);
+            if(!empty($objUsuario) && is_object($objUsuario))
+            {
+                $objTipoRol = $this->getDoctrine()
+                                    ->getRepository(AdmiTipoRol::class)
+                                    ->find($objUsuario->getTIPOROLID()->getId());
+                if(!empty($objTipoRol) && is_object($objTipoRol))
+                {
+                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    {
+                        $intIdRestaurante = '';
+                    }
+                    else
+                    {
+                        $objUsuarioRes = $this->getDoctrine()
+                                              ->getRepository(InfoUsuarioRes::class)
+                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                    }
+                }
+            }
             $arrayParametros = array("strGenero"   => $strGenero,
                                      "strEdad"     => $strEdad,
                                      "strFechaIni" => $strFechaIni,
                                      "strFechaFin" => $strFechaFin,
+                                     "intIdRestaurante"=>$intIdRestaurante,
                                      "strGlobal"   => $strGlobal);
 
             $arrayRespuesta   = $this->getDoctrine()
