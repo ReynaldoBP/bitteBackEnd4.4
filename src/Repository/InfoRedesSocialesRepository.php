@@ -34,7 +34,7 @@ class InfoRedesSocialesRepository extends \Doctrine\ORM\EntityRepository
         {
             if(!empty($intIdRestaurante))
             {
-                $strInnerJoin    = " INNER JOIN INFO_CLIENTE_ENCUESTA ICE ON ICE.CONTENIDO_ID=ICS.ID_CONTENIDO_SUBIDO
+                $strInnerJoin    = " INNER JOIN INFO_CLIENTE_ENCUESTA ICE ON ICE.CONTENIDO_ID=ICS.ID_CONTENIDO_SUBIDO AND ICE.ESTADO != 'ELIMINADO'
                                      INNER JOIN INFO_SUCURSAL ISU ON  ISU.ID_SUCURSAL = ICE.SUCURSAL_ID ";
                 $strSubWhere     = " AND ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
             }

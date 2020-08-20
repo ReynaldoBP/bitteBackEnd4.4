@@ -27,6 +27,7 @@ class InfoVistaPublicidadRepository extends \Doctrine\ORM\EntityRepository
         $strGlobal          = $arrayParametros['strGlobal'] ? $arrayParametros['strGlobal']:'';
         $strFechaIni        = $arrayParametros['strFechaIni'] ? $arrayParametros['strFechaIni']:'';
         $strFechaFin        = $arrayParametros['strFechaFin'] ? $arrayParametros['strFechaFin']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayCliente       = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -44,7 +45,13 @@ class InfoVistaPublicidadRepository extends \Doctrine\ORM\EntityRepository
                                 INNER JOIN ADMI_PARAMETRO AP_EDAD    ON AP_EDAD.DESCRIPCION     = 'EDAD'
                                                                     AND EXTRACT(YEAR FROM IC.EDAD) >= AP_EDAD.VALOR2
                                                                     AND EXTRACT(YEAR FROM IC.EDAD) <= AP_EDAD.VALOR3 ";
+            $strWhere       = " WHERE IVP.FE_CREACION BETWEEN '".$strFechaIni."' AND '".$strFechaFin."' ";
             $strGroup       = " GROUP BY IVP.PUBLICIDAD_ID ";
+            if(!empty($intIdRestaurante))
+            {
+                $strWhere .= " AND IR.ID_RESTAURANTE = :ID_RESTAURANTE";
+                $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
+            }
             if(!empty($strGenero) && $strGenero=='SI')
             {
                 $strSelect .= " ,IC.GENERO AS CRITERIO ";
@@ -56,10 +63,6 @@ class InfoVistaPublicidadRepository extends \Doctrine\ORM\EntityRepository
                 $strSelect .= " ,AP_EDAD.VALOR1 AS CRITERIO ";
                 $objRsmBuilder->addScalarResult('CRITERIO', 'CRITERIO', 'string');
                 $strGroup = " GROUP BY IVP.PUBLICIDAD_ID,CRITERIO ";
-            }
-            if(!empty($strFechaIni) && !empty($strFechaFin))
-            {
-                $strWhere = " IVP.FE_CREACION BETWEEN '".$strFechaIni."' AND '".$strFechaFin."' ";
             }
             $objRsmBuilder->addScalarResult('ID_PUBLICIDAD', 'ID_PUBLICIDAD', 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');

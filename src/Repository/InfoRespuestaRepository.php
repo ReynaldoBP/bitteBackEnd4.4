@@ -300,7 +300,8 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                 INNER JOIN INFO_SUCURSAL ISU         ON ISU.ID_SUCURSAL         =  ICE.SUCURSAL_ID
                                 INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID 
                                 WHERE 
-                                IE.ESTADO           = 'ACTIVO' ";
+                                IE.ESTADO           = 'ACTIVO' 
+                                AND ICE.ESTADO !='ELIMINADO'";
             $strSql2         = $strSelect2.$strFrom2.$strWhere.$strGroupBy2;
             $objQuery2->setSQL($strSql2);
             $arrayResultadoEnc                 = $objQuery2->getOneOrNullResult();
@@ -335,6 +336,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strCiudad          = $arrayParametros['strCiudad'] ? $arrayParametros['strCiudad']:'';
         $strProvincia       = $arrayParametros['strProvincia'] ? $arrayParametros['strProvincia']:'';
         $strParroquia       = $arrayParametros['strParroquia'] ? $arrayParametros['strParroquia']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -364,7 +366,11 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                         AND IE.ESTADO           = 'ACTIVO'
                                         AND ICE.ESTADO          = 'ACTIVO' ";
             $strGroupBy     = " GROUP BY MES,ANIO ";
-
+            if(!empty($intIdRestaurante))
+            {
+                $strWhere .= " AND IRES.ID_RESTAURANTE = :ID_RESTAURANTE ";
+                $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
+            }
             if(!empty($strGenero))
             {
                 $strWhere .= " AND IC.GENERO = :GENERO ";
@@ -442,6 +448,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strCiudad          = $arrayParametros['strCiudad'] ? $arrayParametros['strCiudad']:'';
         $strProvincia       = $arrayParametros['strProvincia'] ? $arrayParametros['strProvincia']:'';
         $strParroquia       = $arrayParametros['strParroquia'] ? $arrayParametros['strParroquia']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -469,7 +476,11 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $strWhere       = "WHERE IR.DESCRIPCION != 'NO COMPARTIDO'
                                     AND ICE.ESTADO   = 'ACTIVO' ";
             $strGroupBy     = " GROUP BY ANIO,MES ";
-
+            if(!empty($intIdRestaurante))
+            {
+                $strWhere .= " AND IRES.ID_RESTAURANTE = :ID_RESTAURANTE";
+                $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
+            }
             if(!empty($strGenero))
             {
                 $strWhere .= " AND IC.GENERO = :GENERO";
@@ -545,6 +556,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strCiudad          = $arrayParametros['strCiudad'] ? $arrayParametros['strCiudad']:'';
         $strProvincia       = $arrayParametros['strProvincia'] ? $arrayParametros['strProvincia']:'';
         $strParroquia       = $arrayParametros['strParroquia'] ? $arrayParametros['strParroquia']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -583,7 +595,11 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                 AND IOR.VALOR           = '10'
                                 AND IE.ESTADO           = 'ACTIVO'
                                 AND ICE.ESTADO          = 'ACTIVO' ";
-
+            if(!empty($intIdRestaurante))
+            {
+                $strWhere .= " AND IRES.ID_RESTAURANTE = :ID_RESTAURANTE";
+                $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
+            }
             if(!empty($strFechaIni) && !empty($strFechaFin))
             {
                 $strWhere .= " AND ICE.FE_CREACION BETWEEN '".$strFechaIni."' AND '".$strFechaFin."' ";
