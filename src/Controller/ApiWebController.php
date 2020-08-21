@@ -1486,13 +1486,17 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception('No existe el contenido con la descripción enviada por parámetro.');
             }
-            $objParametro    = $this->getDoctrine()
-                                    ->getRepository(AdmiParametro::class)
-                                    ->findOneBy(array('DESCRIPCION' => 'PUNTOS_PUBLICACION',
-                                                      'ESTADO'      => 'ACTIVO'));
-            if(!is_object($objParametro) || empty($objParametro))
+            $objRedSocial = $this->getDoctrine()
+                                 ->getRepository(InfoContenidoSubido::class)
+                                 ->find($objContenido->getREDESSOCIALESID()->getId());
+            $intPuntosPerdidos = 0;
+            if($objRedSocial->getDESCRIPCION() == "NO COMPARTIDO")
             {
-                throw new \Exception('No existe parametro con la descripción enviada por parámetro.');
+                $intPuntosPerdidos = intval($objClienteEncuesta->getCANTIDADPUNTOS());
+            }
+            else
+            {
+                $intPuntosPerdidos = intval($objClienteEncuesta->getCANTIDADPUNTOS()) + intval($objContenido->getCANTIDADPUNTOS());
             }
             if(!empty($strEstado))
             {
@@ -1509,7 +1513,7 @@ class ApiWebController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class="">¡LO SENTIMOS!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">Se han restado '.$objParametro->getVALOR1().' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> y a su vez pierdes un cup&oacute;n para el sorteo mensual del <strong>Tenedor de Oro</strong>.&nbsp;</div>
+            <div class="">Se han restado '.$intPuntosPerdidos.' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> y a su vez pierdes un cup&oacute;n para el sorteo mensual del <strong>Tenedor de Oro</strong>.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">Las razones que el restaurante decidi&oacute; restar tus puntos pueden ser las siguientes:&nbsp;</div>
             <div class="">&nbsp;</div>
