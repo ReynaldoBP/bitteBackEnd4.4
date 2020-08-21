@@ -149,14 +149,14 @@ class ApiMovilController extends FOSRestController
         error_reporting( error_reporting() & ~E_NOTICE );
         $strIdentificacion  = isset($arrayData['identificacion']) ? $arrayData['identificacion']:'';
         $strDireccion       = isset($arrayData['direccion']) ? $arrayData['direccion']:'';
-        $strEdad            = isset($arrayData['edad']) ? $arrayData['edad']:'';
+        $strEdad            = isset($arrayData['edad']) ? $arrayData['edad']:'SIN EDAD';
         $strTipoComida      = isset($arrayData['tipoComida']) ? $arrayData['tipoComida']:'';
         $strEstado          = isset($arrayData['estado']) ? $arrayData['estado']:'';
         $strSector          = isset($arrayData['sector']) ? $arrayData['sector']:'';
         $strNombre          = isset($arrayData['nombre']) ? $arrayData['nombre']:'';
         $strApellido        = isset($arrayData['apellido']) ? $arrayData['apellido']:'';
         $strCorreo          = isset($arrayData['correo']) ? $arrayData['correo']:'';
-        $strGenero          = isset($arrayData['genero']) ? $arrayData['genero']:'';
+        $strGenero          = isset($arrayData['genero']) ? $arrayData['genero']:'SIN GENERO';
         $intIdTipoCLiente   = isset($arrayData['idTipoCLiente']) ? $arrayData['idTipoCLiente']:'';
         $intIdUsuario       = isset($arrayData['idUsuario']) ? $arrayData['idUsuario']:'';
         $strContrasenia     = isset($arrayData['contrasenia']) ? $arrayData['contrasenia']:'';
@@ -2506,6 +2506,7 @@ class ApiMovilController extends FOSRestController
         $strDestinatario  = $arrayData['strCorreo'] ? $arrayData['strCorreo']:'';
         $strAsunto        = 'Clave temporal Bitte';
         $strContrasenia   = uniqid();
+        $strContrasenia   = substr($strContrasenia,0,4);
         $strMensajeCorreo = '<div class="">Estimado cliente.</div>
         <div class="">&nbsp;</div>
         <div class="">En base a su solicitud el sistema BITTE ha procedido a asignarle una clave temporal.&nbsp;</div>

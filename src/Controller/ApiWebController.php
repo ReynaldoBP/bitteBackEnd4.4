@@ -2664,6 +2664,7 @@ class ApiWebController extends FOSRestController
         $strDestinatario  = $arrayData['strCorreo'] ? $arrayData['strCorreo']:'';
         $strAsunto        = 'Clave temporal Bitte';
         $strContrasenia   = uniqid();
+        $strContrasenia   = substr($strContrasenia,0,4);
         $strMensajeCorreo = '<div class="">Estimado usuario.</div>
         <div class="">&nbsp;</div>
         <div class="">En base a su solicitud el sistema BITTE ha procedido a asignarle una clave temporal.&nbsp;</div>

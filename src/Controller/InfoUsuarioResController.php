@@ -41,6 +41,7 @@ class InfoUsuarioResController extends Controller
         $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
         $strContrasenia         = uniqid();
+        $strContrasenia         = substr($strContrasenia,0,4);
         try
         {
             $em->getConnection()->beginTransaction();
