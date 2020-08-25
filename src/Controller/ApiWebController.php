@@ -1488,9 +1488,9 @@ class ApiWebController extends FOSRestController
             }
             $objRedSocial = $this->getDoctrine()
                                  ->getRepository(InfoContenidoSubido::class)
-                                 ->find($objContenido->getREDESSOCIALESID()->getId());
+                                 ->find($objContenido->getREDESSOCIALESID());
             $intPuntosPerdidos = 0;
-            if($objRedSocial->getDESCRIPCION() == "NO COMPARTIDO")
+            if(is_object($objRedSocial) && $objRedSocial->getDESCRIPCION() == "NO COMPARTIDO")
             {
                 $intPuntosPerdidos = intval($objClienteEncuesta->getCANTIDADPUNTOS());
             }
