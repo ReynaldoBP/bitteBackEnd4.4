@@ -149,14 +149,17 @@ class ApiMovilController extends FOSRestController
         error_reporting( error_reporting() & ~E_NOTICE );
         $strIdentificacion  = isset($arrayData['identificacion']) ? $arrayData['identificacion']:'';
         $strDireccion       = isset($arrayData['direccion']) ? $arrayData['direccion']:'';
-        $strEdad            = isset($arrayData['edad']) ? $arrayData['edad']:'SIN EDAD';
+        $strEdad            = ( isset($arrayData['edad']) && !empty($arrayData['edad']) )
+                                     ? $arrayData['edad'] : 'SIN EDAD';
         $strTipoComida      = isset($arrayData['tipoComida']) ? $arrayData['tipoComida']:'';
         $strEstado          = isset($arrayData['estado']) ? $arrayData['estado']:'';
         $strSector          = isset($arrayData['sector']) ? $arrayData['sector']:'';
         $strNombre          = isset($arrayData['nombre']) ? $arrayData['nombre']:'';
         $strApellido        = isset($arrayData['apellido']) ? $arrayData['apellido']:'';
         $strCorreo          = isset($arrayData['correo']) ? $arrayData['correo']:'';
-        $strGenero          = isset($arrayData['genero']) ? $arrayData['genero']:'SIN GENERO';
+        $strGenero          = ( isset($arrayData['genero']) && !empty($arrayData['genero']) )
+                                     ? $arrayData['genero'] : 'SIN GENERO';
+
         $intIdTipoCLiente   = isset($arrayData['idTipoCLiente']) ? $arrayData['idTipoCLiente']:'';
         $intIdUsuario       = isset($arrayData['idUsuario']) ? $arrayData['idUsuario']:'';
         $strContrasenia     = isset($arrayData['contrasenia']) ? $arrayData['contrasenia']:'';
