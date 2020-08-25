@@ -169,6 +169,7 @@ class ApiMovilController extends FOSRestController
         $objResponse        = new Response;
         $em                 = $this->getDoctrine()->getManager();
         $strEstado          = (!empty($strAutenticacionRS) && $strAutenticacionRS == 'N') ? 'INACTIVO':'ACTIVO';
+        $boolBanderaCambio  = 0;
         try
         {
             $em->getConnection()->beginTransaction();
@@ -177,17 +178,27 @@ class ApiMovilController extends FOSRestController
                             ->findOneBy(array('CORREO'=>$strCorreo));
             if(is_object($objClt) || !empty($objClt))
             {
-                throw new \Exception('Cliente ya existente.');
+                $strAuthRS = $objClt->getAUTENTICACIONRS();
+                if($strAutenticacionRS == 'S' && $strAuthRS == 'N')
+                {
+                    $boolBanderaCambio  = 1;
+                }
+                else
+                {
+                    throw new \Exception('Cliente ya existente.');
+                }
             }
-            $objTipoCliente = $this->getDoctrine()
+            if($boolBanderaCambio == 0)
+            {
+                 $objTipoCliente = $this->getDoctrine()
                                    ->getRepository(AdmiTipoClientePuntaje::class)
                                    ->findOneBy(array('ESTADO' => 'ACTIVO',
                                                      'id'     => $intIdTipoCLiente));
-            if(!is_object($objTipoCliente) || empty($objTipoCliente))
-            {
-                throw new \Exception('No existe tipo cliente con la descripción enviada por parámetro.');
-            }
-            $arrayParametrosUsuario = array('ESTADO' => 'ACTIVO',
+                if(!is_object($objTipoCliente) || empty($objTipoCliente))
+                {
+                     throw new \Exception('No existe tipo cliente con la descripción enviada por parámetro.');
+                }
+                $arrayParametrosUsuario = array('ESTADO' => 'ACTIVO',
                                             'id'     => $intIdUsuario);
             $objUsuario = $this->getDoctrine()
                                ->getRepository(InfoUsuario::class)
@@ -286,7 +297,27 @@ class ApiMovilController extends FOSRestController
                 $objController->setContainer($this->container);
                 $objController->enviaCorreo($arrayParametros);
             }
-        }
+          }
+         }
+         else
+         {
+            $objClt->setAUTENTICACIONRS($strAutenticacionRS);
+            $objClt->setESTADO(strtoupper($strEstado));
+            $objClt->setEDAD($strEdad);
+            $objClt->setTIPOCOMIDA($strTipoComida);
+            $objClt->setGENERO($strGenero);
+            $objClt->setUSRCREACION($strUsuarioCreacion);
+            $objClt->setFECREACION($strDatetimeActual);
+            $em->persist($objClt);
+            $em->flush();
+            $strMensajeError = 'Usuario creado con exito.!';
+            $em->getConnection()->commit();
+            $em->getConnection()->close();
+            $arrayCliente = array('id'             => $objClt->getId(),
+                                    'identificacion' => $objClt->getIDENTIFICACION(),
+                                    'nombre'         => $objClt->getNOMBRE(),
+                                    'apellido'       => $objClt->getAPELLIDO());
+         }
         }
         catch(\Exception $ex)
         {
