@@ -172,6 +172,11 @@ class ApiMovilController extends FOSRestController
         try
         {
             $em->getConnection()->beginTransaction();
+            if(empty($strNombre) && empty($strApellido))
+            {
+                $strNombre = explode('@',$strCorreo);
+                $strNombre = $strNombre[0];
+            }
             $objClt  = $this->getDoctrine()
                             ->getRepository(InfoCliente::class)
                             ->findOneBy(array('CORREO'=>$strCorreo));
