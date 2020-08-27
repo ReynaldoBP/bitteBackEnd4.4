@@ -34,10 +34,22 @@ class InfoCodigoPromocionRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSelect      = " SELECT ICP.ID_CODIGO_PROMOCION,ICP.RESTAURANTE_ID,ICP.PROMOCION_ID,ICP.CODIGO,ICP.ESTADO,
-                                IRES.NOMBRE_COMERCIAL,IPR.DESCRIPCION_TIPO_PROMOCION ";
+                                IRES.NOMBRE_COMERCIAL,IPR.DESCRIPCION_TIPO_PROMOCION,
+                                CASE
+                                    WHEN ICP.ESTADO ='ACTIVO' THEN 'SI'
+                                    WHEN ICP.ESTADO ='ELIMINADO' THEN 'NO'
+                                END as BANDERA_ESTADO,
+                                CASE
+                                    WHEN ICP.ESTADO ='CANJEADO' THEN 'SI'
+                                    ELSE 'NO'
+                                END as BANDERA_CANJEADO,
+                                CONCAT(IC.NOMBRE,CONCAT(' ',IC.APELLIDO)) AS CLIENTE,
+                                IPCH.FE_CREACION ";
             $strFrom        = "FROM INFO_CODIGO_PROMOCION ICP 
                                 JOIN INFO_PROMOCION IPR ON IPR.ID_PROMOCION=ICP.PROMOCION_ID
-                                JOIN INFO_RESTAURANTE IRES ON IRES.ID_RESTAURANTE=ICP.RESTAURANTE_ID ";
+                                JOIN INFO_RESTAURANTE IRES ON IRES.ID_RESTAURANTE=ICP.RESTAURANTE_ID 
+                                LEFT JOIN INFO_CODIGO_PROMOCION_HISTORIAL IPCH ON IPCH.CODIGO_PROMOCION_ID=ICP.ID_CODIGO_PROMOCION
+                                LEFT JOIN INFO_CLIENTE IC ON IC.ID_CLIENTE=IPCH.CLIENTE_ID";
             $strWhere       = "WHERE ICP.ESTADO in (:ESTADO) ";
             $strOrder       = " order by ICP.ESTADO ASC ";
             $objQuery->setParameter("ESTADO",$strEstado);
@@ -60,6 +72,10 @@ class InfoCodigoPromocionRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CODIGO', 'CODIGO', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION_TIPO_PROMOCION', 'DESCRIPCION_TIPO_PROMOCION', 'string');
+            $objRsmBuilder->addScalarResult('BANDERA_ESTADO', 'BANDERA_ESTADO', 'string');
+            $objRsmBuilder->addScalarResult('BANDERA_CANJEADO', 'BANDERA_CANJEADO', 'string');
+            $objRsmBuilder->addScalarResult('CLIENTE', 'CLIENTE', 'string');
+            $objRsmBuilder->addScalarResult('FE_CREACION', 'FE_CREACION', 'string');
             $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
             $objQuery->setSQL($strSql);

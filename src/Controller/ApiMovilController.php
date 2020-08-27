@@ -32,6 +32,7 @@ use App\Entity\InfoVistaPublicidad;
 use App\Entity\AdmiTipoComida;
 use App\Entity\InfoClienteInfluencer;
 use App\Entity\InfoCodigoPromocion;
+use App\Entity\InfoCodigoPromocionHistorial;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -2162,7 +2163,7 @@ class ApiMovilController extends FOSRestController
         $intIdCliente       = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
         $intIdRestaurante   = $arrayData['idRestaurante'] ? $arrayData['idRestaurante']:'';
         $strEstado          = $arrayData['estado'] ? $arrayData['estado']:'PENDIENTE';
-        $strUsuarioCreacion = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $strUsuarioCreacion = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'usuario';
         $strDatetimeActual  = new \DateTime('now');
         $strMensajeError    = '';
         $strStatus          = 400;

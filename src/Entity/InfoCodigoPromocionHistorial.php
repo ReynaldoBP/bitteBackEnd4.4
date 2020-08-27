@@ -161,99 +161,99 @@ class InfoCodigoPromocionHistorial
     }
 
     /**
-     * Set USRCREACION
+     * Set USR_CREACION
      *
-     * @param string $USRCREACION
+     * @param string $USR_CREACION
      *
      * @return InfoCodigoPromocionHistorial
      */
-    public function setUSRCREACION($USRCREACION)
+    public function setUSRCREACION($USR_CREACION)
     {
-        $this->USRCREACION = $USRCREACION;
+        $this->USR_CREACION = $USR_CREACION;
 
         return $this;
     }
 
     /**
-     * Get USRCREACION
+     * Get USR_CREACION
      *
      * @return string
      */
     public function getUSRCREACION()
     {
-        return $this->USRCREACION;
+        return $this->USR_CREACION;
     }
 
     /**
-     * Set FECREACION
+     * Set FE_CREACION
      *
-     * @param \DateTime $FECREACION
+     * @param \DateTime $FE_CREACION
      *
      * @return InfoCodigoPromocionHistorial
      */
-    public function setFECREACION($FECREACION)
+    public function setFECREACION($FE_CREACION)
     {
-        $this->FECREACION = $FECREACION;
+        $this->FE_CREACION = $FE_CREACION;
 
         return $this;
     }
 
     /**
-     * Get FECREACION
+     * Get FE_CREACION
      *
      * @return \DateTime
      */
     public function getFECREACION()
     {
-        return $this->FECREACION;
+        return $this->FE_CREACION;
     }
 
     /**
-     * Set USRMODIFICACION
+     * Set USR_MODIFICACION
      *
-     * @param string $USRMODIFICACION
+     * @param string $USR_MODIFICACION
      *
      * @return InfoCodigoPromocionHistorial
      */
-    public function setUSRMODIFICACION($USRMODIFICACION)
+    public function setUSRMODIFICACION($USR_MODIFICACION)
     {
-        $this->USRMODIFICACION = $USRMODIFICACION;
+        $this->USR_MODIFICACION = $USR_MODIFICACION;
 
         return $this;
     }
 
     /**
-     * Get USRMODIFICACION
+     * Get USR_MODIFICACION
      *
      * @return string
      */
     public function getUSRMODIFICACION()
     {
-        return $this->USRMODIFICACION;
+        return $this->USR_MODIFICACION;
     }
 
     /**
-     * Set FEMODIFICACION
+     * Set FE_MODIFICACION
      *
-     * @param \DateTime $FEMODIFICACION
+     * @param \DateTime $FE_MODIFICACION
      *
      * @return InfoCodigoPromocionHistorial
      */
-    public function setFEMODIFICACION($FEMODIFICACION)
+    public function setFEMODIFICACION($FE_MODIFICACION)
     {
-        $this->FEMODIFICACION = $FEMODIFICACION;
+        $this->FE_MODIFICACION = $FE_MODIFICACION;
 
         return $this;
     }
 
     /**
-     * Get FEMODIFICACION
+     * Get FE_MODIFICACION
      *
      * @return \DateTime
      */
     public function getFEMODIFICACION()
     {
-        return $this->FEMODIFICACION;
+        return $this->FE_MODIFICACION;
     }
 
 }
