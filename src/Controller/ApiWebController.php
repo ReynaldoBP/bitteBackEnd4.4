@@ -801,34 +801,60 @@ class ApiWebController extends FOSRestController
                     throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
                 }
                 $strRestauranteCodigo = $objRestaurante->getCODIGO();
-                if(!empty($strCodigo) && $strCodigo != "NO" && $strRestauranteCodigo == "NO")
+                if($strRestauranteCodigo == "NO")
                 {
                     $strStatus = 409;
                     throw new \Exception('El restaurante seleccionado no permite el ingreso de códigos.');
                 }
                 if( (!empty($strRestauranteCodigo) && $strRestauranteCodigo == "SI")&&(!empty($strCodigo) && $strCodigo!="NO") )
                 {
-                    $objBaseToPhp  = explode(',', $strExcel);
-                    $arrayDataTemp = base64_decode($objBaseToPhp[1]);
-                    $arrayData     = explode("\n", $arrayDataTemp);
                     if(!empty($strExcel))
                     {
+                        $objBaseToPhp  = explode(',', $strExcel);
+                        $arrayDataTemp = base64_decode($objBaseToPhp[1]);
+                        $arrayData     = explode("\n", $arrayDataTemp);
                         $strRutaExcel = $objController->subirfichero($strExcel);
-                    }
-                    for($intCont =0; $intCont<sizeof($arrayData); $intCont ++)
-                    {
-                        if($arrayData[$intCont]!="" && $arrayData[$intCont]!=null)
+                        if(is_array($arrayData) && !empty($arrayData))
                         {
-                            $entityCodigoPromocion = new InfoCodigoPromocion();
-                            $entityCodigoPromocion->setRESTAURANTEID($objRestaurante);
-                            $entityCodigoPromocion->setPROMOCIONID($objPromocion);
-                            $entityCodigoPromocion->setEXCEL($strRutaExcel);
-                            $entityCodigoPromocion->setESTADO(strtoupper($strEstado));
-                            $entityCodigoPromocion->setCODIGO(trim($arrayData[$intCont]));
-                            $entityCodigoPromocion->setUSRCREACION($strUsuarioCreacion);
-                            $entityCodigoPromocion->setFECREACION($strDatetimeActual);
-                            $em->persist($entityCodigoPromocion);
-                            $em->flush();
+                            for($intCont =0; $intCont<sizeof($arrayData); $intCont ++)
+                            {
+                                if($arrayData[$intCont]!="" && $arrayData[$intCont]!=null)
+                                {
+                                    $entityCodigoPromocion = new InfoCodigoPromocion();
+                                    $entityCodigoPromocion->setRESTAURANTEID($objRestaurante);
+                                    $entityCodigoPromocion->setPROMOCIONID($objPromocion);
+                                    if(!empty($strRutaExcel))
+                                    {
+                                        $entityCodigoPromocion->setEXCEL($strRutaExcel);
+                                    }
+                                    $entityCodigoPromocion->setESTADO(strtoupper($strEstado));
+                                    $entityCodigoPromocion->setCODIGO(trim($arrayData[$intCont]));
+                                    $entityCodigoPromocion->setUSRCREACION($strUsuarioCreacion);
+                                    $entityCodigoPromocion->setFECREACION($strDatetimeActual);
+                                    $em->persist($entityCodigoPromocion);
+                                    $em->flush();
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        $arrayCodigoPromo = $this->getDoctrine()
+                                                 ->getRepository(InfoCodigoPromocion::class)
+                                                 ->findby(array("PROMOCION_ID"=>$intIdPromocion));
+                        foreach($arrayCodigoPromo as $arrayItem)
+                        {
+                            $objCodigoPromo = $this->getDoctrine()
+                                                   ->getRepository(InfoCodigoPromocion::class)
+                                                   ->find($arrayItem->getId());
+                            if(is_object($objCodigoPromo) && !empty($objCodigoPromo))
+                            {
+                                $objCodigoPromo->setRESTAURANTEID($objRestaurante);
+                                $objCodigoPromo->setUSRMODIFICACION($strUsuarioCreacion);
+                                $objCodigoPromo->setFEMODIFICACION($strDatetimeActual);
+                                $em->persist($objCodigoPromo);
+                                $em->flush();
+                            }
                         }
                     }
                 }
