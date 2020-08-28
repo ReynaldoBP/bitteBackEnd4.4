@@ -261,7 +261,7 @@ class UsuarioController extends Controller
             }
             if(!empty($strTipoRol))
             {
-                $arrayParametrosRol = array('ESTADO' => $strEstado,
+                $arrayParametrosRol = array(//'ESTADO' => $strEstado,
                                             'id'     => $strTipoRol);
                 $objTipoRol         = $this->getDoctrine()
                                            ->getRepository(AdmiTipoRol::class)

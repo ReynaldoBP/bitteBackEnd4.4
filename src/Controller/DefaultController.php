@@ -159,7 +159,7 @@ error_log(print_r($arrayParametros,1));*/
      * 
      * @return array  $nombreImg
      */
-    public function subirfichero($imgBase64)
+    public function subirfichero($imgBase64,$idDiferenciador)
     {
         $base_to_php   = explode(',', $imgBase64);
         $data          = base64_decode($base_to_php[1]);
@@ -169,7 +169,7 @@ error_log(print_r($arrayParametros,1));*/
         {
             $ext = "ico";
         }
-        $nombreImg     = ("bitte_".date("YmdHis").".".$ext);
+        $nombreImg     = ("bitte_".date("YmdHis")."_".$idDiferenciador.".".$ext);
         $strRutaImagen = ("images"."/".$nombreImg);
         file_put_contents($strRutaImagen,$data);
         return $nombreImg;

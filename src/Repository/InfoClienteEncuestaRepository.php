@@ -384,6 +384,7 @@ AND ICE.ESTADO != 'ELIMINADO'
                                     INNER JOIN INFO_CLIENTE IC 
                                         ON ICE.CLIENTE_ID = IC.ID_CLIENTE ";
             $strWhere       = " WHERE ICE.ESTADO != 'ELIMINADO' AND EXTRACT(MONTH FROM ICE.FE_CREACION)  = :MES
+AND IC.EDAD!='SIN EDAD'
                                     AND EXTRACT(YEAR FROM ICE.FE_CREACION) = :ANIO ".$strSubWhere."";
             $strGroup       = " GROUP BY GENERACION ";
             $objQuery->setParameter("MES",$strMes);
