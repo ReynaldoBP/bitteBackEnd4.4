@@ -161,11 +161,11 @@ class ApiWebController extends FOSRestController
         {
             if(!empty($imgBase64))
             {
-                $strRutaImagen = $objController->subirfichero($imgBase64);
+                $strRutaImagen = $objController->subirfichero($imgBase64,1);
             }
             if(!empty($icoBase64))
             {
-                $strRutaIcono  = $objController->subirfichero($icoBase64);
+                $strRutaIcono  = $objController->subirfichero($icoBase64,2);
             }
             $em->getConnection()->beginTransaction();
             if(strtoupper($strTipoIdentificacion) == 'RUC' && strlen(trim($strIdentificacion))!=13)
@@ -281,11 +281,11 @@ class ApiWebController extends FOSRestController
         {
             if(!empty($imgBase64))
             {
-                $strRutaImagen = $objController->subirfichero($imgBase64);
+                $strRutaImagen = $objController->subirfichero($imgBase64,"1");
             }
             if(!empty($icoBase64))
             {
-                $strRutaIcono = $objController->subirfichero($icoBase64);
+                $strRutaIcono = $objController->subirfichero($icoBase64,"2");
             }
 
             $em->getConnection()->beginTransaction();
@@ -434,7 +434,7 @@ class ApiWebController extends FOSRestController
             $em->getConnection()->beginTransaction();
             if(!empty($imgBase64))
             {
-                $strRutaImagen = $objController->subirfichero($imgBase64);
+                $strRutaImagen = $objController->subirfichero($imgBase64,1);
             }
             $entityPublicidad = new InfoPublicidad();
             $entityPublicidad->setDESCRIPCION($strDescrPublicidad);
@@ -524,7 +524,7 @@ class ApiWebController extends FOSRestController
             $em->getConnection()->beginTransaction();
             if(!empty($imgBase64))
             {
-                $strRutaImagen = $objController->subirfichero($imgBase64);
+                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdPublicidad);
             }
             $objPublicidad = $this->getDoctrine()
                                   ->getRepository(InfoPublicidad::class)
@@ -648,7 +648,7 @@ class ApiWebController extends FOSRestController
             $em->getConnection()->beginTransaction();
             if(!empty($imgBase64))
             {
-                $strRutaImagen = $objController->subirfichero($imgBase64);
+                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdRestaurante);
             }
             $arrayParametros = array('ESTADO' => 'ACTIVO',
                                      'id'     => $intIdRestaurante);
@@ -672,7 +672,7 @@ class ApiWebController extends FOSRestController
                 $arrayData     = explode("\n", $arrayDataTemp);
                 if(!empty($strExcel))
                 {
-                    $strRutaExcel = $objController->subirfichero($strExcel);
+                    $strRutaExcel = $objController->subirfichero($strExcel,1);
                 }
                 for($intCont =0; $intCont<sizeof($arrayData); $intCont ++)
                 {
@@ -777,7 +777,7 @@ class ApiWebController extends FOSRestController
             $em->getConnection()->beginTransaction();
             if(!empty($imgBase64))
             {
-                $strRutaImagen = $objController->subirfichero($imgBase64);
+                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdPromocion);
             }
             else
             {
@@ -813,7 +813,7 @@ class ApiWebController extends FOSRestController
                         $objBaseToPhp  = explode(',', $strExcel);
                         $arrayDataTemp = base64_decode($objBaseToPhp[1]);
                         $arrayData     = explode("\n", $arrayDataTemp);
-                        $strRutaExcel = $objController->subirfichero($strExcel);
+                        $strRutaExcel = $objController->subirfichero($strExcel,1);
                         if(is_array($arrayData) && !empty($arrayData))
                         {
                             for($intCont =0; $intCont<sizeof($arrayData); $intCont ++)
@@ -836,6 +836,7 @@ class ApiWebController extends FOSRestController
                                 }
                             }
                         }
+                        $strRutaExcel = $objController->subirfichero($strExcel,1);
                     }
                     else
                     {
@@ -1030,7 +1031,7 @@ class ApiWebController extends FOSRestController
         {
             if(!empty($imgBase64))
             {
-                $strRutaImagen = $objController->subirfichero($imgBase64);
+                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdCliente);
             }
             $em->getConnection()->beginTransaction();
             $objCliente = $this->getDoctrine()
@@ -1104,7 +1105,7 @@ class ApiWebController extends FOSRestController
         {
             if(!empty($imgBase64))
             {
-                $strRutaImagen = $objController->subirfichero($imgBase64);
+                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdCltInfluencer);
             }
             $em->getConnection()->beginTransaction();
             $objCltInfluencer = $this->getDoctrine()
