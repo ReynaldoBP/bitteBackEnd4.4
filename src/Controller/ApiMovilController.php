@@ -174,6 +174,7 @@ class ApiMovilController extends FOSRestController
         $em                 = $this->getDoctrine()->getManager();
         $strEstado          = (!empty($strAutenticacionRS) && $strAutenticacionRS == 'N') ? 'INACTIVO':'ACTIVO';
         $boolBanderaCambio  = 0;
+        $boolBanderaCliente = 0;
         try
         {
             $em->getConnection()->beginTransaction();
@@ -182,23 +183,26 @@ class ApiMovilController extends FOSRestController
                 $strNombre = explode('@',$strCorreo);
                 $strNombre = $strNombre[0];
             }
-            $objClt  = $this->getDoctrine()
+            $entityCliente  = $this->getDoctrine()
                             ->getRepository(InfoCliente::class)
                             ->findOneBy(array('CORREO'=>$strCorreo));
-            if(is_object($objClt) || !empty($objClt))
+            if(is_object($entityCliente) || !empty($entityCliente))
             {
-                $strAuthRS = $objClt->getAUTENTICACIONRS();
+                $strAuthRS = $entityCliente->getAUTENTICACIONRS();
                 if($strAutenticacionRS == 'S' && $strAuthRS == 'N')
                 {
                     $boolBanderaCambio  = 1;
                 }
                 else
                 {
-                    throw new \Exception('Cliente ya existente.');
+                    $boolBanderaCliente  = 1;
                 }
             }
             if($boolBanderaCambio == 0)
             {
+                 if($boolBanderaCliente == 0)
+                 {
+
                  $objTipoCliente = $this->getDoctrine()
                                    ->getRepository(AdmiTipoClientePuntaje::class)
                                    ->findOneBy(array('ESTADO' => 'ACTIVO',
@@ -208,124 +212,133 @@ class ApiMovilController extends FOSRestController
                      throw new \Exception('No existe tipo cliente con la descripción enviada por parámetro.');
                 }
                 $arrayParametrosUsuario = array('ESTADO' => 'ACTIVO',
-                                            'id'     => $intIdUsuario);
-            $objUsuario = $this->getDoctrine()
+                                                'id'     => $intIdUsuario);
+                $objUsuario = $this->getDoctrine()
                                ->getRepository(InfoUsuario::class)
                                ->findOneBy($arrayParametrosUsuario);
-            if(!is_object($objUsuario) || empty($objUsuario))
-            {
-                throw new \Exception('No existe usuario con identificador enviado por parámetro.');
-            }
+                if(!is_object($objUsuario) || empty($objUsuario))
+                {
+                     throw new \Exception('No existe usuario con identificador enviado por parámetro.');
+                }
 
-            $entityCliente = new InfoCliente();
+                $entityCliente = new InfoCliente();
+                $entityCliente->setAUTENTICACIONRS($strAutenticacionRS);
+                $entityCliente->setCONTRASENIA(md5($strContrasenia));
+                $entityCliente->setIDENTIFICACION($strIdentificacion);
+                $entityCliente->setDIRECCION($strDireccion);
+                $entityCliente->setEDAD($strEdad);
+                $entityCliente->setTIPOCOMIDA($strTipoComida);
+                $entityCliente->setGENERO($strGenero);
+                $entityCliente->setESTADO(strtoupper($strEstado));
+                $entityCliente->setSECTOR($strSector);
+                $entityCliente->setTIPOCLIENTEPUNTAJEID($objTipoCliente);
+                $entityCliente->setUSUARIOID($objUsuario);
+                $entityCliente->setNOMBRE($strNombre);
+                $entityCliente->setAPELLIDO($strApellido);
+                $entityCliente->setCORREO($strCorreo);
+                $entityCliente->setUSRCREACION($strUsuarioCreacion);
+                $entityCliente->setFECREACION($strDatetimeActual);
+                $em->persist($entityCliente);
+                $em->flush();
+                $strMensajeError = 'Usuario creado con exito.!';
+       
+                     if ($em->getConnection()->isTransactionActive())
+                     {
+                          $em->getConnection()->commit();
+                          $em->getConnection()->close();
+                     }
+                }
+                
+                if($strAutenticacionRS == 'N')
+                {
+                    $strNombreClt      = !empty($entityCliente->getNOMBRE()) ? $entityCliente->getNOMBRE():'';
+                    $strWelcome        = (!empty($entityCliente->getGENERO()) && $entityCliente->getGENERO() == "MASCULINO") ? "Bienvenido":"Bienvenida";
+                    $strDistractor     = substr(md5(time()),0,16);
+                    ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                    //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                    $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                    $strUrlTermCond    ="https://la.bitte.app/privacy-policy/";
+                    $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
+                    $strAsunto         = $strWelcome.' Usuario Bitte';
+
+                    $strMensajeCorreo = '<div class="">Hola '.$strNombreClt.' ,</div>
+                   <div class="">&nbsp;</div>
+                   <div class="">FELICITACIONES!!!!&nbsp;</div>
+                   <div class="">&nbsp;</div>
+                   <div class="">Has logrado con &eacute;xito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en nuestros restaurantes participantes.&nbsp;</div>
+                   <div class="">&nbsp;</div>
+                   <div class="">En Bitte es muy importante seguir las reglas para que tus puntos sean v&aacute;lidos y no los pierdas. Puedes disfrutar de nuestra aplicaci&oacute;n siguiendo estos pasos:&nbsp;</div>
+                   <div class="">1. Abre la aplicaci&oacute;n y elige tomar foto. Por GPS se ubica el restaurante donde estas y se autoriza para tomar la foto.&nbsp;</div>
+                   <div class="">2. Solo se aceptan fotos de platos de comida.&nbsp;</div>
+                   <div class="">3. Califica tu experiencia gastron&oacute;mica - GANASTE PUNTOS. &nbsp;</div>
+                   <div class="">4. Comparte en redes sociales tu imagen si lo deseas - GANAS M&Aacute;S PUNTOS&nbsp;</div>
+                   <div class="">5. Acumulas y canjea tus puntos en tus restaurantes favoritos. &nbsp;</div>
+                   <div class="">6. Tus puntos tienen una vigencia de 8 meses.&nbsp;</div>
+                   <div class="">7. Tus puntos son v&aacute;lidos solo en el restaurante donde comiste y calificaste.&nbsp;</div>
+                   <div class="">8. El restaurante tiene la potestad de eliminar tus puntos si ve que la foto no concuerda con su men&uacute;.&nbsp;</div>
+                   <div class="">&nbsp;</div>
+                   <div class="">Para mayor informaci&oacute;n consulta <a href='.$strUrlTermCond.' target="_blank" >aqu&iacute;</a> los t&eacute;rminos y condiciones de uso.&nbsp;</div>
+                   <div class="">Para información de los restaurantes participantes has click <a href='.$strUrlRestaurante.' target="_blank" >aqu&iacute;</a>.&nbsp;</div>
+                   <div class="">
+                    Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas.&nbsp;</div>
+                   <div class="">&nbsp;</div>
+                   <div class="">
+                   <div>
+                   <div><strong>Est&aacute;s a un paso de comenzar, solamente debes activar tu cuenta.&nbsp;</strong></div>
+                   <div><a href='.$strActivaCltProd.' target="_blank" >Activar mi cuenta</a></div>
+                   <div>&nbsp;</div>
+                   </div>
+                   </div>
+                   <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+                   <div class="">&nbsp;</div>';
+
+                   $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                             'strMensajeCorreo' => $strMensajeCorreo,
+                                             'strRemitente'     => "notificaciones@bitte.app",
+                                             'strDestinatario'  => $strCorreo);
+                   $objController    = new DefaultController();
+                   $objController->setContainer($this->container);
+                   $objController->enviaCorreo($arrayParametros);
+                }
+                if($boolBanderaCliente == 1)
+                {
+                    throw new \Exception('Cliente ya existente. Se envió el correo de ingreso');   
+                }
+                else
+                {
+                   $arrayCliente = array('id'             => $entityCliente->getId(),
+                                      'identificacion' => $entityCliente->getIDENTIFICACION(),
+                                      'nombre'         => $entityCliente->getNOMBRE(),
+                                      'apellido'       => $entityCliente->getAPELLIDO(),
+                                      'correo'         => $entityCliente->getCORREO(),
+                                      'direccion'      => $entityCliente->getDIRECCION(),
+                                      'edad'           => $entityCliente->getEDAD(),
+                                      'tipoComida'     => $entityCliente->getTIPOCOMIDA(),
+                                      'genero'         => $entityCliente->getGENERO(),
+                                      'estado'         => $entityCliente->getESTADO(),
+                                      'sector'         => $entityCliente->getSECTOR(),
+                                      'usrCreacion'    => $entityCliente->getUSRCREACION(),
+                                      'feCreacion'     => $entityCliente->getFECREACION());
+                }
+         }
+         else
+         {
             $entityCliente->setAUTENTICACIONRS($strAutenticacionRS);
-            $entityCliente->setCONTRASENIA(md5($strContrasenia));
-            $entityCliente->setIDENTIFICACION($strIdentificacion);
-            $entityCliente->setDIRECCION($strDireccion);
+            $entityCliente->setESTADO(strtoupper($strEstado));
             $entityCliente->setEDAD($strEdad);
             $entityCliente->setTIPOCOMIDA($strTipoComida);
             $entityCliente->setGENERO($strGenero);
-            $entityCliente->setESTADO(strtoupper($strEstado));
-            $entityCliente->setSECTOR($strSector);
-            $entityCliente->setTIPOCLIENTEPUNTAJEID($objTipoCliente);
-            $entityCliente->setUSUARIOID($objUsuario);
-            $entityCliente->setNOMBRE($strNombre);
-            $entityCliente->setAPELLIDO($strApellido);
-            $entityCliente->setCORREO($strCorreo);
             $entityCliente->setUSRCREACION($strUsuarioCreacion);
             $entityCliente->setFECREACION($strDatetimeActual);
             $em->persist($entityCliente);
             $em->flush();
             $strMensajeError = 'Usuario creado con exito.!';
-       
-        if ($em->getConnection()->isTransactionActive())
-        {
             $em->getConnection()->commit();
             $em->getConnection()->close();
-            $arrayCliente = array('id'             => $entityCliente->getId(),
+            $arrayCliente = array('id'               => $entityCliente->getId(),
                                     'identificacion' => $entityCliente->getIDENTIFICACION(),
                                     'nombre'         => $entityCliente->getNOMBRE(),
-                                    'apellido'       => $entityCliente->getAPELLIDO(),
-                                    'correo'         => $entityCliente->getCORREO(),
-                                    'direccion'      => $entityCliente->getDIRECCION(),
-                                    'edad'           => $entityCliente->getEDAD(),
-                                    'tipoComida'     => $entityCliente->getTIPOCOMIDA(),
-                                    'genero'         => $entityCliente->getGENERO(),
-                                    'estado'         => $entityCliente->getESTADO(),
-                                    'sector'         => $entityCliente->getSECTOR(),
-                                    'usrCreacion'    => $entityCliente->getUSRCREACION(),
-                                    'feCreacion'     => $entityCliente->getFECREACION());
-            if($strAutenticacionRS == 'N')
-            {
-                $strNombreClt      = !empty($entityCliente->getNOMBRE()) ? $entityCliente->getNOMBRE():'';
-                $strWelcome        = (!empty($entityCliente->getGENERO()) && $entityCliente->getGENERO() == "MASCULINO") ? "Bienvenido":"Bienvenida";
-                $strDistractor     = substr(md5(time()),0,16);
-                ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
-                //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
-                $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
-                $strUrlTermCond    ="https://la.bitte.app/privacy-policy/";
-                $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
-                $strAsunto         = $strWelcome.' Usuario Bitte';
-
-                $strMensajeCorreo = '<div class="">Hola '.$strNombreClt.' ,</div>
-                <div class="">&nbsp;</div>
-                <div class="">FELICITACIONES!!!!&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Has logrado con &eacute;xito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en nuestros restaurantes participantes.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">En Bitte es muy importante seguir las reglas para que tus puntos sean v&aacute;lidos y no los pierdas. Puedes disfrutar de nuestra aplicaci&oacute;n siguiendo estos pasos:&nbsp;</div>
-                <div class="">1. Abre la aplicaci&oacute;n y elige tomar foto. Por GPS se ubica el restaurante donde estas y se autoriza para tomar la foto.&nbsp;</div>
-                <div class="">2. Solo se aceptan fotos de platos de comida.&nbsp;</div>
-                <div class="">3. Califica tu experiencia gastron&oacute;mica - GANASTE PUNTOS. &nbsp;</div>
-                <div class="">4. Comparte en redes sociales tu imagen si lo deseas - GANAS M&Aacute;S PUNTOS&nbsp;</div>
-                <div class="">5. Acumulas y canjea tus puntos en tus restaurantes favoritos. &nbsp;</div>
-                <div class="">6. Tus puntos tienen una vigencia de 8 meses.&nbsp;</div>
-                <div class="">7. Tus puntos son v&aacute;lidos solo en el restaurante donde comiste y calificaste.&nbsp;</div>
-                <div class="">8. El restaurante tiene la potestad de eliminar tus puntos si ve que la foto no concuerda con su men&uacute;.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Para mayor informaci&oacute;n consulta <a href='.$strUrlTermCond.' target="_blank" >aqu&iacute;</a> los t&eacute;rminos y condiciones de uso.&nbsp;</div>
-                <div class="">Para información de los restaurantes participantes has click <a href='.$strUrlRestaurante.' target="_blank" >aqu&iacute;</a>.&nbsp;</div>
-                <div class="">
-                Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">
-                <div>
-                <div><strong>Est&aacute;s a un paso de comenzar, solamente debes activar tu cuenta.&nbsp;</strong></div>
-                <div><a href='.$strActivaCltProd.' target="_blank" >Activar mi cuenta</a></div>
-                <div>&nbsp;</div>
-                </div>
-                </div>
-                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-                <div class="">&nbsp;</div>';
-
-                $arrayParametros  = array('strAsunto'        => $strAsunto,
-                                          'strMensajeCorreo' => $strMensajeCorreo,
-                                          'strRemitente'     => "notificaciones@bitte.app",
-                                          'strDestinatario'  => $strCorreo);
-                $objController    = new DefaultController();
-                $objController->setContainer($this->container);
-                $objController->enviaCorreo($arrayParametros);
-            }
-          }
-         }
-         else
-         {
-            $objClt->setAUTENTICACIONRS($strAutenticacionRS);
-            $objClt->setESTADO(strtoupper($strEstado));
-            $objClt->setEDAD($strEdad);
-            $objClt->setTIPOCOMIDA($strTipoComida);
-            $objClt->setGENERO($strGenero);
-            $objClt->setUSRCREACION($strUsuarioCreacion);
-            $objClt->setFECREACION($strDatetimeActual);
-            $em->persist($objClt);
-            $em->flush();
-            $strMensajeError = 'Usuario creado con exito.!';
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-            $arrayCliente = array('id'             => $objClt->getId(),
-                                    'identificacion' => $objClt->getIDENTIFICACION(),
-                                    'nombre'         => $objClt->getNOMBRE(),
-                                    'apellido'       => $objClt->getAPELLIDO());
+                                    'apellido'       => $entityCliente->getAPELLIDO());
          }
         }
         catch(\Exception $ex)
@@ -2172,6 +2185,7 @@ class ApiMovilController extends FOSRestController
         $objResponse        = new Response;
         $em                 = $this->getDoctrine()->getManager();
         $boolSucces         = true;
+        $boolBanderaCodigo  = false;
         try
         {
             $em->getConnection()->beginTransaction();
@@ -2258,6 +2272,7 @@ class ApiMovilController extends FOSRestController
                     $entityCodigoPromocionHist->setFECREACION($strDatetimeActual);
                     $em->persist($entityCodigoPromocionHist);
                     $em->flush();
+		    $boolBanderaCodigo = true;
                 }
                 $arrayPromociones   = $this->getDoctrine()
                                            ->getRepository(InfoPromocionHistorial::class)
@@ -2283,6 +2298,7 @@ class ApiMovilController extends FOSRestController
                     $em->persist($entityPromocionHist);
                     $em->flush();
                     $strMensajeError = 'Creado con exito.!';
+                    $intIdPromocionHist = $entityPromocionHist->getId();
                 }
                 else
                 {
@@ -2310,6 +2326,27 @@ class ApiMovilController extends FOSRestController
         {
             $em->getConnection()->commit();
             $em->getConnection()->close();
+            if($boolBanderaCodigo)
+            {
+                $objPromocionHist = $this->getDoctrine()
+                                         ->getRepository(InfoPromocionHistorial::class)
+                                         ->findOneBy(array('id'     => $intIdPromocionHist,
+                                                           'ESTADO' => 'PENDIENTE'));
+                if(!empty($objPromocionHist)&&is_object($objPromocionHist))
+                {
+                    $strEstado = "COMPLETADO";
+                    $objPromocionHist->setESTADO(strtoupper($strEstado));
+                    $objPromocionHist->setUSRMODIFICACION($strUsuarioCreacion);
+                    $objPromocionHist->setFEMODIFICACION($strDatetimeActual);
+                    $em->persist($objPromocionHist);
+                    $em->flush();
+                }
+                if ($em->getConnection()->isTransactionActive())
+                {
+                    $em->getConnection()->commit();
+                    $em->getConnection()->close();
+                }
+            }
             $arrayPromocionHist = array('id'             => $entityPromocionHist->getId(),
                                         'idCliente'      => $entityPromocionHist->getCLIENTEID()->getId(),
                                         'idPromocion'    => $entityPromocionHist->getPROMOCIONID()->getId(),

@@ -801,7 +801,7 @@ class ApiWebController extends FOSRestController
                     throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
                 }
                 $strRestauranteCodigo = $objRestaurante->getCODIGO();
-                if($strRestauranteCodigo == "NO")
+                if($strRestauranteCodigo == "NO" && (!empty($strCodigo) && $strCodigo == "SI"))
                 {
                     $strStatus = 409;
                     throw new \Exception('El restaurante seleccionado no permite el ingreso de códigos.');

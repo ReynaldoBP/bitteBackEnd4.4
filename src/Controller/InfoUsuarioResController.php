@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManager;
 use App\Entity\InfoUsuario;
 use App\Entity\InfoRestaurante;
 use App\Entity\InfoUsuarioRes;
+use App\Controller\DefaultController;
 
 class InfoUsuarioResController extends Controller
 {
@@ -40,8 +41,9 @@ class InfoUsuarioResController extends Controller
         $objResponse            = new Response;
         $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
-        $strContrasenia         = uniqid();
-        $strContrasenia         = substr($strContrasenia,0,4);
+        $strContrasenia         = "0000";
+        //$strContrasenia         = uniqid();
+        //$strContrasenia         = substr($strContrasenia,0,4);
         try
         {
             $em->getConnection()->beginTransaction();

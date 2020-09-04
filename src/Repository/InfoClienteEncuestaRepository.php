@@ -262,14 +262,14 @@ AND ICE.ESTADO != 'ELIMINADO'
             }
             $strSelect      = "SELECT IE.ID_ENCUESTA, 
                                 IE.TITULO,
-                                WEEK(ICE.FE_CREACION) AS SEMANA,
+                                WEEK(ICE.FE_CREACION,1) AS SEMANA,
                                 EXTRACT(YEAR  FROM ICE.FE_CREACION) AS ANIO, 
                                 IFNULL(COUNT(*),0) AS CANTIDAD ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 ".$strSubSelect."
                                     INNER JOIN INFO_ENCUESTA IE ON ICE.ENCUESTA_ID = IE.ID_ENCUESTA ";
             $strWhere       = " WHERE IE.ESTADO in (:ESTADO) AND ICE.ESTADO != 'ELIMINADO' ".$strSubWhere." ";
-            $strGroup       = " GROUP BY ICE.ENCUESTA_ID,WEEK(ICE.FE_CREACION),EXTRACT(YEAR  FROM ICE.FE_CREACION) ";
+            $strGroup       = " GROUP BY ICE.ENCUESTA_ID,WEEK(ICE.FE_CREACION,1),EXTRACT(YEAR  FROM ICE.FE_CREACION) ";
             $strOrder       = " ORDER BY ICE.FE_CREACION DESC ";
             $strLimit       = " LIMIT ".$strLimite." ";
             $objQuery->setParameter("ESTADO",$strEstado);

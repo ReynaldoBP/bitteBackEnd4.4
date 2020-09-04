@@ -62,7 +62,6 @@ error_log(print_r($arrayParametros,1));*/
                                         ->setTo($strDestinatario)
                                         ->setBody($strMensajeCorreo, 'text/html');
         $strRespuesta = $this->get('mailer')->send($objMessage);
-
         } catch (\Exception $e) {
            return  $e->getMessage();
         }
