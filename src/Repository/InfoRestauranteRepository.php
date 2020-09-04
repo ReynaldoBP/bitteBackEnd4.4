@@ -20,7 +20,10 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
      * @version 1.0 16-07-2019
      * 
      * @return array  $arrayRestaurante
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.0 04-09-2020 - Se agrega bandera para retornar todos los restaurantes menos Bitte
+     *
      */    
     public function getRestauranteCriterio($arrayParametros)
     {
@@ -31,6 +34,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
         $strTipoIdentificacion = $arrayParametros['strTipoIdentificacion'] ? $arrayParametros['strTipoIdentificacion']:'';
         $strRazonSocial        = $arrayParametros['strRazonSocial'] ? $arrayParametros['strRazonSocial']:'';
         $strContador           = $arrayParametros['strContador'] ? $arrayParametros['strContador']:'NO';
+        $strBanderaBitte       = $arrayParametros['strBanderaBitte'] ? $arrayParametros['strBanderaBitte']:'N';
         $strEstado             = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
         $arrayRestaurante      = array();
         $strMensajeError       = '';
@@ -81,6 +85,10 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                 {
                 $strWhere .= " AND IR.ID_RESTAURANTE =:ID_RESTAURANTE";
                 $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
+                }
+                if(!empty($strBanderaBitte) && $strBanderaBitte == "S")
+                {
+                    $strWhere .= " AND IR.ID_RESTAURANTE != 28 ";
                 }
                 if(!empty($intIdUsuario))
                 {

@@ -175,6 +175,7 @@ class ApiMovilController extends FOSRestController
         $strEstado          = (!empty($strAutenticacionRS) && $strAutenticacionRS == 'N') ? 'INACTIVO':'ACTIVO';
         $boolBanderaCambio  = 0;
         $boolBanderaCliente = 0;
+        $boolBanderaCltNew  = 0;
         try
         {
             $em->getConnection()->beginTransaction();
@@ -197,6 +198,10 @@ class ApiMovilController extends FOSRestController
                 {
                     $boolBanderaCliente  = 1;
                 }
+            }
+            else
+            {
+                $boolBanderaCltNew = 1;
             }
             if($boolBanderaCambio == 0)
             {
@@ -241,7 +246,35 @@ class ApiMovilController extends FOSRestController
                 $em->persist($entityCliente);
                 $em->flush();
                 $strMensajeError = 'Usuario creado con exito.!';
-       
+                if($boolBanderaCltNew == 1)
+                {
+                    $arrayRestaurantes = $this->getDoctrine()
+                                              ->getRepository(InfoRestaurante::class)
+                                              ->getRestauranteCriterio(array('strEstado'       => "ACTIVO",
+                                                                             'strBanderaBitte' => "S"));
+                    if(empty($arrayRestaurantes['error']))
+                    {
+                        $intCantPuntos = 1;
+                        foreach ($arrayRestaurantes['resultados'] as $item)
+                        {
+                            $objRestaurante = $this->getDoctrine()
+                                                   ->getRepository(InfoRestaurante::class)
+                                                   ->find($item['ID_RESTAURANTE']);
+                            if(is_object($objRestaurante) && !empty($objRestaurante))
+                            {
+                                $entityCltPunto = new InfoClientePunto();
+                                $entityCltPunto->setCLIENTEID($entityCliente);
+                                $entityCltPunto->setRESTAURANTEID($objRestaurante);
+                                $entityCltPunto->setCANTIDADPUNTOS($intCantPuntos);
+                                $entityCltPunto->setESTADO("ACTIVO");
+                                $entityCltPunto->setUSRCREACION($strUsuarioCreacion);
+                                $entityCltPunto->setFECREACION($strDatetimeActual);
+                                $em->persist($entityCltPunto);
+                                $em->flush();
+                            }
+                        }
+                    }
+                }
                      if ($em->getConnection()->isTransactionActive())
                      {
                           $em->getConnection()->commit();
@@ -267,6 +300,9 @@ class ApiMovilController extends FOSRestController
                    <div class="">&nbsp;</div>
                    <div class="">Has logrado con &eacute;xito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en nuestros restaurantes participantes.&nbsp;</div>
                    <div class="">&nbsp;</div>
+                   <div><strong>Est&aacute;s a un paso de comenzar, solamente debes activar tu cuenta.&nbsp;</strong></div>
+                   <div><a href='.$strActivaCltProd.' target="_blank" >Activar mi cuenta</a></div>
+                   <div class="">&nbsp;</div>
                    <div class="">En Bitte es muy importante seguir las reglas para que tus puntos sean v&aacute;lidos y no los pierdas. Puedes disfrutar de nuestra aplicaci&oacute;n siguiendo estos pasos:&nbsp;</div>
                    <div class="">1. Abre la aplicaci&oacute;n y elige tomar foto. Por GPS se ubica el restaurante donde estas y se autoriza para tomar la foto.&nbsp;</div>
                    <div class="">2. Solo se aceptan fotos de platos de comida.&nbsp;</div>
@@ -284,8 +320,6 @@ class ApiMovilController extends FOSRestController
                    <div class="">&nbsp;</div>
                    <div class="">
                    <div>
-                   <div><strong>Est&aacute;s a un paso de comenzar, solamente debes activar tu cuenta.&nbsp;</strong></div>
-                   <div><a href='.$strActivaCltProd.' target="_blank" >Activar mi cuenta</a></div>
                    <div>&nbsp;</div>
                    </div>
                    </div>
