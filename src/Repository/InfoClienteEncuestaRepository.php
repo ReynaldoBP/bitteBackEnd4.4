@@ -478,9 +478,10 @@ AND IC.EDAD!='SIN EDAD'
                                       IRE.NUMERO_CONTACTO,
                                       IRE.DIRECCION_TRIBUTARIO,
                                       IRE.ICONO ";
-            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
-                                JOIN INFO_SUCURSAL         ISUR ON ISUR.ID_SUCURSAL   = ICE.SUCURSAL_ID
-                                JOIN INFO_RESTAURANTE      IRE  ON IRE.ID_RESTAURANTE = ISUR.RESTAURANTE_ID ";
+            $strFrom        = "  FROM INFO_RESTAURANTE                  IRE 
+                                        JOIN INFO_SUCURSAL              ISUR ON IRE.ID_RESTAURANTE   = ISUR.RESTAURANTE_ID 
+                                                                             AND IRE.ID_RESTAURANTE !=28
+                                        LEFT JOIN INFO_CLIENTE_ENCUESTA ICE ON ISUR.ID_SUCURSAL      = ICE.SUCURSAL_ID ";
             $strWhere       = " WHERE ISUR.ESTADO = :ESTADO
                                     AND IRE.ESTADO  = :ESTADO ";
             $strGroupBy     = " GROUP BY IRE.ID_RESTAURANTE ";
@@ -562,4 +563,68 @@ AND IC.EDAD!='SIN EDAD'
         $arrayCltEncuesta['error'] = $strMensajeError;
         return $arrayCltEncuesta;
     }
+
+    /**
+     * Documentación para la función 'getCantEncRes'
+     * Método encargado de validar si tiene una encuesta realizada y si a canjeado una promocion.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 14-09-2020
+     * 
+     * @return array  $arrayCltEncuesta
+     *
+     */
+    public function getCantEncRes($arrayParametros)
+    {
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $arrayEncuesta      = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = "SELECT 
+                                        CASE
+                                            WHEN count(ICE.ID_CLT_ENCUESTA) >= 1 THEN 'SI'
+                                            ELSE 'NO'
+                                        END AS ES_PERMITIDO,
+                                        (SELECT 
+                                                CASE
+                                                    WHEN count(ICPH.ID_CLIENTE_PUNTO_HISTORIAL) >= 1 THEN 'SI'
+                                                    ELSE 'NO'
+                                                END 
+                                        FROM INFO_CLIENTE_PROMOCION_HISTORIAL ICPH
+                                        WHERE ICPH.PROMOCION_ID IN (SELECT IPO_C.ID_PROMOCION  
+                                                                        FROM INFO_PROMOCION IPO_C
+                                                                        WHERE IPO_C.RESTAURANTE_ID=IRE.ID_RESTAURANTE 
+                                                                        AND IPO_C.DESCRIPCION_TIPO_PROMOCION='Cerveza de Cortesía')
+                                                AND ICPH.CLIENTE_ID=IC.ID_CLIENTE) AS ES_CANJEADO ";
+            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
+                                    JOIN INFO_CLIENTE      IC  ON IC.ID_CLIENTE      = ICE.CLIENTE_ID
+                                    JOIN INFO_SUCURSAL     ISU ON ISU.ID_SUCURSAL    = ICE.SUCURSAL_ID
+                                    JOIN INFO_RESTAURANTE  IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
+            $strWhere       = " WHERE IRE.ID_RESTAURANTE = :ID_RESTAURANTE
+                                    AND IC.ID_CLIENTE    = :ID_CLIENTE
+                                    AND ICE.ESTADO       IN ('ACTIVO','PENDIENTE') ";
+
+            $objQuery->setParameter("ID_RESTAURANTE",$intIdRestaurante);
+            $objQuery->setParameter("ID_CLIENTE",$intIdCliente);
+
+            $objRsmBuilder->addScalarResult('ES_PERMITIDO', 'ES_PERMITIDO', 'string');
+            $objRsmBuilder->addScalarResult('ES_CANJEADO', 'ES_CANJEADO', 'string');
+            error_log($strSql);
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayEncuesta['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayEncuesta['error'] = $strMensajeError;
+        return $arrayEncuesta;
+    }
+
 }

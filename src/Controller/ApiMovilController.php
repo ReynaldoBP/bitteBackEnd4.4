@@ -2006,6 +2006,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 10-02-2020 - Se valida si el cliente está serca de una sucursal.
      *
+     * @author Kevin Baque
+     * @version 1.3 14-09-2020 - Se agrega validaciones por promocion especial.
+     *
      * @return array  $objResponse
      */
     public function getPromocion($arrayData)
@@ -2028,6 +2031,10 @@ class ApiMovilController extends FOSRestController
         $objController          = new DefaultController();
         $intCantPuntos          = 0;
         $strDescripcion         = 'CANTIDAD_DISTANCIA';
+        $strDescripcionPromoEsp = 'PROMOCION_ESPECIAL';
+        $boolContinuar          = true;
+        $strEsPermitido         = "NO";
+        $strEsCanjeado          = "NO";
         $objController->setContainer($this->container);
         try
         {
@@ -2051,33 +2058,71 @@ class ApiMovilController extends FOSRestController
                                                                 'estado'       => $strEstado,
                                                                 'intIdRestaurante' => $intIdRestaurante,
                                                                 'metros'       => $objParametro->getVALOR2()));
+            /*
+            Bloque que valida una promocion especial, con las sgte. condiciones:
+            -Que aparezca solamente cuando tenga una encuesta realizada mientras no haya consumido esa promocion.
+             */
+            $arrayParametro  = $this->getDoctrine()
+                                    ->getRepository(AdmiParametro::class)
+                                    ->findBy(array('ESTADO'      => 'ACTIVO',
+                                                   'DESCRIPCION' => $strDescripcionPromoEsp,
+                                                   'VALOR2'      => $intIdRestaurante));
+            if(!empty($arrayParametro) && is_array($arrayParametro))
+            {
+                foreach($arrayParametro as $arrayItem)
+                {
+                    $arrayEncuesta = $this->getDoctrine()
+                                          ->getRepository(InfoClienteEncuesta::class)
+                                          ->getCantEncRes(array('intIdCliente'     =>$intIdCliente,
+                                                                'intIdRestaurante' =>$intIdRestaurante));
+                }
+                if( (!empty($arrayParametro) && is_array($arrayParametro)) && 
+                    (!empty($arrayEncuesta["resultados"]) && empty($arrayEncuesta["error"])))
+                {
+                    $arrayTemp      = $arrayEncuesta["resultados"][0];
+                    $strEsPermitido = !empty($arrayTemp["ES_PERMITIDO"]) ? $arrayTemp["ES_PERMITIDO"]:"NO";
+                    $strEsCanjeado  = !empty($arrayTemp["ES_CANJEADO"]) ? $arrayTemp["ES_CANJEADO"]:"NO";
+                }
+            }
+
             foreach($objPromocion as $arrayItem)
             {
-                $strRutaImagen = "";
-                if(!empty($arrayItem->getIMAGEN()))
+                foreach($arrayParametro as $arrayItemPromoEsp)
                 {
-                    $strRutaImagen = $objController->getImgBase64($arrayItem->getIMAGEN());
+                    if($arrayItemPromoEsp->getVALOR1() == $arrayItem->getId() && 
+                      (($strEsPermitido == "NO" && $strEsCanjeado == "NO")||($strEsPermitido == "SI" && $strEsCanjeado == "SI")))
+                    {
+                        $boolContinuar = false;
+                    }
                 }
- 
-                $arrayPromocionesActivas   = $this->getDoctrine()
-                                                  ->getRepository(InfoPromocionHistorial::class)
-                                                  ->findBy(array('CLIENTE_ID'  =>$intIdCliente,
-                                                                 'ESTADO'      =>'PENDIENTE',
-                                                                 'PROMOCION_ID'=>$arrayItem->getId()));
-                $strPromocionActiva= "";
-                if(isset($arrayPromocionesActivas) && !empty($arrayPromocionesActivas))
+                if($boolContinuar)
                 {
-                     $strPromocionActiva = "Procesando";
-                }
+                    $strRutaImagen = "";
+                    if(!empty($arrayItem->getIMAGEN()))
+                    {
+                        $strRutaImagen = $objController->getImgBase64($arrayItem->getIMAGEN());
+                    }
 
-                $arrayPromocion []= array( 'idPromocion'   => $arrayItem->getId(),
-                                        'textoProceso'     => $strPromocionActiva,
-                                        'descripcion'      => $arrayItem->getDESCRIPCIONTIPOPROMOCION(),
-                                        'imagen'           => $strRutaImagen ? $strRutaImagen:'',
-                                        'cantPuntos'       => $arrayItem->getCANTIDADPUNTOS(),
-                                        'aceptaGlobal'     => $arrayItem->getACEPTAGLOBAL(),
-                                        'habilitar'        => (!empty($arraySucursal["resultados"])&& isset($arraySucursal["resultados"])) ? 'SI':'NO',
-                                        'estado'           => $arrayItem->getESTADO());
+                    $arrayPromocionesActivas   = $this->getDoctrine()
+                                                      ->getRepository(InfoPromocionHistorial::class)
+                                                      ->findBy(array('CLIENTE_ID'  =>$intIdCliente,
+                                                                     'ESTADO'      =>'PENDIENTE',
+                                                                     'PROMOCION_ID'=>$arrayItem->getId()));
+                    $strPromocionActiva= "";
+                    if(isset($arrayPromocionesActivas) && !empty($arrayPromocionesActivas))
+                    {
+                         $strPromocionActiva = "Procesando";
+                    }
+    
+                    $arrayPromocion []= array( 'idPromocion'   => $arrayItem->getId(),
+                                            'textoProceso'     => $strPromocionActiva,
+                                            'descripcion'      => $arrayItem->getDESCRIPCIONTIPOPROMOCION(),
+                                            'imagen'           => $strRutaImagen ? $strRutaImagen:'',
+                                            'cantPuntos'       => $arrayItem->getCANTIDADPUNTOS(),
+                                            'aceptaGlobal'     => $arrayItem->getACEPTAGLOBAL(),
+                                            'habilitar'        => (!empty($arraySucursal["resultados"])&& isset($arraySucursal["resultados"])) ? 'SI':'NO',
+                                            'estado'           => $arrayItem->getESTADO());
+                }
             }
             $arrayPuntos     = $this->getDoctrine()
                                     ->getRepository(InfoClientePunto::class)
