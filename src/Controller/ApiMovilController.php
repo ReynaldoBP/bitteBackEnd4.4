@@ -694,7 +694,7 @@ class ApiMovilController extends FOSRestController
                 } 
                 $intIterador = $intIterador +1;
             }
-            
+         
             if(isset($arraySucursal['error']) && !empty($arraySucursal['error']))
             {
                 $strStatus  = 404;
@@ -1753,15 +1753,8 @@ class ApiMovilController extends FOSRestController
                                  ->findOneBy(array('id'     => $intIdRedSocial,
                                                    'ESTADO' => 'ACTIVO'));
             $intPuntosPublicacion = $objParametro->getVALOR1();
-            if($intIdRedSocial == 2)
-            {
-                $intPuntosPublicacion = 0;
-                $strCupon = 'dos cupones';
-            }
-            else
-            {
-                $strCupon = 'un cup&oacute;n';
-            }
+            $strCupon = 'un cup&oacute;n';
+
             if(!is_object($objRedSocial) || empty($objRedSocial))
             {
                 throw new \Exception('No existe la red social con identificador enviada por parámetro.');
