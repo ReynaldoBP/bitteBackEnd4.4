@@ -472,6 +472,11 @@ AND IC.EDAD!='SIN EDAD'
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
+            $strFromAdicional = " AND IRE.ID_RESTAURANTE !=28 ";
+            if($intIdCliente == 1 || $intIdCliente == 19 || $intIdCliente == 17 || $intIdCliente == 14 || $intIdCliente == 32)
+            {
+                $strFromAdicional = "  ";
+            }
             //SUM(ICE.CANTIDAD_PUNTOS) AS CANT_PUNTOS,
             $strSelect      = "SELECT IRE.NOMBRE_COMERCIAL,
                                       IRE.ID_RESTAURANTE,
@@ -480,7 +485,7 @@ AND IC.EDAD!='SIN EDAD'
                                       IRE.ICONO ";
             $strFrom        = "  FROM INFO_RESTAURANTE                  IRE 
                                         JOIN INFO_SUCURSAL              ISUR ON IRE.ID_RESTAURANTE   = ISUR.RESTAURANTE_ID 
-                                                                             AND IRE.ID_RESTAURANTE !=28
+                                                                             ".$strFromAdicional."
                                         LEFT JOIN INFO_CLIENTE_ENCUESTA ICE ON ISUR.ID_SUCURSAL      = ICE.SUCURSAL_ID ";
             $strWhere       = " WHERE ISUR.ESTADO = :ESTADO
                                     AND IRE.ESTADO  = :ESTADO ";
@@ -501,7 +506,6 @@ AND IC.EDAD!='SIN EDAD'
                                     ICEP.CLIENTE_ID      = :CLIENTE_ID 
                                     AND ISURP.RESTAURANTE_ID = IRE.ID_RESTAURANTE
                                     ) AS CANT_PUNTOS_PENDIENTE ";
-                $strWhere .= " AND ICE.CLIENTE_ID= :CLIENTE_ID ";
                 $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
             }
 

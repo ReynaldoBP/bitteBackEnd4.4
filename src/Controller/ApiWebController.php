@@ -665,6 +665,19 @@ class ApiWebController extends FOSRestController
                 $strStatus = 409;
                 throw new \Exception('El restaurante seleccionado no permite el ingreso de códigos.');
             }
+
+            $entityPromocion = new InfoPromocion();
+            $entityPromocion->setRESTAURANTEID($objRestaurante);
+            $entityPromocion->setDESCRIPCIONTIPOPROMOCION($strDescrPromocion);
+            $entityPromocion->setIMAGEN($strRutaImagen);
+            $entityPromocion->setPREMIO($strPremio);
+            $entityPromocion->setCANTIDADPUNTOS($intCantPuntos);
+            $entityPromocion->setACEPTAGLOBAL($strAceptaGlobal);
+            $entityPromocion->setESTADO(strtoupper($strEstado));
+            $entityPromocion->setCODIGO(strtoupper($strCodigo));
+            $entityPromocion->setUSRCREACION($strUsuarioCreacion);
+            $entityPromocion->setFECREACION($strDatetimeActual);
+
             if( (!empty($strRestauranteCodigo) && $strRestauranteCodigo == "SI")&&(!empty($strCodigo) && $strCodigo!="NO") )
             {
                 $objBaseToPhp  = explode(',', $strExcel);
@@ -680,7 +693,7 @@ class ApiWebController extends FOSRestController
                     {
                         $entityCodigoPromocion = new InfoCodigoPromocion();
                         $entityCodigoPromocion->setRESTAURANTEID($objRestaurante);
-                        $entityCodigoPromocion->setPROMOCIONID($objPromocion);
+                        $entityCodigoPromocion->setPROMOCIONID($entityPromocion->getId());
                         $entityCodigoPromocion->setESTADO(strtoupper($strEstado));
                         $entityCodigoPromocion->setEXCEL($strRutaExcel);
                         $entityCodigoPromocion->setCODIGO(trim($arrayData[$intCont]));
@@ -691,17 +704,7 @@ class ApiWebController extends FOSRestController
                     }
                 }
             }
-            $entityPromocion = new InfoPromocion();
-            $entityPromocion->setRESTAURANTEID($objRestaurante);
-            $entityPromocion->setDESCRIPCIONTIPOPROMOCION($strDescrPromocion);
-            $entityPromocion->setIMAGEN($strRutaImagen);
-            $entityPromocion->setPREMIO($strPremio);
-            $entityPromocion->setCANTIDADPUNTOS($intCantPuntos);
-            $entityPromocion->setACEPTAGLOBAL($strAceptaGlobal);
-            $entityPromocion->setESTADO(strtoupper($strEstado));
-            $entityPromocion->setCODIGO(strtoupper($strCodigo));
-            $entityPromocion->setUSRCREACION($strUsuarioCreacion);
-            $entityPromocion->setFECREACION($strDatetimeActual);
+
             $em->persist($entityPromocion);
             $em->flush();
             $strMensajeError = 'Promoción creado con exito.!';

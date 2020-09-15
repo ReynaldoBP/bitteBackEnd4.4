@@ -218,13 +218,6 @@ class ApiMovilController extends FOSRestController
                 }
                 $arrayParametrosUsuario = array('ESTADO' => 'ACTIVO',
                                                 'id'     => $intIdUsuario);
-                $objUsuario = $this->getDoctrine()
-                               ->getRepository(InfoUsuario::class)
-                               ->findOneBy($arrayParametrosUsuario);
-                if(!is_object($objUsuario) || empty($objUsuario))
-                {
-                     throw new \Exception('No existe usuario con identificador enviado por parámetro.');
-                }
 
                 $entityCliente = new InfoCliente();
                 $entityCliente->setAUTENTICACIONRS($strAutenticacionRS);
@@ -2319,7 +2312,7 @@ class ApiMovilController extends FOSRestController
                     <div class="">&nbsp;</div>
                     <div class="">Acabas de canjear '.$intCantPuntospromo.' puntos en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>.&nbsp;</div>
                     <div class="">&nbsp;</div>
-                    <div><strong>Presenta este código '.$objCodigoPromocion->getCODIGO().' al momento de realizar tu pedido al cajero. Esperamos que tu premio est&eacute; delicioso.&nbsp;</strong></div>
+                    <div>Presenta este <strong>c&oacute;digo '.$objCodigoPromocion->getCODIGO().'</strong> al momento de realizar tu pedido al cajero. Esperamos que tu premio est&eacute; delicioso.&nbsp;</div>
                     <div class="">&nbsp;</div>
                     <div class="">Recuerda siempre usar tu app Bitte para calificar tu experiencia gastron&oacute;mica, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
                     <div class="">&nbsp;</div>
