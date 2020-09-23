@@ -1840,6 +1840,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 02-03-2020 - Se agrega correo para enviar correo de tenedor de oro al cliente y administrador.
      * 
+     * @author Kevin Baque
+     * @version 1.2 23-09-2020 - Se agrega link de video al correo de tenedor de oro-cliente.
+     *
      * @return array  $objResponse
      */
     public function createPromocionHistorial($arrayData)
@@ -1931,13 +1934,20 @@ class ApiWebController extends FOSRestController
             $objControllerResOro->enviaCorreo($arrayParametrosResOro);
             sleep(1);
             /* cliente */
+            $strUrlVideo ="https://youtu.be/MYMbKLR3RoU";
             $strMensajeCorreoOro = '<div class="">Hola '.$strNombreUsuarioOro.' ,</div>
             <div class="">&nbsp;</div>
-            <div class="">FELICITACIONES!!!&nbsp;</div>
+            <div class="">FELICITACIONES!!!🎉 🎊 🎁&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.' has sido el ganador de un <strong>Tenedor de Oro</strong> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de <strong>mis puntos</strong> encontrar&aacute;s el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().' con el <strong>Tenedor de Oro asignado</strong>.&nbsp;</div>
+            <div class="">En el sorteo de '.$strMes.' has sido el ganador de un <strong>Tenedor de Oro</strong> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">Para obtener el <strong>Tenedor de Oro</strong>, debes de ir al Restaurante y solicitar al mesero tu premio. El restaurante confirmar&aacute; en nuestro sistema que t&uacute; eres el ganador y te entregar&aacute;n tu premio. El <strong>Tenedor de Oro</strong> solo puede ser concedido dentro del Restaurante.&nbsp;</div>
+            <div class="">Para obtener el <strong>Tenedor de Oro</strong>, debes de ir al Restaurante a solicitar tu premio. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de <strong>PUNTOS</strong> has click en el tenedor de oro en la parte superior derecha y te aparecer&aacute; el <strong>Tenedor de Oro</strong> del restaurante asignado.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Debes dar click en "Retirar Premio" y notificarle al salonero sobre tu <strong>Tenedor de Oro</strong>, el restaurante confirmar&aacute; en el sistema que t&uacute; eres el ganador y te entregar&aacute;n tu premio.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">El <strong>Tenedor de Oro</strong> solo puede ser concedido dentro del Restaurante.&nbsp;</div>
+            <div class="">&nbsp;</div>
+            <div class="">Puedes ver el video del proceso de solicitar el <strong>Tenedor de Oro</strong> dando click <a href='.$strUrlVideo.' target="_blank" >AQUI</a>.&nbsp;</div>
             <div class="">&nbsp;</div>
             <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
             <div class="">&nbsp;</div>

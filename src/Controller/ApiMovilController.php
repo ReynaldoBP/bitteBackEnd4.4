@@ -2251,6 +2251,7 @@ class ApiMovilController extends FOSRestController
         $em                 = $this->getDoctrine()->getManager();
         $boolSucces         = true;
         $boolBanderaCodigo  = false;
+        $strMensajePromocion = "Informele al mesero sobre su solicitud\n Y presente su identificación";
         try
         {
             $em->getConnection()->beginTransaction();
@@ -2267,6 +2268,11 @@ class ApiMovilController extends FOSRestController
             if(!is_object($objRestaurante) || empty($objRestaurante))
             {
                 throw new \Exception('No existe restaurante con identificador enviado por parámetro.');
+            }
+            $strRestauranteCodigo = $objRestaurante->getCODIGO();
+            if(!empty($strRestauranteCodigo) && $strRestauranteCodigo == "SI")
+            {
+                $strMensajePromocion = "Revise su correo electrónico para obtener\n su código el cual debe presentar al momento\n de realizar su pedido y obtener su promoción";
             }
             //consultar el estado a buscar
             $arrayCltPunto = $this->getDoctrine()
@@ -2421,6 +2427,7 @@ class ApiMovilController extends FOSRestController
                                 );
         }
         $arrayPromocionHist['strMensajeError'] = $strMensajeError;
+        $arrayPromocionHist['strMensaje']      = $strMensajePromocion;
         $objResponse->setContent(json_encode(array(
                                             'status'    => $strStatus,
                                             'resultado' => $arrayPromocionHist,
