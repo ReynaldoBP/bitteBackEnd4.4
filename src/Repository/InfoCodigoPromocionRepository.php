@@ -50,22 +50,25 @@ class InfoCodigoPromocionRepository extends \Doctrine\ORM\EntityRepository
                                 JOIN INFO_RESTAURANTE IRES ON IRES.ID_RESTAURANTE=ICP.RESTAURANTE_ID 
                                 LEFT JOIN INFO_CODIGO_PROMOCION_HISTORIAL IPCH ON IPCH.CODIGO_PROMOCION_ID=ICP.ID_CODIGO_PROMOCION
                                 LEFT JOIN INFO_CLIENTE IC ON IC.ID_CLIENTE=IPCH.CLIENTE_ID";
-            $strWhere       = "WHERE ICP.ESTADO in (:ESTADO) ";
+            $strWhere       = " WHERE ICP.ESTADO in (:ESTADO) ";
             $strOrder       = " order by ICP.ESTADO ASC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
-            error_log($intIdPromocion);
-            error_log($intIdRestaurante);
+            
+            
             if(!empty($intIdPromocion))
             {
-                $strWhere = " AND ICP.PROMOCION_ID = :intIdPromocion ";
+		error_log("llena la promocion");
+		$strWhere .= " AND ICP.PROMOCION_ID = :intIdPromocion ";
                 $objQuery->setParameter("intIdPromocion",$intIdPromocion);
             }
             if(!empty($intIdRestaurante))
             {
-                $strWhere = " AND ICP.RESTAURANTE_ID = :intIdRestaurante ";
+		error_log("lleno el restaurante");
+		$strWhere .= " AND ICP.RESTAURANTE_ID = :intIdRestaurante ";
                 $objQuery->setParameter("intIdRestaurante",$intIdRestaurante);
-            }
+	    }
+error_log($strWhere);
             $objRsmBuilder->addScalarResult('ID_CODIGO_PROMOCION', 'ID_CODIGO_PROMOCION', 'string');
             $objRsmBuilder->addScalarResult('RESTAURANTE_ID', 'RESTAURANTE_ID', 'string');
             $objRsmBuilder->addScalarResult('PROMOCION_ID', 'PROMOCION_ID', 'string');

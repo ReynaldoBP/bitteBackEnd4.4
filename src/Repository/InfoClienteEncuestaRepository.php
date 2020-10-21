@@ -466,6 +466,8 @@ AND IC.EDAD!='SIN EDAD'
     {
         $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:'';
+        $intLimiteInicial   = $arrayParametros['intLimiteInicial'] ? $arrayParametros['intLimiteInicial']:'0';
+        $intLimiteFinal     = $arrayParametros['intLimiteFinal'] ? $arrayParametros['intLimiteFinal']:'100';
         $arrayCantPtos      = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -489,7 +491,7 @@ AND IC.EDAD!='SIN EDAD'
                                         LEFT JOIN INFO_CLIENTE_ENCUESTA ICE ON ISUR.ID_SUCURSAL      = ICE.SUCURSAL_ID ";
             $strWhere       = " WHERE ISUR.ESTADO = :ESTADO
                                     AND IRE.ESTADO  = :ESTADO ";
-            $strGroupBy     = " GROUP BY IRE.ID_RESTAURANTE ";
+            $strGroupBy     = " GROUP BY IRE.ID_RESTAURANTE order by IRE.ID_RESTAURANTE  limit ".$intLimiteInicial.",".$intLimiteFinal;
             $objQuery->setParameter("ESTADO",$strEstado);
             if(!empty($intIdCliente))
             {

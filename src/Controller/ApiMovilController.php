@@ -564,7 +564,7 @@ class ApiMovilController extends FOSRestController
                                     'strEstado'         => $strEstado);
             $arrayCliente   = $this->getDoctrine()
                                    ->getRepository(InfoCliente::class)
-                                   ->getClienteCriterio($arrayParametros);
+                                   ->getClienteCriterioMovil($arrayParametros);
             if(isset($arrayCliente['error']) && !empty($arrayCliente['error']))
             {
                 $strStatus  = 404;
@@ -1351,6 +1351,15 @@ class ApiMovilController extends FOSRestController
         $objController->setContainer($this->container);
         try
         {
+/*
+            $objResponse->setContent(json_encode(array(
+                                                    'status'    => $strStatus,
+                                                    'resultado' => array('IMAGEN' => null),
+                                                    'succes'    => 'true')
+                                            ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+*/
             $em->getConnection()->beginTransaction();
             $objCliente = $this->getDoctrine()
                                ->getRepository(InfoCliente::class)
@@ -2080,6 +2089,8 @@ class ApiMovilController extends FOSRestController
 
             foreach($objPromocion as $arrayItem)
             {
+$boolContinuar = true;
+if(!empty($arrayParametro) && is_array($arrayParametro)){
                 foreach($arrayParametro as $arrayItemPromoEsp)
                 {
                     if($arrayItemPromoEsp->getVALOR1() == $arrayItem->getId() && 
@@ -2087,7 +2098,7 @@ class ApiMovilController extends FOSRestController
                     {
                         $boolContinuar = false;
                     }
-                }
+                }}
                 if($boolContinuar)
                 {
                     $strRutaImagen = "";
@@ -2573,6 +2584,8 @@ class ApiMovilController extends FOSRestController
         $intIdCliente      = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
         $strEstado         = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
         $conIcono          = $arrayData['icono']  ? $arrayData['icono']:'SI';
+        $intLimiteInicial  = $arrayData['limiteInicial'];
+        $intLimiteFinal    = $arrayData['limiteFinal'];
         $arrayPuntos       = array();
         $strMensajeError   = '';
         $strStatus         = 400;
@@ -2581,26 +2594,35 @@ class ApiMovilController extends FOSRestController
         $objController->setContainer($this->container);
         try
         {
-            $intNumeroEncuesta  = $this->getDoctrine()
+            if(empty($intLimiteInicial))
+            {
+             $intNumeroEncuesta  = $this->getDoctrine()
                                        ->getRepository(InfoClienteEncuesta::class)
                                        ->getCantidadEncuestaCliente(
                                                               array('clienteId'=>$intIdCliente,
                                                                     'strEstado' =>array('ACTIVO','PENDIENTE')));
-           
-            $arrayParametros = array('intIdCliente'     => $intIdCliente,
-                                    'strEstado'         => $strEstado
-                                    );
-            $arrayParametrosTenedor = array('intIdCliente'     => $intIdCliente,
+
+             $arrayParametrosTenedor = array('intIdCliente'     => $intIdCliente,
                                             'strEstado'         => 'PENDIENTE'
                                             );
-            $arrayPuntos   = $this->getDoctrine()
+
+             $arrayTenedorOro   = $this->getDoctrine()
+                                    ->getRepository(InfoPromocionHistorial::class)
+                                    ->getPromoHistorialTenedorMovil($arrayParametrosTenedor);
+           }
+           if(true)//if(!empty($intLimiteFinal))
+           {
+            $arrayParametros = array('intIdCliente'     => $intIdCliente,
+                                    'strEstado'         => $strEstado,
+                                    'intLimiteInicial'  => $intLimiteInicial,
+                                    'intLimiteFinal'    => $intLimiteFinal
+                                    );      
+
+             $arrayPuntos   = $this->getDoctrine()
                                     ->getRepository(InfoClienteEncuesta::class)
                                     ->getCantPtosResEnc($arrayParametros);
 
-           $arrayTenedorOro   = $this->getDoctrine()
-                                    ->getRepository(InfoPromocionHistorial::class)
-                                    ->getPromoHistorialTenedorMovil($arrayParametrosTenedor);
-
+           }
             if(isset($arrayPuntos['error']) && !empty($arrayPuntos['error']))
             {
                 $strStatus  = 404;

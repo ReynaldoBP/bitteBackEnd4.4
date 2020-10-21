@@ -31,7 +31,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         $strProvincia          = $arrayParametros['strProvincia'] ? $arrayParametros['strProvincia']:'';
         $strCiudad             = $arrayParametros['strCiudad'] ? $arrayParametros['strCiudad']:'';
         $strParroquia          = $arrayParametros['strParroquia'] ? $arrayParametros['strParroquia']:'';
-        $strEstado             = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
+        $strEstado             = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
         $strEstadoFacturacion  = $arrayParametros['strEstadoFacturacion'] ? $arrayParametros['strEstadoFacturacion']:'';
         $arraySucursal         = array();
         $strMensajeError       = '';

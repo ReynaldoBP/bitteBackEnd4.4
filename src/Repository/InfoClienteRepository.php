@@ -131,14 +131,14 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
         $strApellidos       = $arrayParametros['strApellidos'] ? $arrayParametros['strApellidos']:'';
         $strContador        = $arrayParametros['strContador'] ? $arrayParametros['strContador']:'NO';
         $strCupoDisponible  = $arrayParametros['strCupoDisponible'] ? $arrayParametros['strCupoDisponible']:'NO';
-        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
         $arrayCliente       = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         $objRsmBuilderCount = new ResultSetMappingBuilder($this->_em);
         $objQueryCount      = $this->_em->createNativeQuery(null, $objRsmBuilderCount);
-        $strOrder           = ' ORDER BY IC.NOMBRE ASC';
+        $strOrder           = ' ORDER BY FECHA_MAXIMA_PROMO DESC, IC.NOMBRE ASC';
         try
         {
             if(!empty($strContador) && $strContador == 'SI')
@@ -157,7 +157,8 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
             {
                 $strSelect      = "SELECT IC.ID_CLIENTE,IC.USUARIO_ID,IC.TIPO_CLIENTE_PUNTAJE_ID, IC.IDENTIFICACION, IC.NOMBRE,IC.APELLIDO,
                                 IC.CORREO,IC.DIRECCION,IC.EDAD,IC.TIPO_COMIDA,IC.GENERO,IC.ESTADO,
-                                IC.USR_CREACION,IC.FE_CREACION,IC.USR_MODIFICACION,IC.FE_MODIFICACION  ";
+                                IC.USR_CREACION,IC.FE_CREACION,IC.USR_MODIFICACION,IC.FE_MODIFICACION
+                                  ";
                 $strFrom        = "FROM INFO_CLIENTE IC 
                                 LEFT JOIN INFO_CLIENTE_PUNTO ICP         ON IC.ID_CLIENTE       = ICP.CLIENTE_ID
                                 LEFT JOIN INFO_RESTAURANTE IRES          ON IRES.ID_RESTAURANTE = ICP.RESTAURANTE_ID
@@ -189,17 +190,34 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
                                    ,IF((SELECT ipo.RESTAURANTE_ID FROM INFO_CLIENTE_PROMOCION_HISTORIAL icph 
                                     INNER JOIN INFO_PROMOCION ipo on ipo.ID_PROMOCION =icph.PROMOCION_ID 
                                     WHERE icph.ESTADO='PENDIENTE' AND ipo.RESTAURANTE_ID = :intIdRestaurante AND icph.CLIENTE_ID = IC.ID_CLIENTE
-                                    AND ipo.DESCRIPCION_TIPO_PROMOCION='Tenedor de Oro'
-                                    AND ipo.ESTADO='Activo'
+                                    AND ipo.PREMIO='SI'
+                                    AND ipo.ESTADO='ACTIVO'
                                     LIMIT 1
-                                    ) IS NOT NULL, 'SI', 'NO') AS TENEDOR ";
+                                    ) IS NOT NULL, 'SI', 'NO') AS TENEDOR, 
+                                    (SELECT MAX(FE_CREACION) FROM INFO_CLIENTE_PROMOCION_HISTORIAL icph
+                                        WHERE icph.CLIENTE_ID=IC.ID_CLIENTE AND
+                                        icph.ESTADO='PENDIENTE' AND  CASE WHEN :intIdRestaurante IS NOT NULL THEN icph.PROMOCION_ID IN (SELECT ip.ID_PROMOCION  
+                                        FROM INFO_PROMOCION ip
+                                        INNER JOIN INFO_RESTAURANTE ir ON ip.RESTAURANTE_ID=ir.ID_RESTAURANTE
+                                        WHERE ID_RESTAURANTE = :intIdRestaurante)
+                                        ELSE TRUE END
+                                    ) AS FECHA_MAXIMA_PROMO "
+                    ;
                     $objQuery->setParameter("intIdRestaurante", $intIdRestaurante);
                 }
                 else
                 {
                     $strSelect .= ",IFNULL(SUM(ICP.CANTIDAD_PUNTOS),0) AS PUNTOS_RESTAURANTES
                                    ,IF((SELECT ipo.RESTAURANTE_ID FROM INFO_CLIENTE_PROMOCION_HISTORIAL icph 
-                                    INNER JOIN INFO_PROMOCION ipo on ipo.ID_PROMOCION =icph.PROMOCION_ID 
+                                    INNER JOIN INFO_PROMOCION ipo on ipo.ID_PROMOCION =icph.PROMOCION_ID,
+                                    (SELECT MAX(FE_CREACION) FROM INFO_CLIENTE_PROMOCION_HISTORIAL icph
+                                        WHERE icph.CLIENTE_ID=IC.ID_CLIENTE AND
+                                        icph.ESTADO='PENDIENTE' AND  CASE WHEN :intIdRestaurante IS NOT NULL THEN icph.PROMOCION_ID IN (SELECT ip.ID_PROMOCION 
+                                        FROM INFO_PROMOCION ip
+                                        INNER JOIN INFO_RESTAURANTE ir ON ip.RESTAURANTE_ID=ir.ID_RESTAURANTE
+                                        WHERE ID_RESTAURANTE = :intIdRestaurante)
+                                        ELSE TRUE END
+                                    ) AS FECHA_MAXIMA_PROMO 
                                     WHERE icph.ESTADO='PENDIENTE' 
                                     AND icph.CLIENTE_ID = IC.ID_CLIENTE
                                     LIMIT 1
