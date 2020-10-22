@@ -46,6 +46,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
         {
             if(!empty($strContador) && $strContador == 'SI')
             {
+                $strEstado = 'ACTIVO';
                 $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
                 $strFromCount   = "FROM INFO_RESTAURANTE IR ";
                 $strWhereCount  = "WHERE IR.ESTADO in (:ESTADO) ";
@@ -64,7 +65,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                                     JOIN ADMI_TIPO_COMIDA ATC
                                     ON IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
                 $strWhere       = "WHERE IR.ESTADO in (:ESTADO) ";
-                $strOrder       = " order by IR.ESTADO ASC ";
+                $strOrder       = " order by IR.RAZON_SOCIAL ASC, IR.ESTADO ASC ";
                 $objQuery->setParameter("ESTADO", $strEstado);
                 if(!empty($strRazonSocial))
                 {

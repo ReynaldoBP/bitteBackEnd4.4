@@ -45,25 +45,23 @@ class InfoCodigoPromocionRepository extends \Doctrine\ORM\EntityRepository
                                 END as BANDERA_CANJEADO,
                                 CONCAT(IC.NOMBRE,CONCAT(' ',IC.APELLIDO)) AS CLIENTE,
                                 IPCH.FE_CREACION ";
-            $strFrom        = "FROM INFO_CODIGO_PROMOCION ICP 
+            $strFrom        = " FROM INFO_CODIGO_PROMOCION ICP 
                                 JOIN INFO_PROMOCION IPR ON IPR.ID_PROMOCION=ICP.PROMOCION_ID
                                 JOIN INFO_RESTAURANTE IRES ON IRES.ID_RESTAURANTE=ICP.RESTAURANTE_ID 
                                 LEFT JOIN INFO_CODIGO_PROMOCION_HISTORIAL IPCH ON IPCH.CODIGO_PROMOCION_ID=ICP.ID_CODIGO_PROMOCION
                                 LEFT JOIN INFO_CLIENTE IC ON IC.ID_CLIENTE=IPCH.CLIENTE_ID";
-            $strWhere       = "WHERE ICP.ESTADO in (:ESTADO) ";
+            $strWhere       = " WHERE ICP.ESTADO in (:ESTADO) ";
             $strOrder       = " order by ICP.ESTADO ASC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
-            error_log($intIdPromocion);
-            error_log($intIdRestaurante);
             if(!empty($intIdPromocion))
             {
-                $strWhere = " AND ICP.PROMOCION_ID = :intIdPromocion ";
+                $strWhere .= " AND ICP.PROMOCION_ID = :intIdPromocion ";
                 $objQuery->setParameter("intIdPromocion",$intIdPromocion);
             }
             if(!empty($intIdRestaurante))
             {
-                $strWhere = " AND ICP.RESTAURANTE_ID = :intIdRestaurante ";
+                $strWhere .= " AND ICP.RESTAURANTE_ID = :intIdRestaurante ";
                 $objQuery->setParameter("intIdRestaurante",$intIdRestaurante);
             }
             $objRsmBuilder->addScalarResult('ID_CODIGO_PROMOCION', 'ID_CODIGO_PROMOCION', 'string');

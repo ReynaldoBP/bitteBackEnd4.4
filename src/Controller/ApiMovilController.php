@@ -564,7 +564,7 @@ class ApiMovilController extends FOSRestController
                                     'strEstado'         => $strEstado);
             $arrayCliente   = $this->getDoctrine()
                                    ->getRepository(InfoCliente::class)
-                                   ->getClienteCriterio($arrayParametros);
+                                   ->getClienteCriterioMovil($arrayParametros);
             if(isset($arrayCliente['error']) && !empty($arrayCliente['error']))
             {
                 $strStatus  = 404;
@@ -1351,6 +1351,15 @@ class ApiMovilController extends FOSRestController
         $objController->setContainer($this->container);
         try
         {
+/*
+            $objResponse->setContent(json_encode(array(
+                                                    'status'    => $strStatus,
+                                                    'resultado' => array('IMAGEN' => null),
+                                                    'succes'    => 'true')
+                                            ));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+*/
             $em->getConnection()->beginTransaction();
             $objCliente = $this->getDoctrine()
                                ->getRepository(InfoCliente::class)
@@ -2080,12 +2089,16 @@ class ApiMovilController extends FOSRestController
 
             foreach($objPromocion as $arrayItem)
             {
-                foreach($arrayParametro as $arrayItemPromoEsp)
+                $boolContinuar = true;
+                if(!empty($arrayParametro) && is_array($arrayParametro))
                 {
-                    if($arrayItemPromoEsp->getVALOR1() == $arrayItem->getId() && 
-                      (($strEsPermitido == "NO" && $strEsCanjeado == "NO")||($strEsPermitido == "SI" && $strEsCanjeado == "SI")))
+                    foreach($arrayParametro as $arrayItemPromoEsp)
                     {
-                        $boolContinuar = false;
+                        if($arrayItemPromoEsp->getVALOR1() == $arrayItem->getId() && 
+                        (($strEsPermitido == "NO" && $strEsCanjeado == "NO")||($strEsPermitido == "SI" && $strEsCanjeado == "SI")))
+                        {
+                            $boolContinuar = false;
+                        }
                     }
                 }
                 if($boolContinuar)
@@ -2573,6 +2586,8 @@ class ApiMovilController extends FOSRestController
         $intIdCliente      = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
         $strEstado         = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
         $conIcono          = $arrayData['icono']  ? $arrayData['icono']:'SI';
+        $intLimiteInicial  = $arrayData['limiteInicial'];
+        $intLimiteFinal    = $arrayData['limiteFinal'];
         $arrayPuntos       = array();
         $strMensajeError   = '';
         $strStatus         = 400;
@@ -2581,26 +2596,34 @@ class ApiMovilController extends FOSRestController
         $objController->setContainer($this->container);
         try
         {
-            $intNumeroEncuesta  = $this->getDoctrine()
+            if(empty($intLimiteInicial))
+            {
+             $intNumeroEncuesta  = $this->getDoctrine()
                                        ->getRepository(InfoClienteEncuesta::class)
                                        ->getCantidadEncuestaCliente(
                                                               array('clienteId'=>$intIdCliente,
                                                                     'strEstado' =>array('ACTIVO','PENDIENTE')));
-           
-            $arrayParametros = array('intIdCliente'     => $intIdCliente,
-                                    'strEstado'         => $strEstado
-                                    );
-            $arrayParametrosTenedor = array('intIdCliente'     => $intIdCliente,
+
+             $arrayParametrosTenedor = array('intIdCliente'     => $intIdCliente,
                                             'strEstado'         => 'PENDIENTE'
                                             );
-            $arrayPuntos   = $this->getDoctrine()
-                                    ->getRepository(InfoClienteEncuesta::class)
-                                    ->getCantPtosResEnc($arrayParametros);
 
-           $arrayTenedorOro   = $this->getDoctrine()
+             $arrayTenedorOro   = $this->getDoctrine()
                                     ->getRepository(InfoPromocionHistorial::class)
                                     ->getPromoHistorialTenedorMovil($arrayParametrosTenedor);
+           }
+           if(true)//if(!empty($intLimiteFinal))
+           {
+            $arrayParametros = array('intIdCliente'     => $intIdCliente,
+                                    'strEstado'         => $strEstado,
+                                    'intLimiteInicial'  => $intLimiteInicial,
+                                    'intLimiteFinal'    => $intLimiteFinal
+                                    );      
 
+             $arrayPuntos   = $this->getDoctrine()
+                                    ->getRepository(InfoClienteEncuesta::class)
+                                    ->getCantPtosResEnc($arrayParametros);
+           }
             if(isset($arrayPuntos['error']) && !empty($arrayPuntos['error']))
             {
                 $strStatus  = 404;
@@ -3072,7 +3095,7 @@ class ApiMovilController extends FOSRestController
                 $strDia           = date("d");
                 $strAnio          = date("Y");
                 $strMes           = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][date("n") - 1];
-                $strMensajeCorreo = '
+                /*$strMensajeCorreo = '
                 <div class="">Hola '.$item["NOMBRE_COMERCIAL"].'&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">C&oacute;digo del '.$strDia.'/'.$strMes.'/'.$strAnio.': <strong>'.$strCodigo.'</strong>.&nbsp;</div>
@@ -3087,7 +3110,7 @@ class ApiMovilController extends FOSRestController
                                           'strDestinatario'  => $item["CORREO"]);
                 $objController    = new DefaultController();
                 $objController->setContainer($this->container);
-                $strMensajeError = $objController->enviaCorreo($arrayParametros);
+                $strMensajeError = $objController->enviaCorreo($arrayParametros);*/
 
                 $objSucursal->setCODIGO_DIARIO($strCodigo);
                 $em->persist($objSucursal);
