@@ -57,6 +57,12 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
                 $objQuery->setParameter("ID_SUCURSAL", $intIdSucursal);
                 $objQueryCount->setParameter("ID_SUCURSAL", $intIdSucursal);
             }
+            if(!empty($strEstadoFacturacion))
+            {
+                $strWhere .= " AND ISUR.ESTADO_FACTURACION =:strEstadoFacturacion";
+                $objQuery->setParameter("strEstadoFacturacion", $strEstadoFacturacion);
+                $objQueryCount->setParameter("strEstadoFacturacion", $strEstadoFacturacion);
+            }
             if(!empty($intIdUsuario))
             {
                 $strFrom  .= " JOIN INFO_USUARIO_RES IUR ON IUR.RESTAURANTE_ID= IR.ID_RESTAURANTE ";
