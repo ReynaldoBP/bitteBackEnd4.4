@@ -111,8 +111,12 @@ class UsuarioController extends Controller
      * 
      * @author Kevin Baque
      * @version 1.0 01-08-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 07-06-2021 - Se agrega campo, para saber si el usuario recibirá notificaciones de las encuesta.
+     *
      * @return array  $objResponse
+     *
      */
     public function createUsuarioAction(Request $request)
     {
@@ -125,6 +129,7 @@ class UsuarioController extends Controller
         $strImagen              = $request->query->get("imagen") ? $request->query->get("imagen"):'';
         $strCorreo              = $request->query->get("correo") ? $request->query->get("correo"):'';
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'';
+        $strNotificacion        = $request->query->get("notificacion") ? $request->query->get("notificacion"):'NO';
         $strPais                = $request->query->get("pais") ? $request->query->get("pais"):'';
         $strCiudad              = $request->query->get("ciudad") ? $request->query->get("ciudad"):'';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
@@ -173,6 +178,7 @@ class UsuarioController extends Controller
             $entityUsuario->setIMAGEN($strImagen);
             $entityUsuario->setCORREO($strCorreo);
             $entityUsuario->setESTADO(strtoupper($strEstado));
+            $entityUsuario->setNOTIFICACION(strtoupper($strNotificacion));
             $entityUsuario->setPAIS($strPais);
             $entityUsuario->setCIUDAD($strCiudad);
             $entityUsuario->setUSRCREACION($strUsuarioCreacion);
@@ -225,6 +231,9 @@ class UsuarioController extends Controller
      * @author Kevin Baque
      * @version 1.0 01-08-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 07-06-2021 - Se agrega campo, para saber si el usuario recibirá notificaciones de las encuesta.
+     *
      * @return array  $objResponse
      */
     public function editUsuarioAction(Request $request)
@@ -239,6 +248,7 @@ class UsuarioController extends Controller
         $strImagen              = $request->query->get("imagen") ? $request->query->get("imagen"):'';
         $strCorreo              = $request->query->get("correo") ? $request->query->get("correo"):'';
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'';
+        $strNotificacion        = $request->query->get("notificacion") ? $request->query->get("notificacion"):'';
         $strPais                = $request->query->get("pais") ? $request->query->get("pais"):'';
         $strCiudad              = $request->query->get("ciudad") ? $request->query->get("ciudad"):'';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
@@ -299,6 +309,10 @@ class UsuarioController extends Controller
             if(!empty($strEstado))
             {
                 $objUsuario->setESTADO(strtoupper($strEstado));
+            }
+            if(!empty($strNotificacion))
+            {
+                $objUsuario->setNOTIFICACION(strtoupper($strNotificacion));
             }
             if(!empty($strPais))
             {

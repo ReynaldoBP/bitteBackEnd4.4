@@ -83,6 +83,13 @@ class InfoUsuario
     /**
      * @var string
      *
+     * @ORM\Column(name="NOTIFICACION", type="string", length=2)
+     */
+    private $NOTIFICACION;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="PAIS", type="string", length=100, nullable=true)
      */
     private $PAIS;
@@ -298,6 +305,30 @@ class InfoUsuario
     public function getESTADO()
     {
         return $this->ESTADO;
+    }
+
+    /**
+     * Set NOTIFICACION
+     *
+     * @param string $NOTIFICACION
+     *
+     * @return InfoUsuario
+     */
+    public function setNOTIFICACION($NOTIFICACION)
+    {
+        $this->NOTIFICACION = $NOTIFICACION;
+
+        return $this;
+    }
+
+    /**
+     * Get NOTIFICACION
+     *
+     * @return string
+     */
+    public function getNOTIFICACION()
+    {
+        return $this->NOTIFICACION;
     }
 
     /**
