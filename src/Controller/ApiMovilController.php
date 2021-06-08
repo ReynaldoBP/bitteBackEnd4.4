@@ -247,7 +247,7 @@ class ApiMovilController extends FOSRestController
                                                                              'strBanderaBitte' => "S"));
                     if(empty($arrayRestaurantes['error']))
                     {
-                        $intCantPuntos = 1;
+                        $intCantPuntos = 4;
                         foreach ($arrayRestaurantes['resultados'] as $item)
                         {
                             $objRestaurante = $this->getDoctrine()

@@ -18,13 +18,16 @@ class InfoUsuarioRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.0 16-07-2019
      *
-     * @return array  $arrayUsuarios
-     *
      * @author Kevin Baque
      * @version 1.1 10-11-2019 Se agrega filtro por restaurante.
      *
      * @author Kevin Baque
      * @version 1.2 04-02-2020 Se retorna el nombre comercial del restaurante si no es admin.
+     * 
+     * @author Kevin Baque
+     * @version 1.3 07-06-2021 - Se agrega campo, para saber si el usuario recibirá notificaciones de las encuesta.
+     *
+     * @return array  $arrayUsuarios
      *
      */
     public function getUsuariosCriterio($arrayParametros)
@@ -47,6 +50,7 @@ class InfoUsuarioRepository extends \Doctrine\ORM\EntityRepository
             $strSelect      = "SELECT IU.ID_USUARIO,IU.NOMBRES,IU.APELLIDOS,IU.CONTRASENIA, IU.IDENTIFICACION, IU.CORREO,IU.TIPO_ROL_ID,
                                IU.ESTADO,IU.PAIS,IU.CIUDAD,IU.USR_CREACION,IU.FE_CREACION,IU.USR_MODIFICACION,IU.FE_MODIFICACION,
                                ATR.DESCRIPCION_TIPO_ROL,ATR.ID_TIPO_ROL,
+                               IU.NOTIFICACION,
                                 CASE
                                 WHEN ATR.DESCRIPCION_TIPO_ROL ='ADMINISTRADOR' 
                                 THEN ''
@@ -104,6 +108,7 @@ class InfoUsuarioRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CORREO', 'CORREO', 'string');
             $objRsmBuilder->addScalarResult('TIPO_ROL_ID', 'TIPO_ROL_ID', 'string');
             $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
+            $objRsmBuilder->addScalarResult('NOTIFICACION', 'NOTIFICACION', 'string');
             $objRsmBuilder->addScalarResult('PAIS', 'PAIS', 'string');
             $objRsmBuilder->addScalarResult('CIUDAD', 'CIUDAD', 'string');
             $objRsmBuilder->addScalarResult('USR_CREACION', 'USR_CREACION', 'string');
