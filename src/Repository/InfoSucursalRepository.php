@@ -16,7 +16,10 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
      * 
      * @author Kevin Baque
      * @version 1.0 16-07-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 09-06-2021 - Se agrega horario de atención.
+     *
      * @return array  $arraySucursal
      * 
      */
@@ -44,6 +47,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $strSelect      = "SELECT ISUR.ID_SUCURSAL,ISUR.DESCRIPCION,ISUR.ES_MATRIZ,ISUR.EN_CENTRO_COMERCIAL,ISUR.DIRECCION,ISUR.NUMERO_CONTACTO,
                                       IR.IDENTIFICACION,IR.NOMBRE_COMERCIAL, ISUR.RESTAURANTE_ID,ISUR.ESTADO_FACTURACION,ISUR.ESTADO,ISUR.LATITUD,
                                       ISUR.LONGITUD, ISUR.PAIS,ISUR.PROVINCIA,ISUR.CIUDAD,ISUR.PARROQUIA,ISUR.CODIGO_DIARIO,
+                                      ISUR.HORA_LUN_VIE_INI,ISUR.HORA_LUN_VIE_FIN,ISUR.HORA_SABADO_INI,ISUR.HORA_SABADO_FIN,ISUR.HORA_DOMINGO_INI,ISUR.HORA_DOMINGO_FIN,
                                       ISUR.USR_CREACION, ISUR.FE_CREACION,ISUR.USR_MODIFICACION,ISUR.FE_MODIFICACION ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM INFO_SUCURSAL ISUR
@@ -107,6 +111,12 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CIUDAD', 'CIUDAD', 'string');
             $objRsmBuilder->addScalarResult('PARROQUIA', 'PARROQUIA', 'string');
             $objRsmBuilder->addScalarResult('CODIGO_DIARIO', 'CODIGO_DIARIO', 'string');
+            $objRsmBuilder->addScalarResult('HORA_LUN_VIE_INI', 'HORA_LUN_VIE_INI', 'string');
+            $objRsmBuilder->addScalarResult('HORA_LUN_VIE_FIN', 'HORA_LUN_VIE_FIN', 'string');
+            $objRsmBuilder->addScalarResult('HORA_SABADO_INI', 'HORA_SABADO_INI', 'string');
+            $objRsmBuilder->addScalarResult('HORA_SABADO_FIN', 'HORA_SABADO_FIN', 'string');
+            $objRsmBuilder->addScalarResult('HORA_DOMINGO_INI', 'HORA_DOMINGO_INI', 'string');
+            $objRsmBuilder->addScalarResult('HORA_DOMINGO_FIN', 'HORA_DOMINGO_FIN', 'string');
             $objRsmBuilder->addScalarResult('USR_CREACION', 'USR_CREACION', 'string');
             $objRsmBuilder->addScalarResult('FE_CREACION', 'FE_CREACION', 'date');
             $objRsmBuilder->addScalarResult('USR_MODIFICACION', 'USR_MODIFICACION', 'string');
@@ -135,6 +145,9 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.0 29-08-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 09-06-2021 - Se agrega horario de atención.
+     *
      * @return array  $arraySucursal
      * 
      */
@@ -156,10 +169,13 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSelect      = "SELECT T1.CODIGO_DIARIO,T1.ID_SUCURSAL, T1.RESTAURANTE_ID, T1.DESCRIPCION, T1.PAIS, T1.PROVINCIA,
-                                T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.DISTANCIA,T1.VALOR  ";
+                                T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.DISTANCIA,
+                                T1.HORA_LUN_VIE_INI,T1.HORA_LUN_VIE_FIN,T1.HORA_SABADO_INI,T1.HORA_SABADO_FIN,T1.HORA_DOMINGO_INI,T1.HORA_DOMINGO_FIN,
+                                T1.VALOR  ";
             $strFrom        ="FROM
                                 (SELECT ISU.CODIGO_DIARIO,ISU.ID_SUCURSAL, ISU.RESTAURANTE_ID,
                                     ISU.DESCRIPCION, ISU.PAIS,ISU.PROVINCIA,ISU.CIUDAD,ISU.PARROQUIA,
+                                    ISU.HORA_LUN_VIE_INI,ISU.HORA_LUN_VIE_FIN,ISU.HORA_SABADO_INI,ISU.HORA_SABADO_FIN,ISU.HORA_DOMINGO_INI,ISU.HORA_DOMINGO_FIN,
                                     IRE.NOMBRE_COMERCIAL,
                                     (CASE
                                         WHEN 
@@ -206,6 +222,12 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
             $objRsmBuilder->addScalarResult('DISTANCIA', 'DISTANCIA', 'string');
             $objRsmBuilder->addScalarResult('VALOR', 'VALOR', 'string');
+            $objRsmBuilder->addScalarResult('HORA_LUN_VIE_INI', 'HORA_LUN_VIE_INI', 'string');
+            $objRsmBuilder->addScalarResult('HORA_LUN_VIE_FIN', 'HORA_LUN_VIE_FIN', 'string');
+            $objRsmBuilder->addScalarResult('HORA_SABADO_INI', 'HORA_SABADO_INI', 'string');
+            $objRsmBuilder->addScalarResult('HORA_SABADO_FIN', 'HORA_SABADO_FIN', 'string');
+            $objRsmBuilder->addScalarResult('HORA_DOMINGO_INI', 'HORA_DOMINGO_INI', 'string');
+            $objRsmBuilder->addScalarResult('HORA_DOMINGO_FIN', 'HORA_DOMINGO_FIN', 'string');
 
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
             $objQuery->setSQL($strSql);

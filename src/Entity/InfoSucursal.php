@@ -104,6 +104,48 @@ class InfoSucursal
     /**
      * @var string
      *
+     * @ORM\Column(name="HORA_LUN_VIE_INI", type="string")
+     */
+    private $HORA_LUN_VIE_INI;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_LUN_VIE_FIN", type="string")
+     */
+    private $HORA_LUN_VIE_FIN;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_SABADO_INI", type="string")
+     */
+    private $HORA_SABADO_INI;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_SABADO_FIN", type="string")
+     */
+    private $HORA_SABADO_FIN;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_DOMINGO_INI", type="string")
+     */
+    private $HORA_DOMINGO_INI;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_DOMINGO_FIN", type="string")
+     */
+    private $HORA_DOMINGO_FIN;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="PAIS", type="string", length=100)
      */
     private $PAIS;
@@ -382,6 +424,150 @@ class InfoSucursal
     public function getCODIGO_DIARIO()
     {
         return $this->CODIGO_DIARIO;
+    }
+
+    /**
+     * Set HORA_LUN_VIE_INI
+     *
+     * @param string $HORA_LUN_VIE_INI
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_LUN_VIE_INI($HORA_LUN_VIE_INI)
+    {
+        $this->HORA_LUN_VIE_INI = $HORA_LUN_VIE_INI;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_LUN_VIE_INI
+     *
+     * @return string
+     */
+    public function getHORA_LUN_VIE_INI()
+    {
+        return $this->HORA_LUN_VIE_INI;
+    }
+
+    /**
+     * Set HORA_LUN_VIE_FIN
+     *
+     * @param string $HORA_LUN_VIE_FIN
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_LUN_VIE_FIN($HORA_LUN_VIE_FIN)
+    {
+        $this->HORA_LUN_VIE_FIN = $HORA_LUN_VIE_FIN;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_LUN_VIE_FIN
+     *
+     * @return string
+     */
+    public function getHORA_LUN_VIE_FIN()
+    {
+        return $this->HORA_LUN_VIE_FIN;
+    }
+
+    /**
+     * Set HORA_SABADO_INI
+     *
+     * @param string $HORA_SABADO_INI
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_SABADO_INI($HORA_SABADO_INI)
+    {
+        $this->HORA_SABADO_INI = $HORA_SABADO_INI;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_SABADO_INI
+     *
+     * @return string
+     */
+    public function getHORA_SABADO_INI()
+    {
+        return $this->HORA_SABADO_INI;
+    }
+
+    /**
+     * Set HORA_SABADO_FIN
+     *
+     * @param string $HORA_SABADO_FIN
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_SABADO_FIN($HORA_SABADO_FIN)
+    {
+        $this->HORA_SABADO_FIN = $HORA_SABADO_FIN;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_SABADO_FIN
+     *
+     * @return string
+     */
+    public function getHORA_SABADO_FIN()
+    {
+        return $this->HORA_SABADO_FIN;
+    }
+
+    /**
+     * Set HORA_DOMINGO_INI
+     *
+     * @param string $HORA_DOMINGO_INI
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_DOMINGO_INI($HORA_DOMINGO_INI)
+    {
+        $this->HORA_DOMINGO_INI = $HORA_DOMINGO_INI;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_DOMINGO_INI
+     *
+     * @return string
+     */
+    public function getHORA_DOMINGO_INI()
+    {
+        return $this->HORA_DOMINGO_INI;
+    }
+
+    /**
+     * Set HORA_DOMINGO_FIN
+     *
+     * @param string $HORA_DOMINGO_FIN
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_DOMINGO_FIN($HORA_DOMINGO_FIN)
+    {
+        $this->HORA_DOMINGO_FIN = $HORA_DOMINGO_FIN;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_DOMINGO_FIN
+     *
+     * @return string
+     */
+    public function getHORA_DOMINGO_FIN()
+    {
+        return $this->HORA_DOMINGO_FIN;
     }
 
     /**

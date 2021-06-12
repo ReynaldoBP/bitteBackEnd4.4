@@ -593,14 +593,17 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 28-08-2019
      *
-     * @return array  $objResponse
-     *
      * @author Nestor Naula
      * @version 1.1 04-10-2019 -  Se agrega la imagen a las coordenadas
      * @since 1.0
      * 
      * @author Kevin Baque
      * @version 1.2 04-12-2019 -  Se agrega la imagen si el cliente en sesión es Influencer.
+     * 
+     * @author Kevin Baque
+     * @version 1.3 09-06-2021 - Se agrega logica para indicar si el cliente puede realizar el flujo de acuerdo al horario de atención.
+     *
+     * @return array  $objResponse
      *
      */
     public function getSucursalPorUbicacion($arrayData)
@@ -624,8 +627,15 @@ class ApiMovilController extends FOSRestController
         $boolSucces        = true;
         $arrayRespuesta    = array();
         $strImagenInfluencer = null;
+        // Número entero que representa el día de la semana, de 0 (dom) a 6 (sab)
+        $strDiaActual        = date("w");
+        $intHoraActual       = date("G");
+        $intMinActual        = date("i");
+        error_log("Hora Actual: ".$intHoraActual.':'.$intMinActual);
         try
         {
+            $boolDomingo = ($strDiaActual == 0) ? true:false;
+            $boolSabado  = ($strDiaActual == 6) ? true:false;
             $arrayCltEncuesta = $this->getDoctrine()
                                      ->getRepository(InfoClienteEncuesta::class)
                                      ->getVigenciaEncuesta(array('intIdCliente'=>$intIdCliente,
@@ -665,6 +675,96 @@ class ApiMovilController extends FOSRestController
                                     ->getSucursalPorUbicacion($arrayParametros);
             foreach ($arraySucursal["resultados"] as &$item)
             {
+                $strAtencion = "";
+                if($boolDomingo)
+                {
+                    if(!empty($item["HORA_DOMINGO_INI"]) && isset($item["HORA_DOMINGO_INI"])
+                       && !empty($item["HORA_DOMINGO_FIN"]) && isset($item["HORA_DOMINGO_FIN"]))
+                    {
+                        $arrayHoraIni = explode(":",$item["HORA_DOMINGO_INI"]);
+                        $intHoraIni   = $arrayHoraIni[0];
+                        $intMinIni    = $arrayHoraIni[1];
+                        $arrayHoraFin = explode(":",$item["HORA_DOMINGO_FIN"]);
+                        $intHoraFin   = $arrayHoraFin[0];
+                        $intMinFin    = $arrayHoraFin[1];
+
+                        if($intHoraActual >= $intHoraIni && $intHoraActual <= $intHoraFin)
+                        {
+                            $strAtencion = "S";
+                            if($intHoraActual == $intHoraFin &&($intMinActual >= $intMinIni && $intMinActual <= $intMinFin))
+                            {
+                                $strAtencion = "S";
+                            }
+                            else
+                            {
+                                $strAtencion = "N";
+                            }
+                        }
+                        else
+                        {
+                            $strAtencion = "N";
+                        }
+                    }
+                }
+                elseif ($boolSabado)
+                {
+                    if(!empty($item["HORA_SABADO_INI"]) && isset($item["HORA_SABADO_INI"])
+                       && !empty($item["HORA_SABADO_FIN"]) && isset($item["HORA_SABADO_FIN"]))
+                    {
+                        $arrayHoraIni = explode(":",$item["HORA_SABADO_INI"]);
+                        $intHoraIni   = $arrayHoraIni[0];
+                        $intMinIni    = $arrayHoraIni[1];
+                        $arrayHoraFin = explode(":",$item["HORA_SABADO_FIN"]);
+                        $intHoraFin   = $arrayHoraFin[0];
+                        $intMinFin    = $arrayHoraFin[1];
+
+                        if($intHoraActual >= $intHoraIni && $intHoraActual <= $intHoraFin)
+                        {
+                            $strAtencion = "S";
+                            if($intHoraActual == $intHoraFin &&($intMinActual >= $intMinIni && $intMinActual <= $intMinFin))
+                            {
+                                $strAtencion = "S";
+                            }
+                            else
+                            {
+                                $strAtencion = "N";
+                            }
+                        }
+                        else
+                        {
+                            $strAtencion = "N";
+                        }
+                    }
+                }
+                else
+                {
+                    if(!empty($item["HORA_LUN_VIE_INI"]) && isset($item["HORA_LUN_VIE_INI"])
+                       && !empty($item["HORA_LUN_VIE_FIN"]) && isset($item["HORA_LUN_VIE_FIN"]))
+                    {
+                        $arrayHoraIni = explode(":",$item["HORA_LUN_VIE_INI"]);
+                        $intHoraIni   = $arrayHoraIni[0];
+                        $intMinIni    = $arrayHoraIni[1];
+                        $arrayHoraFin = explode(":",$item["HORA_LUN_VIE_FIN"]);
+                        $intHoraFin   = $arrayHoraFin[0];
+                        $intMinFin    = $arrayHoraFin[1];
+                        if($intHoraActual >= $intHoraIni && $intHoraActual <= $intHoraFin)
+                        {
+                            $strAtencion = "S";
+                            if($intHoraActual == $intHoraFin &&($intMinActual >= $intMinIni && $intMinActual <= $intMinFin))
+                            {
+                                $strAtencion = "S";
+                            }
+                            else
+                            {
+                                $strAtencion = "N";
+                            }
+                        }
+                        else
+                        {
+                            $strAtencion = "N";
+                        }
+                    }
+                }
                 $arraySucursalRes   = $this->getDoctrine()
                                            ->getRepository(InfoSucursal::class)
                                            ->findOneById($item["ID_SUCURSAL"]);
@@ -685,6 +785,7 @@ class ApiMovilController extends FOSRestController
                         $arraySucursal["resultados"][$intIterador]["IMAGEN"] =  null;
                     }
                 } 
+                $arraySucursal["resultados"][$intIterador]["ATENCION"] = $strAtencion;
                 $intIterador = $intIterador +1;
             }
          
