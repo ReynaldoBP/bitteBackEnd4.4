@@ -118,6 +118,13 @@ class InfoRestaurante
     /**
      * @var string
      *
+     * @ORM\Column(name="ES_AFILIADO", type="string", length=2, nullable=false)
+     */
+    private $ES_AFILIADO;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="USR_CREACION", type="string", length=255)
      */
     private $USRCREACION;
@@ -560,5 +567,29 @@ class InfoRestaurante
     public function getICONO()
     {
         return $this->ICONO;
+    }
+
+    /**
+     * Set ES_AFILIADO
+     *
+     * @param string $ES_AFILIADO
+     *
+     * @return InfoRestaurante
+     */
+    public function setES_AFILIADO($ES_AFILIADO)
+    {
+        $this->ES_AFILIADO = $ES_AFILIADO;
+
+        return $this;
+    }
+
+    /**
+     * Get ES_AFILIADO
+     *
+     * @return string
+     */
+    public function getES_AFILIADO()
+    {
+        return $this->ES_AFILIADO;
     }
 }

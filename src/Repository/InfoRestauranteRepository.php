@@ -24,6 +24,9 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.0 04-09-2020 - Se agrega bandera para retornar todos los restaurantes menos Bitte
      *
+     * @author Kevin Baque
+     * @version 1.1 14-06-2021 - Se agrega bandera para retornar si el restaurante es afiliado.
+     *
      */    
     public function getRestauranteCriterio($arrayParametros)
     {
@@ -60,7 +63,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             {
                 $strSelect      = "SELECT IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
                                 IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,ATC.DESCRIPCION_TIPO_COMIDA, 
-                                IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.NUMERO_CONTACTO, IR.ESTADO, IR.CODIGO, IR.IMAGEN, IR.ICONO ";
+                                IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.NUMERO_CONTACTO, IR.ESTADO, IR.CODIGO,IR.ES_AFILIADO, IR.IMAGEN, IR.ICONO ";
                 $strFrom        = "FROM INFO_RESTAURANTE IR
                                     JOIN ADMI_TIPO_COMIDA ATC
                                     ON IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
@@ -116,6 +119,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                 $objRsmBuilder->addScalarResult('NUMERO_CONTACTO', 'NUMERO_CONTACTO', 'string');
                 $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
                 $objRsmBuilder->addScalarResult('CODIGO', 'CODIGO', 'string');
+                $objRsmBuilder->addScalarResult('ES_AFILIADO', 'ES_AFILIADO', 'string');
                 $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
                 $objRsmBuilder->addScalarResult('ICONO', 'ICONO', 'string');
                 $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;

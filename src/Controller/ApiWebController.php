@@ -129,6 +129,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 17-08-2020 - Se agrega la creación de codigo en el restaurante.
      *
+     * @author Kevin Baque
+     * @version 1.2 15-06-2021 - Se agrega la creación de afiliado en el restaurante.
+     *
      * @return array  $objResponse
      */
     public function createRestaurante($arrayData)
@@ -146,6 +149,7 @@ class ApiWebController extends FOSRestController
         $strNumeroContacto      = $arrayData['numeroContacto'] ? $arrayData['numeroContacto']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
         $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
+        $strEsAfiliado          = $arrayData['esAfiliado'] ? $arrayData['esAfiliado']:'NO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $imgBase64              = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
         $icoBase64              = $arrayData['rutaIcono'] ? $arrayData['rutaIcono']:'';
@@ -210,6 +214,7 @@ class ApiWebController extends FOSRestController
             $entityRestaurante->setNUMEROCONTACTO($strNumeroContacto);
             $entityRestaurante->setESTADO(strtoupper($strEstado));
             $entityRestaurante->setCODIGO(strtoupper($strCodigo));
+            $entityRestaurante->setES_AFILIADO(strtoupper($strEsAfiliado));
             $entityRestaurante->setUSRCREACION($strUsuarioCreacion);
             $entityRestaurante->setFECREACION($strDatetimeActual);
             $em->persist($entityRestaurante);
@@ -249,6 +254,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 17-08-2020 - Se agrega la edición de codigo en el restaurante.
      * 
+     * @author Kevin Baque
+     * @version 1.3 15-06-2021 - Se agrega la creación de afiliado en el restaurante.
+     *
      * @return array  $objResponse
      */
     public function editRestaurante($arrayData)
@@ -266,6 +274,7 @@ class ApiWebController extends FOSRestController
         $strNumeroContacto      = $arrayData['numeroContacto'] ? $arrayData['numeroContacto']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
         $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
+        $strEsAfiliado          = $arrayData['esAfiliado'] ? $arrayData['esAfiliado']:'NO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $imgBase64              = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
         $icoBase64              = $arrayData['rutaIcono'] ? $arrayData['rutaIcono']:'';
@@ -360,6 +369,10 @@ class ApiWebController extends FOSRestController
             if(!empty($strCodigo))
             {
                 $objRestaurante->setCODIGO(strtoupper($strCodigo));
+            }
+            if(!empty($strEsAfiliado))
+            {
+                $objRestaurante->setES_AFILIADO(strtoupper($strEsAfiliado));
             }
             if(!empty($strRutaImagen))
             {
