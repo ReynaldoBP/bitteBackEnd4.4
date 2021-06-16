@@ -141,6 +141,9 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.0 29-08-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 16-06-2021 - Se agrega filtro de ciudad y si el restaurante es afiliado.
+     *
      * @return array  $arrayRestaurante
      * 
      */    
@@ -154,12 +157,15 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
         $strRazonSocial        = $arrayParametros['strRazonSocial'] ? $arrayParametros['strRazonSocial']:'';
         $strEstado             = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
         $intEsRestaurante      = $arrayParametros['intEsRestaurante'] ? $arrayParametros['intEsRestaurante']:'';
+        $intCiudad             = $arrayParametros['intCiudad'] ? $arrayParametros['intCiudad']:'';
+        $strEsAfiliado         = $arrayParametros['strEsAfiliado'] ? $arrayParametros['strEsAfiliado']:'';
         $arrayRestaurante      = array();
         $strMensajeError       = '';
         $objRsmBuilder         = new ResultSetMappingBuilder($this->_em);
         $objQuery              = $this->_em->createNativeQuery(null, $objRsmBuilder);
         $objRsmBuilderCount    = new ResultSetMappingBuilder($this->_em);
         $objQueryCount         = $this->_em->createNativeQuery(null, $objRsmBuilderCount);
+        $strEstadoActivo       = "ACTIVO";
         try
         {
             $strSelect      = "SELECT IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
@@ -180,20 +186,42 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                                                     AND SUB_ICE.ESTADO = 'ACTIVO' 
                                                     AND SUB_ISU.RESTAURANTE_ID = IR.ID_RESTAURANTE) AS PRO_ENCUESTAS ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
-            $strFrom        = "FROM INFO_RESTAURANTE IR,ADMI_TIPO_COMIDA ATC ";
-            $strWhere       = "WHERE IR.ESTADO in (:ESTADO) AND IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
+            $strFrom        = "FROM INFO_RESTAURANTE IR
+                               JOIN ADMI_TIPO_COMIDA ATC ON IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
+            $strWhere       = "WHERE IR.ESTADO in (:ESTADO) ";
+            $strGroupBy     = " GROUP BY ID_RESTAURANTE,TIPO_IDENTIFICACION,IDENTIFICACION,RAZON_SOCIAL,NOMBRE_COMERCIAL,REPRESENTANTE_LEGAL,
+                                TIPO_COMIDA_ID,DESCRIPCION_TIPO_COMIDA,DIRECCION_TRIBUTARIO,URL_CATALOGO,NUMERO_CONTACTO,ESTADO,IMAGEN,ICONO,
+                                CANT_LIKE,PRO_ENCUESTAS ";
             if(!empty($intEsRestaurante))
             {
                 $strWhere = $strWhere." AND IR.ID_RESTAURANTE != 28 ";
             }
             $objQuery->setParameter("ESTADO", $strEstado);
             $objQueryCount->setParameter("ESTADO", $strEstado);
+            if(!empty($intCiudad))
+            {
+                $strFrom   .= " LEFT JOIN INFO_SUCURSAL ISUR ON ISUR.RESTAURANTE_ID=IR.ID_RESTAURANTE
+                                AND ISUR.ESTADO = :strEstadoActivo AND ISUR.ESTADO_FACTURACION = :strEstadoActivo ";
+                $strWhere  .= " AND ISUR.CIUDAD = :intCiudad ";
+                $objQuery->setParameter("strEstadoActivo", $strEstadoActivo);
+                $objQueryCount->setParameter("strEstadoActivo", $strEstadoActivo);
+                $objQuery->setParameter("intCiudad", $intCiudad);
+                $objQueryCount->setParameter("intCiudad", $intCiudad);
+            }
+            if(!empty($strEsAfiliado))
+            {
+                $strEsAfiliado = $strEsAfiliado == "S" ? "SI":"NO";
+                $strWhere     .= " AND IR.ES_AFILIADO = :strEsAfiliado ";
+                $objQuery->setParameter("strEsAfiliado", $strEsAfiliado);
+                $objQueryCount->setParameter("strEsAfiliado", $strEsAfiliado);
+            }
             if(!empty($intIdCliente))
             {
                 $strSelect .= " ,(SELECT ILR.ID_LIKE FROM INFO_LIKE_RES ILR WHERE ILR.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ESTADO='ACTIVO' AND CLIENTE_ID=:CLIENTE_ID LIMIT 1) as ID_LIKE ";
                 $objQuery->setParameter("CLIENTE_ID", $intIdCliente);
                 $objQueryCount->setParameter("CLIENTE_ID", $intIdCliente);
                 $objRsmBuilder->addScalarResult('ID_LIKE', 'ID_LIKE', 'string');
+                $strGroupBy .= " ,ID_LIKE ";
             }
             if(!empty($strRazonSocial))
             {
@@ -242,7 +270,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CANT_LIKE', 'CANT_LIKE', 'string');
             $objRsmBuilder->addScalarResult('PRO_ENCUESTAS', 'PRO_ENCUESTAS', 'string');
             $objRsmBuilderCount->addScalarResult('CANTIDAD', 'Cantidad', 'integer');
-            $strSql       = $strSelect.$strFrom.$strWhere;
+            $strSql       = $strSelect.$strFrom.$strWhere.$strGroupBy;
             $objQuery->setSQL($strSql);
             $strSqlCount  = $strSelectCount.$strFrom.$strWhere;
             $objQueryCount->setSQL($strSqlCount);

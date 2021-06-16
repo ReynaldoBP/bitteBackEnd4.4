@@ -169,13 +169,14 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSelect      = "SELECT T1.CODIGO_DIARIO,T1.ID_SUCURSAL, T1.RESTAURANTE_ID, T1.DESCRIPCION, T1.PAIS, T1.PROVINCIA,
-                                T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.DISTANCIA,
+                                T1.CIUDAD,T1.PARROQUIA, T1.NOMBRE_COMERCIAL,T1.ES_AFILIADO,T1.DISTANCIA,
                                 T1.HORA_LUN_VIE_INI,T1.HORA_LUN_VIE_FIN,T1.HORA_SABADO_INI,T1.HORA_SABADO_FIN,T1.HORA_DOMINGO_INI,T1.HORA_DOMINGO_FIN,
                                 T1.VALOR  ";
             $strFrom        ="FROM
                                 (SELECT ISU.CODIGO_DIARIO,ISU.ID_SUCURSAL, ISU.RESTAURANTE_ID,
                                     ISU.DESCRIPCION, ISU.PAIS,ISU.PROVINCIA,ISU.CIUDAD,ISU.PARROQUIA,
                                     ISU.HORA_LUN_VIE_INI,ISU.HORA_LUN_VIE_FIN,ISU.HORA_SABADO_INI,ISU.HORA_SABADO_FIN,ISU.HORA_DOMINGO_INI,ISU.HORA_DOMINGO_FIN,
+                                    IRE.ES_AFILIADO,
                                     IRE.NOMBRE_COMERCIAL,
                                     (CASE
                                         WHEN 
@@ -228,7 +229,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('HORA_SABADO_FIN', 'HORA_SABADO_FIN', 'string');
             $objRsmBuilder->addScalarResult('HORA_DOMINGO_INI', 'HORA_DOMINGO_INI', 'string');
             $objRsmBuilder->addScalarResult('HORA_DOMINGO_FIN', 'HORA_DOMINGO_FIN', 'string');
-
+            $objRsmBuilder->addScalarResult('ES_AFILIADO', 'ES_AFILIADO', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
             $objQuery->setSQL($strSql);
             $arraySucursal['resultados'] = $objQuery->getResult();

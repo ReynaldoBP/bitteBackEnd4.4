@@ -33,6 +33,7 @@ use App\Entity\AdmiTipoComida;
 use App\Entity\InfoClienteInfluencer;
 use App\Entity\InfoCodigoPromocion;
 use App\Entity\InfoCodigoPromocionHistorial;
+use App\Entity\AdmiCiudad;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -114,6 +115,8 @@ class ApiMovilController extends FOSRestController
               case 'getEditInfoCltEncuestaPend':$arrayRespuesta = $this->getEditInfoCltEncuestaPend($arrayData);
               break;
               case 'generaCodigoSucursal':$arrayRespuesta = $this->generaCodigoSucursal($arrayData);
+              break;
+              case 'getCiudad':$arrayRespuesta = $this->getCiudad($arrayData);
               break;
               default:
                $objResponse->setContent(json_encode(array(
@@ -785,6 +788,7 @@ class ApiMovilController extends FOSRestController
                         $arraySucursal["resultados"][$intIterador]["IMAGEN"] =  null;
                     }
                 } 
+                $arraySucursal["resultados"][$intIterador]["ES_AFILIADO"] = (!empty($item["ES_AFILIADO"]) && $item["ES_AFILIADO"] == "SI") ? 'S':'N';
                 $arraySucursal["resultados"][$intIterador]["ATENCION"] = $strAtencion;
                 $intIterador = $intIterador +1;
             }
@@ -831,6 +835,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 17-11-2019 - Se suprime las imagenes de publicidad.
      *
+     * @author Kevin Baque
+     * @version 1.3 16-06-2021 - Se agrega filtro de ciudad y si el restaurante es afiliado.
+     *
      * @return array  $objResponse
      */
     public function getRestaurante($arrayData)
@@ -846,6 +853,8 @@ class ApiMovilController extends FOSRestController
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $conImagen              = $arrayData['imagen'] ? $arrayData['imagen']:'NO';
         $conIcono               = $arrayData['icono']  ? $arrayData['icono']:'NO';
+        $intCiudad              = $arrayData['intCiudad'] ? $arrayData['intCiudad']:'';
+        $strEsAfiliado          = $arrayData['strEsAfiliado'] ? $arrayData['strEsAfiliado']:'';
         $arrayRestaurante       = array();
         $strMensajeError        = '';
         $strStatus              = 400;
@@ -864,7 +873,9 @@ class ApiMovilController extends FOSRestController
                                     'strIdentificacion'     => $strIdentificacion,
                                     'strRazonSocial'        => $strRazonSocial,
                                     'strEstado'             => $strEstado,
-                                    'intEsRestaurante'      => '1'
+                                    'intEsRestaurante'      => '1',
+                                    'intCiudad'             => $intCiudad,
+                                    'strEsAfiliado'         => $strEsAfiliado
                                     );
             $arrayRestaurante   = (array) $this->getDoctrine()
                                                ->getRepository(InfoRestaurante::class)
@@ -3226,6 +3237,54 @@ class ApiMovilController extends FOSRestController
         }
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $strMensajeError,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'getCiudad'.
+     * 
+     * Función encargada de retornar el listado de ciudades.
+     *
+     * @author Kevin Baque
+     * @version 1.0 15-06-2021
+     *
+     * @return array  $objResponse
+     */
+    public function getCiudad($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strEstado             = $arrayData['strEstado'] ? $arrayData['strEstado']:'ACTIVO';
+        $intCiudad             = $arrayData['intCiudad'] ? $arrayData['intCiudad']:'';
+        $strProvincia          = $arrayData['strProvincia'] ? $arrayData['strProvincia']:'';
+        $arrayCiudad           = array();
+        $strMensajeError       = '';
+        $strStatus             = 200;
+        $objResponse           = new Response;
+        $em                    = $this->getDoctrine()->getManager();
+        $boolSucces            = true;
+        try
+        {
+            $arrayParametros = array('estado'      => $strEstado,
+                                     'idCiudad'    => $intCiudad,
+                                     'idProvincia' => $strProvincia);
+            $arrayCiudad     = $this->getDoctrine()
+                                    ->getRepository(AdmiCiudad::class)
+                                    ->getCiudad($arrayParametros);
+            if(isset($arrayCiudad['error']) && !empty($arrayCiudad['error']))
+            {
+                $strStatus  = 404;
+                throw new \Exception($arrayCiudad['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayCiudad['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayCiudad,
                                                    'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
