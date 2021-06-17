@@ -637,8 +637,6 @@ class ApiMovilController extends FOSRestController
         error_log("Hora Actual: ".$intHoraActual.':'.$intMinActual);
         try
         {
-            $boolDomingo = ($strDiaActual == 0) ? true:false;
-            $boolSabado  = ($strDiaActual == 6) ? true:false;
             $arrayCltEncuesta = $this->getDoctrine()
                                      ->getRepository(InfoClienteEncuesta::class)
                                      ->getVigenciaEncuesta(array('intIdCliente'=>$intIdCliente,
@@ -679,7 +677,7 @@ class ApiMovilController extends FOSRestController
             foreach ($arraySucursal["resultados"] as &$item)
             {
                 $strAtencion = "";
-                if($boolDomingo)
+                if(!empty($strDiaActual) && $strDiaActual==0)//Domingo
                 {
                     if(!empty($item["HORA_DOMINGO_INI"]) && isset($item["HORA_DOMINGO_INI"])
                        && !empty($item["HORA_DOMINGO_FIN"]) && isset($item["HORA_DOMINGO_FIN"]))
@@ -690,26 +688,9 @@ class ApiMovilController extends FOSRestController
                         $arrayHoraFin = explode(":",$item["HORA_DOMINGO_FIN"]);
                         $intHoraFin   = $arrayHoraFin[0];
                         $intMinFin    = $arrayHoraFin[1];
-
-                        if($intHoraActual >= $intHoraIni && $intHoraActual <= $intHoraFin)
-                        {
-                            $strAtencion = "S";
-                            if($intHoraActual == $intHoraFin &&($intMinActual >= $intMinIni && $intMinActual <= $intMinFin))
-                            {
-                                $strAtencion = "S";
-                            }
-                            else
-                            {
-                                $strAtencion = "N";
-                            }
-                        }
-                        else
-                        {
-                            $strAtencion = "N";
-                        }
                     }
                 }
-                elseif ($boolSabado)
+                elseif(!empty($strDiaActual) && $strDiaActual==6)//Sabado
                 {
                     if(!empty($item["HORA_SABADO_INI"]) && isset($item["HORA_SABADO_INI"])
                        && !empty($item["HORA_SABADO_FIN"]) && isset($item["HORA_SABADO_FIN"]))
@@ -720,40 +701,85 @@ class ApiMovilController extends FOSRestController
                         $arrayHoraFin = explode(":",$item["HORA_SABADO_FIN"]);
                         $intHoraFin   = $arrayHoraFin[0];
                         $intMinFin    = $arrayHoraFin[1];
-
-                        if($intHoraActual >= $intHoraIni && $intHoraActual <= $intHoraFin)
-                        {
-                            $strAtencion = "S";
-                            if($intHoraActual == $intHoraFin &&($intMinActual >= $intMinIni && $intMinActual <= $intMinFin))
-                            {
-                                $strAtencion = "S";
-                            }
-                            else
-                            {
-                                $strAtencion = "N";
-                            }
-                        }
-                        else
-                        {
-                            $strAtencion = "N";
-                        }
+                    }
+                }
+                elseif(!empty($strDiaActual) && $strDiaActual==5)//Viernes
+                {
+                    if(!empty($item["HORA_VIERNES_INI"]) && isset($item["HORA_VIERNES_INI"])
+                       && !empty($item["HORA_VIERNES_FIN"]) && isset($item["HORA_VIERNES_FIN"]))
+                    {
+                        $arrayHoraIni = explode(":",$item["HORA_VIERNES_INI"]);
+                        $intHoraIni   = $arrayHoraIni[0];
+                        $intMinIni    = $arrayHoraIni[1];
+                        $arrayHoraFin = explode(":",$item["HORA_VIERNES_FIN"]);
+                        $intHoraFin   = $arrayHoraFin[0];
+                        $intMinFin    = $arrayHoraFin[1];
+                    }
+                }
+                elseif(!empty($strDiaActual) && $strDiaActual==4)//jueves
+                {
+                    if(!empty($item["HORA_JUEVES_INI"]) && isset($item["HORA_JUEVES_INI"])
+                       && !empty($item["HORA_JUEVES_FIN"]) && isset($item["HORA_JUEVES_FIN"]))
+                    {
+                        $arrayHoraIni = explode(":",$item["HORA_JUEVES_INI"]);
+                        $intHoraIni   = $arrayHoraIni[0];
+                        $intMinIni    = $arrayHoraIni[1];
+                        $arrayHoraFin = explode(":",$item["HORA_JUEVES_FIN"]);
+                        $intHoraFin   = $arrayHoraFin[0];
+                        $intMinFin    = $arrayHoraFin[1];
+                    }
+                }
+                elseif(!empty($strDiaActual) && $strDiaActual==3)//Miercoles
+                {
+                    if(!empty($item["HORA_MIERCOLES_INI"]) && isset($item["HORA_MIERCOLES_INI"])
+                       && !empty($item["HORA_MIERCOLES_FIN"]) && isset($item["HORA_MIERCOLES_FIN"]))
+                    {
+                        $arrayHoraIni = explode(":",$item["HORA_MIERCOLES_INI"]);
+                        $intHoraIni   = $arrayHoraIni[0];
+                        $intMinIni    = $arrayHoraIni[1];
+                        $arrayHoraFin = explode(":",$item["HORA_MIERCOLES_FIN"]);
+                        $intHoraFin   = $arrayHoraFin[0];
+                        $intMinFin    = $arrayHoraFin[1];
+                    }
+                }
+                elseif(!empty($strDiaActual) && $strDiaActual==2)//Martes
+                {
+                    if(!empty($item["HORA_MARTES_INI"]) && isset($item["HORA_MARTES_INI"])
+                       && !empty($item["HORA_MARTES_FIN"]) && isset($item["HORA_MARTES_FIN"]))
+                    {
+                        $arrayHoraIni = explode(":",$item["HORA_MARTES_INI"]);
+                        $intHoraIni   = $arrayHoraIni[0];
+                        $intMinIni    = $arrayHoraIni[1];
+                        $arrayHoraFin = explode(":",$item["HORA_MARTES_FIN"]);
+                        $intHoraFin   = $arrayHoraFin[0];
+                        $intMinFin    = $arrayHoraFin[1];
+                    }
+                }
+                elseif(!empty($strDiaActual) && $strDiaActual==1)//Lunes
+                {
+                    if(!empty($item["HORA_LUNES_INI"]) && isset($item["HORA_LUNES_INI"])
+                       && !empty($item["HORA_LUNES_FIN"]) && isset($item["HORA_LUNES_FIN"]))
+                    {
+                        $arrayHoraIni = explode(":",$item["HORA_LUNES_INI"]);
+                        $intHoraIni   = $arrayHoraIni[0];
+                        $intMinIni    = $arrayHoraIni[1];
+                        $arrayHoraFin = explode(":",$item["HORA_LUNES_FIN"]);
+                        $intHoraFin   = $arrayHoraFin[0];
+                        $intMinFin    = $arrayHoraFin[1];
                     }
                 }
                 else
                 {
-                    if(!empty($item["HORA_LUN_VIE_INI"]) && isset($item["HORA_LUN_VIE_INI"])
-                       && !empty($item["HORA_LUN_VIE_FIN"]) && isset($item["HORA_LUN_VIE_FIN"]))
+                    $strAtencion = "N";
+                }
+                if(!empty($intHoraActual) && !empty($intHoraIni) && !empty($intHoraFin))
+                {
+                    if($intHoraActual >= $intHoraIni && $intHoraActual <= $intHoraFin)
                     {
-                        $arrayHoraIni = explode(":",$item["HORA_LUN_VIE_INI"]);
-                        $intHoraIni   = $arrayHoraIni[0];
-                        $intMinIni    = $arrayHoraIni[1];
-                        $arrayHoraFin = explode(":",$item["HORA_LUN_VIE_FIN"]);
-                        $intHoraFin   = $arrayHoraFin[0];
-                        $intMinFin    = $arrayHoraFin[1];
-                        if($intHoraActual >= $intHoraIni && $intHoraActual <= $intHoraFin)
+                        $strAtencion = "S";
+                        if($intHoraActual == $intHoraFin)
                         {
-                            $strAtencion = "S";
-                            if($intHoraActual == $intHoraFin &&($intMinActual >= $intMinIni && $intMinActual <= $intMinFin))
+                            if($intMinActual >= $intMinIni && $intMinActual <= $intMinFin)
                             {
                                 $strAtencion = "S";
                             }
@@ -762,11 +788,15 @@ class ApiMovilController extends FOSRestController
                                 $strAtencion = "N";
                             }
                         }
-                        else
-                        {
-                            $strAtencion = "N";
-                        }
                     }
+                    else
+                    {
+                        $strAtencion = "N";
+                    }
+                }
+                else
+                {
+                    $strAtencion = "N";
                 }
                 $arraySucursalRes   = $this->getDoctrine()
                                            ->getRepository(InfoSucursal::class)

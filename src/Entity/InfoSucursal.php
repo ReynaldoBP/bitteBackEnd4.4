@@ -104,16 +104,72 @@ class InfoSucursal
     /**
      * @var string
      *
-     * @ORM\Column(name="HORA_LUN_VIE_INI", type="string")
+     * @ORM\Column(name="HORA_LUNES_INI", type="string")
      */
-    private $HORA_LUN_VIE_INI;
+    private $HORA_LUNES_INI;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="HORA_LUN_VIE_FIN", type="string")
+     * @ORM\Column(name="HORA_LUNES_FIN", type="string")
      */
-    private $HORA_LUN_VIE_FIN;
+    private $HORA_LUNES_FIN;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_MARTES_INI", type="string")
+     */
+    private $HORA_MARTES_INI;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_MARTES_FIN", type="string")
+     */
+    private $HORA_MARTES_FIN;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_MIERCOLES_INI", type="string")
+     */
+    private $HORA_MIERCOLES_INI;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_MIERCOLES_FIN", type="string")
+     */
+    private $HORA_MIERCOLES_FIN;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_JUEVES_INI", type="string")
+     */
+    private $HORA_JUEVES_INI;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_JUEVES_FIN", type="string")
+     */
+    private $HORA_JUEVES_FIN;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_VIERNES_INI", type="string")
+     */
+    private $HORA_VIERNES_INI;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="HORA_VIERNES_FIN", type="string")
+     */
+    private $HORA_VIERNES_FIN;
 
     /**
      * @var string
@@ -427,53 +483,245 @@ class InfoSucursal
     }
 
     /**
-     * Set HORA_LUN_VIE_INI
+     * Set HORA_LUNES_INI
      *
-     * @param string $HORA_LUN_VIE_INI
+     * @param string $HORA_LUNES_INI
      *
      * @return InfoSucursal
      */
-    public function setHORA_LUN_VIE_INI($HORA_LUN_VIE_INI)
+    public function setHORA_LUNES_INI($HORA_LUNES_INI)
     {
-        $this->HORA_LUN_VIE_INI = $HORA_LUN_VIE_INI;
+        $this->HORA_LUNES_INI = $HORA_LUNES_INI;
 
         return $this;
     }
 
     /**
-     * Get HORA_LUN_VIE_INI
+     * Get HORA_LUNES_INI
      *
      * @return string
      */
-    public function getHORA_LUN_VIE_INI()
+    public function getHORA_LUNES_INI()
     {
-        return $this->HORA_LUN_VIE_INI;
+        return $this->HORA_LUNES_INI;
     }
 
     /**
-     * Set HORA_LUN_VIE_FIN
+     * Set HORA_LUNES_FIN
      *
-     * @param string $HORA_LUN_VIE_FIN
+     * @param string $HORA_LUNES_FIN
      *
      * @return InfoSucursal
      */
-    public function setHORA_LUN_VIE_FIN($HORA_LUN_VIE_FIN)
+    public function setHORA_LUNES_FIN($HORA_LUNES_FIN)
     {
-        $this->HORA_LUN_VIE_FIN = $HORA_LUN_VIE_FIN;
+        $this->HORA_LUNES_FIN = $HORA_LUNES_FIN;
 
         return $this;
     }
 
     /**
-     * Get HORA_LUN_VIE_FIN
+     * Get HORA_LUNES_FIN
      *
      * @return string
      */
-    public function getHORA_LUN_VIE_FIN()
+    public function getHORA_LUNES_FIN()
     {
-        return $this->HORA_LUN_VIE_FIN;
+        return $this->HORA_LUNES_FIN;
     }
 
+    /**
+     * Set HORA_MARTES_INI
+     *
+     * @param string $HORA_MARTES_INI
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_MARTES_INI($HORA_MARTES_INI)
+    {
+        $this->HORA_MARTES_INI = $HORA_MARTES_INI;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_MARTES_INI
+     *
+     * @return string
+     */
+    public function getHORA_MARTES_INI()
+    {
+        return $this->HORA_MARTES_INI;
+    }
+
+    /**
+     * Set HORA_MARTES_FIN
+     *
+     * @param string $HORA_MARTES_FIN
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_MARTES_FIN($HORA_MARTES_FIN)
+    {
+        $this->HORA_MARTES_FIN = $HORA_MARTES_FIN;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_MARTES_FIN
+     *
+     * @return string
+     */
+    public function getHORA_MARTES_FIN()
+    {
+        return $this->HORA_MARTES_FIN;
+    }
+
+    /**
+     * Set HORA_MIERCOLES_INI
+     *
+     * @param string $HORA_MIERCOLES_INI
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_MIERCOLES_INI($HORA_MIERCOLES_INI)
+    {
+        $this->HORA_MIERCOLES_INI = $HORA_MIERCOLES_INI;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_MIERCOLES_INI
+     *
+     * @return string
+     */
+    public function getHORA_MIERCOLES_INI()
+    {
+        return $this->HORA_MIERCOLES_INI;
+    }
+
+    /**
+     * Set HORA_MIERCOLES_FIN
+     *
+     * @param string $HORA_MIERCOLES_FIN
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_MIERCOLES_FIN($HORA_MIERCOLES_FIN)
+    {
+        $this->HORA_MIERCOLES_FIN = $HORA_MIERCOLES_FIN;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_MIERCOLES_FIN
+     *
+     * @return string
+     */
+    public function getHORA_MIERCOLES_FIN()
+    {
+        return $this->HORA_MIERCOLES_FIN;
+    }
+
+    /**
+     * Set HORA_JUEVES_INI
+     *
+     * @param string $HORA_JUEVES_INI
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_JUEVES_INI($HORA_JUEVES_INI)
+    {
+        $this->HORA_JUEVES_INI = $HORA_JUEVES_INI;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_JUEVES_INI
+     *
+     * @return string
+     */
+    public function getHORA_JUEVES_INI()
+    {
+        return $this->HORA_JUEVES_INI;
+    }
+
+    /**
+     * Set HORA_JUEVES_FIN
+     *
+     * @param string $HORA_JUEVES_FIN
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_JUEVES_FIN($HORA_JUEVES_FIN)
+    {
+        $this->HORA_JUEVES_FIN = $HORA_JUEVES_FIN;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_JUEVES_FIN
+     *
+     * @return string
+     */
+    public function getHORA_JUEVES_FIN()
+    {
+        return $this->HORA_JUEVES_FIN;
+    }
+
+    /**
+     * Set HORA_VIERNES_INI
+     *
+     * @param string $HORA_VIERNES_INI
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_VIERNES_INI($HORA_VIERNES_INI)
+    {
+        $this->HORA_VIERNES_INI = $HORA_VIERNES_INI;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_VIERNES_INI
+     *
+     * @return string
+     */
+    public function getHORA_VIERNES_INI()
+    {
+        return $this->HORA_VIERNES_INI;
+    }
+
+    /**
+     * Set HORA_VIERNES_FIN
+     *
+     * @param string $HORA_VIERNES_FIN
+     *
+     * @return InfoSucursal
+     */
+    public function setHORA_VIERNES_FIN($HORA_VIERNES_FIN)
+    {
+        $this->HORA_VIERNES_FIN = $HORA_VIERNES_FIN;
+
+        return $this;
+    }
+
+    /**
+     * Get HORA_VIERNES_FIN
+     *
+     * @return string
+     */
+    public function getHORA_VIERNES_FIN()
+    {
+        return $this->HORA_VIERNES_FIN;
+    }
+    
     /**
      * Set HORA_SABADO_INI
      *

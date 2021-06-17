@@ -475,7 +475,8 @@ AND IC.EDAD!='SIN EDAD'
         try
         {
             $strFromAdicional = " AND IRE.ID_RESTAURANTE !=28 ";
-            if($intIdCliente == 1 || $intIdCliente == 19 || $intIdCliente == 17 || $intIdCliente == 14 || $intIdCliente == 32 || $intIdCliente == 793 || $intIdCliente == 786)
+            if($intIdCliente == 1 || $intIdCliente == 19 || $intIdCliente == 17 || $intIdCliente == 14 || $intIdCliente == 32 || $intIdCliente == 793 || $intIdCliente == 786
+               || $intIdCliente == 1636 || $intIdCliente == 1659 || $intIdCliente == 1443 || $intIdCliente == 1631)
             {
                 $strFromAdicional = "  ";
             }

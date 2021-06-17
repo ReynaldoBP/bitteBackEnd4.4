@@ -96,28 +96,36 @@ class InfoSucursalController extends Controller
     public function createSucursalAction(Request $request)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strIdRestaurante             = $request->query->get("strIdRestaurante") ? $request->query->get("strIdRestaurante"):'';
-        $strIdentificacionRes         = $request->query->get("identificacionRestaurante") ? $request->query->get("identificacionRestaurante"):'';
-        $strEsMatriz                  = $request->query->get("esMatriz") ? $request->query->get("esMatriz"):'';
-        $strEnCentroComercial         = $request->query->get("enCentroComercial") ? $request->query->get("enCentroComercial"):'';
-        $strDescripcion               = $request->query->get("descripcion") ? $request->query->get("descripcion"):'';
-        $strDireccion                 = $request->query->get("direccion") ? $request->query->get("direccion"):'';
-        $strPais                      = $request->query->get("pais") ? $request->query->get("pais"):'';
-        $strProvincia                 = $request->query->get("provincia") ? $request->query->get("provincia"):'';
-        $strCiudad                    = $request->query->get("ciudad") ? $request->query->get("ciudad"):'';
-        $strParroquia                 = $request->query->get("parroquia") ? $request->query->get("parroquia"):'';
-        $floatLatitud                 = $request->query->get("latitud") ? $request->query->get("latitud"):'';
-        $floatLongitud                = $request->query->get("longitud") ? $request->query->get("longitud"):'';
-        $strNumeroContacto            = $request->query->get("numeroContacto") ? $request->query->get("numeroContacto"):'';
-        $strEstado                    = $request->query->get("estado") ? $request->query->get("estado"):'';
-        $strEstadoFacturacion         = $request->query->get("estadoFacturacion") ? $request->query->get("estadoFacturacion"):'';
-        $strUsuarioCreacion           = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
-        $strHorarioAtencionLunVieIni  = $request->query->get("horarioAtencionLunVieIni") ? $request->query->get("horarioAtencionLunVieIni"):'';
-        $strHorarioAtencionLunVieFin  = $request->query->get("horarioAtencionLunVieFin") ? $request->query->get("horarioAtencionLunVieFin"):'';
-        $strHorarioAtencionSabadoIni  = $request->query->get("horarioAtencionSabadoIni") ? $request->query->get("horarioAtencionSabadoIni"):'';
-        $strHorarioAtencionSabadoFin  = $request->query->get("horarioAtencionSabadoFin") ? $request->query->get("horarioAtencionSabadoFin"):'';
-        $strHorarioAtencionDomingoIni = $request->query->get("horarioAtencionDomingoIni") ? $request->query->get("horarioAtencionDomingoIni"):'';
-        $strHorarioAtencionDomingoFin = $request->query->get("horarioAtencionDomingoFin") ? $request->query->get("horarioAtencionDomingoFin"):'';
+        $strIdRestaurante               = $request->query->get("strIdRestaurante")            ? $request->query->get("strIdRestaurante")            :'';
+        $strIdentificacionRes           = $request->query->get("identificacionRestaurante")   ? $request->query->get("identificacionRestaurante")   :'';
+        $strEsMatriz                    = $request->query->get("esMatriz")                    ? $request->query->get("esMatriz")                    :'';
+        $strEnCentroComercial           = $request->query->get("enCentroComercial")           ? $request->query->get("enCentroComercial")           :'';
+        $strDescripcion                 = $request->query->get("descripcion")                 ? $request->query->get("descripcion")                 :'';
+        $strDireccion                   = $request->query->get("direccion")                   ? $request->query->get("direccion")                   :'';
+        $strPais                        = $request->query->get("pais")                        ? $request->query->get("pais")                        :'';
+        $strProvincia                   = $request->query->get("provincia")                   ? $request->query->get("provincia")                   :'';
+        $strCiudad                      = $request->query->get("ciudad")                      ? $request->query->get("ciudad")                      :'';
+        $strParroquia                   = $request->query->get("parroquia")                   ? $request->query->get("parroquia")                   :'';
+        $floatLatitud                   = $request->query->get("latitud")                     ? $request->query->get("latitud")                     :'';
+        $floatLongitud                  = $request->query->get("longitud")                    ? $request->query->get("longitud")                    :'';
+        $strNumeroContacto              = $request->query->get("numeroContacto")              ? $request->query->get("numeroContacto")              :'';
+        $strEstado                      = $request->query->get("estado")                      ? $request->query->get("estado")                      :'';
+        $strEstadoFacturacion           = $request->query->get("estadoFacturacion")           ? $request->query->get("estadoFacturacion")           :'';
+        $strUsuarioCreacion             = $request->query->get("usuarioCreacion")             ? $request->query->get("usuarioCreacion")             :'';
+        $strHorarioAtencionLunesIni     = $request->query->get("horarioAtencionLunesIni")     ? $request->query->get("horarioAtencionLunesIni")     :'';
+        $strHorarioAtencionLunesFin     = $request->query->get("horarioAtencionLunesFin")     ? $request->query->get("horarioAtencionLunesFin")     :'';
+        $strHorarioAtencionMartesIni    = $request->query->get("horarioAtencionMartesIni")    ? $request->query->get("horarioAtencionMartesIni")    :'';
+        $strHorarioAtencionMartesFin    = $request->query->get("horarioAtencionMartesFin")    ? $request->query->get("horarioAtencionMartesFin")    :'';
+        $strHorarioAtencionMiercolesIni = $request->query->get("horarioAtencionMiercolesIni") ? $request->query->get("horarioAtencionMiercolesIni") :'';
+        $strHorarioAtencionMiercolesFin = $request->query->get("horarioAtencionMiercolesFin") ? $request->query->get("horarioAtencionMiercolesFin") :'';
+        $strHorarioAtencionJuevesIni    = $request->query->get("horarioAtencionJuevesIni")    ? $request->query->get("horarioAtencionJuevesIni")    :'';
+        $strHorarioAtencionJuevesFin    = $request->query->get("horarioAtencionJuevesFin")    ? $request->query->get("horarioAtencionJuevesFin")    :'';
+        $strHorarioAtencionViernesIni   = $request->query->get("horarioAtencionViernesIni")   ? $request->query->get("horarioAtencionViernesIni")   :'';
+        $strHorarioAtencionViernesFin   = $request->query->get("horarioAtencionViernesFin")   ? $request->query->get("horarioAtencionViernesFin")   :'';
+        $strHorarioAtencionSabadoIni    = $request->query->get("horarioAtencionSabadoIni")    ? $request->query->get("horarioAtencionSabadoIni")    :'';
+        $strHorarioAtencionSabadoFin    = $request->query->get("horarioAtencionSabadoFin")    ? $request->query->get("horarioAtencionSabadoFin")    :'';
+        $strHorarioAtencionDomingoIni   = $request->query->get("horarioAtencionDomingoIni")   ? $request->query->get("horarioAtencionDomingoIni")   :'';
+        $strHorarioAtencionDomingoFin   = $request->query->get("horarioAtencionDomingoFin")   ? $request->query->get("horarioAtencionDomingoFin")   :'';
         $strDatetimeActual    = new \DateTime('now');
         $strMensajeError      = '';
         $strStatus            = 400;
@@ -159,15 +167,46 @@ class InfoSucursalController extends Controller
             $entitySucursal->setPARROQUIA($strParroquia);
             $entitySucursal->setUSRCREACION($strUsuarioCreacion);
             $entitySucursal->setFECREACION($strDatetimeActual);
-            if(!empty($strHorarioAtencionLunVieIni))
+            if(!empty($strHorarioAtencionLunesIni))
             {
-                $entitySucursal->setHORA_LUN_VIE_INI($strHorarioAtencionLunVieIni);
+                $entitySucursal->setHORA_LUNES_INI($strHorarioAtencionLunesIni);
             }
-            if(!empty($strHorarioAtencionLunVieFin))
+            if(!empty($strHorarioAtencionLunesFin))
             {
-                $entitySucursal->setHORA_LUN_VIE_FIN($strHorarioAtencionLunVieFin);
+                $entitySucursal->setHORA_LUNES_FIN($strHorarioAtencionLunesFin);
             }
-
+            if(!empty($strHorarioAtencionMartesIni))
+            {
+                $entitySucursal->setHORA_MARTES_INI($strHorarioAtencionMartesIni);
+            }
+            if(!empty($strHorarioAtencionMartesFin))
+            {
+                $entitySucursal->setHORA_MARTES_FIN($strHorarioAtencionMartesFin);
+            }
+            if(!empty($strHorarioAtencionMiercolesIni))
+            {
+                $entitySucursal->setHORA_MIERCOLES_INI($strHorarioAtencionMiercolesIni);
+            }
+            if(!empty($strHorarioAtencionMiercolesFin))
+            {
+                $entitySucursal->setHORA_MIERCOLES_FIN($strHorarioAtencionMiercolesFin);
+            }
+            if(!empty($strHorarioAtencionJuevesIni))
+            {
+                $entitySucursal->setHORA_JUEVES_INI($strHorarioAtencionJuevesIni);
+            }
+            if(!empty($strHorarioAtencionJuevesFin))
+            {
+                $entitySucursal->setHORA_JUEVES_FIN($strHorarioAtencionJuevesFin);
+            }
+            if(!empty($strHorarioAtencionViernesIni))
+            {
+                $entitySucursal->setHORA_VIERNES_INI($strHorarioAtencionViernesIni);
+            }
+            if(!empty($strHorarioAtencionViernesFin))
+            {
+                $entitySucursal->setHORA_VIERNES_FIN($strHorarioAtencionViernesFin);
+            }
             if(!empty($strHorarioAtencionSabadoIni))
             {
                 $entitySucursal->setHORA_SABADO_INI($strHorarioAtencionSabadoIni);
@@ -176,7 +215,6 @@ class InfoSucursalController extends Controller
             {
                 $entitySucursal->setHORA_SABADO_FIN($strHorarioAtencionSabadoFin);
             }
-
             if(!empty($strHorarioAtencionDomingoIni))
             {
                 $entitySucursal->setHORA_DOMINGO_INI($strHorarioAtencionDomingoIni);
@@ -232,29 +270,37 @@ class InfoSucursalController extends Controller
     public function editSucursalAction(Request $request)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strIdRestaurante             = $request->query->get("strIdRestaurante") ? $request->query->get("strIdRestaurante"):'';
-        $strIdentificacionRes         = $request->query->get("identificacionRestaurante") ? $request->query->get("identificacionRestaurante"):'';
-        $intIdSucursal                = $request->query->get("idSucursal") ? $request->query->get("idSucursal"):'';
-        $strEsMatriz                  = $request->query->get("esMatriz") ? $request->query->get("esMatriz"):'';
-        $strEnCentroComercial         = $request->query->get("enCentroComercial") ? $request->query->get("enCentroComercial"):'';
-        $strDescripcion               = $request->query->get("descripcion") ? $request->query->get("descripcion"):'';
-        $strDireccion                 = $request->query->get("direccion") ? $request->query->get("direccion"):'';
-        $strPais                      = $request->query->get("pais") ? $request->query->get("pais"):'';
-        $strProvincia                 = $request->query->get("provincia") ? $request->query->get("provincia"):'';
-        $strCiudad                    = $request->query->get("ciudad") ? $request->query->get("ciudad"):'';
-        $strParroquia                 = $request->query->get("parroquia") ? $request->query->get("parroquia"):'';
-        $floatLatitud                 = $request->query->get("latitud") ? $request->query->get("latitud"):'';
-        $floatLongitud                = $request->query->get("longitud") ? $request->query->get("longitud"):'';
-        $strNumeroContacto            = $request->query->get("numeroContacto") ? $request->query->get("numeroContacto"):'';
-        $strEstado                    = $request->query->get("estado") ? $request->query->get("estado"):'';
-        $strEstadoFacturacion         = $request->query->get("estadoFacturacion") ? $request->query->get("estadoFacturacion"):'';
-        $strUsuarioModificacion       = $request->query->get("usuarioModificacion") ? $request->query->get("usuarioModificacion"):'';
-        $strHorarioAtencionLunVieIni  = $request->query->get("horarioAtencionLunVieIni") ? $request->query->get("horarioAtencionLunVieIni"):'';
-        $strHorarioAtencionLunVieFin  = $request->query->get("horarioAtencionLunVieFin") ? $request->query->get("horarioAtencionLunVieFin"):'';
-        $strHorarioAtencionSabadoIni  = $request->query->get("horarioAtencionSabadoIni") ? $request->query->get("horarioAtencionSabadoIni"):'';
-        $strHorarioAtencionSabadoFin  = $request->query->get("horarioAtencionSabadoFin") ? $request->query->get("horarioAtencionSabadoFin"):'';
-        $strHorarioAtencionDomingoIni = $request->query->get("horarioAtencionDomingoIni") ? $request->query->get("horarioAtencionDomingoIni"):'';
-        $strHorarioAtencionDomingoFin = $request->query->get("horarioAtencionDomingoFin") ? $request->query->get("horarioAtencionDomingoFin"):'';
+        $strIdRestaurante               = $request->query->get("strIdRestaurante")            ? $request->query->get("strIdRestaurante")            :'';
+        $strIdentificacionRes           = $request->query->get("identificacionRestaurante")   ? $request->query->get("identificacionRestaurante")   :'';
+        $intIdSucursal                  = $request->query->get("idSucursal")                  ? $request->query->get("idSucursal")                  :'';
+        $strEsMatriz                    = $request->query->get("esMatriz")                    ? $request->query->get("esMatriz")                    :'';
+        $strEnCentroComercial           = $request->query->get("enCentroComercial")           ? $request->query->get("enCentroComercial")           :'';
+        $strDescripcion                 = $request->query->get("descripcion")                 ? $request->query->get("descripcion")                 :'';
+        $strDireccion                   = $request->query->get("direccion")                   ? $request->query->get("direccion")                   :'';
+        $strPais                        = $request->query->get("pais")                        ? $request->query->get("pais")                        :'';
+        $strProvincia                   = $request->query->get("provincia")                   ? $request->query->get("provincia")                   :'';
+        $strCiudad                      = $request->query->get("ciudad")                      ? $request->query->get("ciudad")                      :'';
+        $strParroquia                   = $request->query->get("parroquia")                   ? $request->query->get("parroquia")                   :'';
+        $floatLatitud                   = $request->query->get("latitud")                     ? $request->query->get("latitud")                     :'';
+        $floatLongitud                  = $request->query->get("longitud")                    ? $request->query->get("longitud")                    :'';
+        $strNumeroContacto              = $request->query->get("numeroContacto")              ? $request->query->get("numeroContacto")              :'';
+        $strEstado                      = $request->query->get("estado")                      ? $request->query->get("estado")                      :'';
+        $strEstadoFacturacion           = $request->query->get("estadoFacturacion")           ? $request->query->get("estadoFacturacion")           :'';
+        $strUsuarioModificacion         = $request->query->get("usuarioModificacion")         ? $request->query->get("usuarioModificacion")         :'';
+        $strHorarioAtencionLunesIni     = $request->query->get("horarioAtencionLunesIni")     ? $request->query->get("horarioAtencionLunesIni")     :'';
+        $strHorarioAtencionLunesFin     = $request->query->get("horarioAtencionLunesFin")     ? $request->query->get("horarioAtencionLunesFin")     :'';
+        $strHorarioAtencionMartesIni    = $request->query->get("horarioAtencionMartesIni")    ? $request->query->get("horarioAtencionMartesIni")    :'';
+        $strHorarioAtencionMartesFin    = $request->query->get("horarioAtencionMartesFin")    ? $request->query->get("horarioAtencionMartesFin")    :'';
+        $strHorarioAtencionMiercolesIni = $request->query->get("horarioAtencionMiercolesIni") ? $request->query->get("horarioAtencionMiercolesIni") :'';
+        $strHorarioAtencionMiercolesFin = $request->query->get("horarioAtencionMiercolesFin") ? $request->query->get("horarioAtencionMiercolesFin") :'';
+        $strHorarioAtencionJuevesIni    = $request->query->get("horarioAtencionJuevesIni")    ? $request->query->get("horarioAtencionJuevesIni")    :'';
+        $strHorarioAtencionJuevesFin    = $request->query->get("horarioAtencionJuevesFin")    ? $request->query->get("horarioAtencionJuevesFin")    :'';
+        $strHorarioAtencionViernesIni   = $request->query->get("horarioAtencionViernesIni")   ? $request->query->get("horarioAtencionViernesIni")   :'';
+        $strHorarioAtencionViernesFin   = $request->query->get("horarioAtencionViernesFin")   ? $request->query->get("horarioAtencionViernesFin")   :'';
+        $strHorarioAtencionSabadoIni    = $request->query->get("horarioAtencionSabadoIni")    ? $request->query->get("horarioAtencionSabadoIni")    :'';
+        $strHorarioAtencionSabadoFin    = $request->query->get("horarioAtencionSabadoFin")    ? $request->query->get("horarioAtencionSabadoFin")    :'';
+        $strHorarioAtencionDomingoIni   = $request->query->get("horarioAtencionDomingoIni")   ? $request->query->get("horarioAtencionDomingoIni")   :'';
+        $strHorarioAtencionDomingoFin   = $request->query->get("horarioAtencionDomingoFin")   ? $request->query->get("horarioAtencionDomingoFin")   :'';
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
@@ -331,15 +377,46 @@ class InfoSucursalController extends Controller
             {
                 $entitySucursal->setPARROQUIA($strParroquia);
             }
-            if(!empty($strHorarioAtencionLunVieIni))
+            if(!empty($strHorarioAtencionLunesIni))
             {
-                $entitySucursal->setHORA_LUN_VIE_INI($strHorarioAtencionLunVieIni);
+                $entitySucursal->setHORA_LUNES_INI($strHorarioAtencionLunesIni);
             }
-            if(!empty($strHorarioAtencionLunVieFin))
+            if(!empty($strHorarioAtencionLunesFin))
             {
-                $entitySucursal->setHORA_LUN_VIE_FIN($strHorarioAtencionLunVieFin);
+                $entitySucursal->setHORA_LUNES_FIN($strHorarioAtencionLunesFin);
             }
-
+            if(!empty($strHorarioAtencionMartesIni))
+            {
+                $entitySucursal->setHORA_MARTES_INI($strHorarioAtencionMartesIni);
+            }
+            if(!empty($strHorarioAtencionMartesFin))
+            {
+                $entitySucursal->setHORA_MARTES_FIN($strHorarioAtencionMartesFin);
+            }
+            if(!empty($strHorarioAtencionMiercolesIni))
+            {
+                $entitySucursal->setHORA_MIERCOLES_INI($strHorarioAtencionMiercolesIni);
+            }
+            if(!empty($strHorarioAtencionMiercolesFin))
+            {
+                $entitySucursal->setHORA_MIERCOLES_FIN($strHorarioAtencionMiercolesFin);
+            }
+            if(!empty($strHorarioAtencionJuevesIni))
+            {
+                $entitySucursal->setHORA_JUEVES_INI($strHorarioAtencionJuevesIni);
+            }
+            if(!empty($strHorarioAtencionJuevesFin))
+            {
+                $entitySucursal->setHORA_JUEVES_FIN($strHorarioAtencionJuevesFin);
+            }
+            if(!empty($strHorarioAtencionViernesIni))
+            {
+                $entitySucursal->setHORA_VIERNES_INI($strHorarioAtencionViernesIni);
+            }
+            if(!empty($strHorarioAtencionViernesFin))
+            {
+                $entitySucursal->setHORA_VIERNES_FIN($strHorarioAtencionViernesFin);
+            }
             if(!empty($strHorarioAtencionSabadoIni))
             {
                 $entitySucursal->setHORA_SABADO_INI($strHorarioAtencionSabadoIni);
@@ -348,7 +425,6 @@ class InfoSucursalController extends Controller
             {
                 $entitySucursal->setHORA_SABADO_FIN($strHorarioAtencionSabadoFin);
             }
-
             if(!empty($strHorarioAtencionDomingoIni))
             {
                 $entitySucursal->setHORA_DOMINGO_INI($strHorarioAtencionDomingoIni);
