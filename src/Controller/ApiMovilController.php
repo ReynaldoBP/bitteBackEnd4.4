@@ -34,6 +34,8 @@ use App\Entity\InfoClienteInfluencer;
 use App\Entity\InfoCodigoPromocion;
 use App\Entity\InfoCodigoPromocionHistorial;
 use App\Entity\AdmiCiudad;
+use App\Entity\InfoCupon;
+use App\Entity\InfoCuponHistorial;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -117,6 +119,8 @@ class ApiMovilController extends FOSRestController
               case 'generaCodigoSucursal':$arrayRespuesta = $this->generaCodigoSucursal($arrayData);
               break;
               case 'getCiudad':$arrayRespuesta = $this->getCiudad($arrayData);
+              break;
+              case 'canjearCupon':$arrayRespuesta = $this->canjearCupon($arrayData);
               break;
               default:
                $objResponse->setContent(json_encode(array(
@@ -3342,6 +3346,134 @@ class ApiMovilController extends FOSRestController
         $arrayCiudad['error'] = $strMensajeError;
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $arrayCiudad,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'canjearCupon'.
+     * 
+     * Función encargada de canjear cupón.
+     *
+     * @author Kevin Baque
+     * @version 1.0 19-06-2021
+     *
+     * @return array  $objResponse
+     */
+    public function canjearCupon($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdCliente          = $arrayData['intIdCliente'] ? $arrayData['intIdCliente']:'';
+        $strCupon              = $arrayData['strCupon'] ? $arrayData['strCupon']:'';
+        $strUsuarioCreacion    = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $strDatetimeActual     = new \DateTime('now');
+        $arrayRespuesta        = array();
+        $strStatus             = 200;
+        $objResponse           = new Response;
+        $em                    = $this->getDoctrine()->getManager();
+        $boolSucces            = true;
+        $strMensaje            = "Cupón canjeado con éxito";
+        try
+        {
+            if(empty($intIdCliente) || empty($strCupon) || empty($strUsuarioCreacion))
+            {
+                throw new \Exception('Id cliente, cupón, usuario creación son campos obligatorios para realizar la transacción.');
+            }
+            $objCliente = $this->getDoctrine()
+                               ->getRepository(InfoCliente::class)
+                               ->find($intIdCliente);
+            if(!is_object($objCliente) || empty($objCliente))
+            {
+                throw new \Exception('No existe cliente con el identificador enviado por parámetro.');
+            }
+            $objCupon = $this->getDoctrine()
+                             ->getRepository(InfoCupon::class)
+                             ->findOneBy(array("CUPON"  => $strCupon,
+                                               "ESTADO" => "ACTIVO"));
+            if(!is_object($objCupon) || empty($objCupon))
+            {
+                throw new \Exception("No existe Cupón válido");
+            }
+            $objCupon->setESTADO("CANJEADO");
+            $em->persist($objCupon);
+            $em->flush();
+            $entityCuponHistorial = new InfoCuponHistorial();
+            $entityCuponHistorial->setESTADO("CANJEADO");
+            $entityCuponHistorial->setCUPONID($objCupon);
+            $entityCuponHistorial->setCLIENTEID($objCliente);
+            $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+            $entityCuponHistorial->setFECREACION($strDatetimeActual);
+            $em->persist($entityCuponHistorial);
+            $em->flush();
+            $objParametroCupon = $this->getDoctrine()
+                                      ->getRepository(AdmiParametro::class)
+                                      ->findOneBy(array('DESCRIPCION' => 'CANT_PUNTOS_CLT_CUPON',
+                                                        'ESTADO'      => 'ACTIVO'));
+            if(!is_object($objParametroCupon) || empty($objParametroCupon))
+            {
+                throw new \Exception('No existe el parametro CANT_PUNTOS_CLT_CUPON.');
+            }
+            $arrayRestaurantes = $this->getDoctrine()
+                                      ->getRepository(InfoRestaurante::class)
+                                      ->getRestauranteCriterio(array('strEstado'       => "ACTIVO",
+                                                                     'strBanderaBitte' => "S"));
+            if(empty($arrayRestaurantes['error']) && !empty($arrayRestaurantes['resultados']))
+            {
+                foreach ($arrayRestaurantes['resultados'] as $item)
+                {
+                    $intCantPuntos     = intval($objParametroCupon->getVALOR1());
+                    $intCantidadPuntos = 0;
+                    $objRestaurante    = $this->getDoctrine()
+                                              ->getRepository(InfoRestaurante::class)
+                                              ->find($item['ID_RESTAURANTE']);
+                    $objInfoCltPunto   = $this->getDoctrine()
+                                              ->getRepository(InfoClientePunto::class)
+                                              ->findOneBy(array('CLIENTE_ID'     => $objCliente->getId(),
+                                                                'RESTAURANTE_ID' => $item['ID_RESTAURANTE'],
+                                                                'ESTADO'         => 'ACTIVO'));
+                    if(!empty($objInfoCltPunto) && is_object($objInfoCltPunto))
+                    {
+                        $intCantidadPuntos = $intCantPuntos + intval($objInfoCltPunto->getCANTIDADPUNTOS());
+                        $objInfoCltPunto->setCANTIDADPUNTOS($intCantidadPuntos);
+                        $em->persist($objInfoCltPunto);
+                        $em->flush();
+                    }
+                    else
+                    {
+                        $entityCltPunto = new InfoClientePunto();
+                        $entityCltPunto->setCLIENTEID($objCliente);
+                        $entityCltPunto->setRESTAURANTEID($objRestaurante);
+                        $entityCltPunto->setCANTIDADPUNTOS($intCantPuntos);
+                        $entityCltPunto->setESTADO("ACTIVO");
+                        $entityCltPunto->setUSRCREACION($strUsuarioCreacion);
+                        $entityCltPunto->setFECREACION($strDatetimeActual);
+                        $em->persist($entityCltPunto);
+                        $em->flush();
+                    }
+                }
+            }
+            else
+            {
+                throw new \Exception('No existe restaurantes, con los parámetros enviados.');
+            }
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces = false;
+            $strMensaje = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 204;
+                $em->getConnection()->rollback();
+            }
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensaje,
                                                    'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
