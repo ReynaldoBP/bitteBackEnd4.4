@@ -452,8 +452,6 @@ AND IC.EDAD!='SIN EDAD'
      * 
      * @author Kevin Baque
      * @version 1.0 28-10-2019
-     * 
-     * @return array  $arrayCltEncuesta
      *
      * @author Kevin Baque
      * @version 1.0 25-01-2020 - Se agrega nueva forma para retornar los puntos pendientes.
@@ -461,6 +459,10 @@ AND IC.EDAD!='SIN EDAD'
      * @author Kevin Baque
      * @version 1.1 03-03-2020 - Se retorna direccion y telefono.
      *
+     * @author Kevin Baque
+     * @version 1.2 18-06-2021 - Se agrega lógica para saber si el cliente en sesión puede ver el restaurante Bitte.
+     *
+     * @return array  $arrayCltEncuesta
      */
     public function getCantPtosResEnc($arrayParametros)
     {
@@ -468,17 +470,17 @@ AND IC.EDAD!='SIN EDAD'
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:'';
         $intLimiteInicial   = $arrayParametros['intLimiteInicial'] ? $arrayParametros['intLimiteInicial']:'0';
         $intLimiteFinal     = $arrayParametros['intLimiteFinal'] ? $arrayParametros['intLimiteFinal']:'100';
+        $strVerBitte        = $arrayParametros['strVerBitte']    ? $arrayParametros['strVerBitte']:'N';
         $arrayCantPtos      = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $strFromAdicional   = "";
         try
         {
-            $strFromAdicional = " AND IRE.ID_RESTAURANTE !=28 ";
-            if($intIdCliente == 1 || $intIdCliente == 19 || $intIdCliente == 17 || $intIdCliente == 14 || $intIdCliente == 32 || $intIdCliente == 793 || $intIdCliente == 786
-               || $intIdCliente == 1636 || $intIdCliente == 1659 || $intIdCliente == 1443 || $intIdCliente == 1631)
+            if($strVerBitte == "N")
             {
-                $strFromAdicional = "  ";
+                $strFromAdicional = " AND IRE.ID_RESTAURANTE !=28 ";
             }
             //SUM(ICE.CANTIDAD_PUNTOS) AS CANT_PUNTOS,
             $strSelect      = "SELECT IRE.NOMBRE_COMERCIAL,

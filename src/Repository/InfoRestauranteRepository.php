@@ -27,6 +27,9 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.1 14-06-2021 - Se agrega bandera para retornar si el restaurante es afiliado.
      *
+     * @author Kevin Baque
+     * @version 1.2 18-06-2021 - Se agrega filtro de ciudad.
+     *
      */    
     public function getRestauranteCriterio($arrayParametros)
     {
@@ -39,8 +42,10 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
         $strContador           = $arrayParametros['strContador'] ? $arrayParametros['strContador']:'NO';
         $strBanderaBitte       = $arrayParametros['strBanderaBitte'] ? $arrayParametros['strBanderaBitte']:'N';
         $strEstado             = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
+        $intCiudad             = $arrayParametros['intCiudad'] ? $arrayParametros['intCiudad']:'';
         $arrayRestaurante      = array();
         $strMensajeError       = '';
+        $strEstadoActivo       = "ACTIVO";
         $objRsmBuilder         = new ResultSetMappingBuilder($this->_em);
         $objQuery              = $this->_em->createNativeQuery(null, $objRsmBuilder);
         $objRsmBuilderCount    = new ResultSetMappingBuilder($this->_em);
@@ -68,8 +73,22 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                                     JOIN ADMI_TIPO_COMIDA ATC
                                     ON IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
                 $strWhere       = "WHERE IR.ESTADO in (:ESTADO) ";
+                $strGroupBy     = " GROUP BY IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
+                                    IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,ATC.DESCRIPCION_TIPO_COMIDA, 
+                                    IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.NUMERO_CONTACTO, IR.ESTADO, IR.CODIGO,IR.ES_AFILIADO, IR.IMAGEN, IR.ICONO ";
                 $strOrder       = " order by IR.RAZON_SOCIAL ASC, IR.ESTADO ASC ";
                 $objQuery->setParameter("ESTADO", $strEstado);
+                if(!empty($intCiudad))
+                {
+                    $strFrom   .= " LEFT JOIN INFO_SUCURSAL ISUR ON  ISUR.RESTAURANTE_ID     = IR.ID_RESTAURANTE
+                                                                 AND ISUR.ESTADO             = :strEstadoActivo
+                                                                 AND ISUR.ESTADO_FACTURACION = :strEstadoActivo
+                                    LEFT JOIN ADMI_CIUDAD   ACI  ON  ACI.ID_CIUDAD           = ISUR.CIUDAD
+                                                                 AND ACI.ESTADO              = :strEstadoActivo ";
+                    $strWhere  .= " AND ISUR.CIUDAD = :intCiudad ";
+                    $objQuery->setParameter("strEstadoActivo", $strEstadoActivo);
+                    $objQuery->setParameter("intCiudad", $intCiudad);
+                }
                 if(!empty($strRazonSocial))
                 {
                 $strWhere .= " AND lower(IR.RAZON_SOCIAL) like lower(:RAZON_SOCIAL)";
@@ -122,7 +141,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                 $objRsmBuilder->addScalarResult('ES_AFILIADO', 'ES_AFILIADO', 'string');
                 $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
                 $objRsmBuilder->addScalarResult('ICONO', 'ICONO', 'string');
-                $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
+                $strSql       = $strSelect.$strFrom.$strWhere.$strGroupBy.$strOrder;
                 $objQuery->setSQL($strSql);
                 $arrayRestaurante['resultados'] = $objQuery->getResult();
             }
@@ -292,4 +311,47 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
         $arrayRestaurante['error'] = $strMensajeError;
         return $arrayRestaurante;
     }
+    /**
+     * Documentación para la función 'getCiudadPorRestaurante'
+     *
+     * Función encargada de retornar todos las ciudades por restaurantes según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 18-06-2021
+     * 
+     * @return array  $arrayResultado
+     *
+     */
+    public function getCiudadPorRestaurante($arrayParametros)
+    {
+        $strEstado             = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
+        $arrayResultado        = array();
+        $strMensajeError       = '';
+        $objRsmBuilder         = new ResultSetMappingBuilder($this->_em);
+        $objQuery              = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = " SELECT DISTINCT ID_CIUDAD,CIUDAD_NOMBRE ";
+            $strFrom        = " FROM ADMI_CIUDAD ACI
+                                JOIN INFO_SUCURSAL ISUR ON ISUR.CIUDAD=ACI.ID_CIUDAD ";
+            $strWhere       = " WHERE ACI.ESTADO      = :strEstado
+                                      AND ISUR.ESTADO = :strEstado
+                                      AND ISUR.ESTADO_FACTURACION = :strEstado ";
+            $strOrder       = " ORDER BY ACI.CIUDAD_NOMBRE ASC ";
+            $objQuery->setParameter("strEstado", $strEstado);
+
+            $objRsmBuilder->addScalarResult('ID_CIUDAD', 'ID_CIUDAD', 'string');
+            $objRsmBuilder->addScalarResult('CIUDAD_NOMBRE', 'CIUDAD_NOMBRE', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
+            $objQuery->setSQL($strSql);
+            $arrayResultado['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayResultado['error'] = $strMensajeError;
+        return $arrayResultado;
+    }
+
 }

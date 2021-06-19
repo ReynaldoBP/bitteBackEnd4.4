@@ -275,6 +275,7 @@ class InfoRestauranteController extends Controller
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
         $conImagen              = $request->query->get("imagen") ? $request->query->get("imagen"):'NO';
         $conIcono               = $request->query->get("icono") ? $request->query->get("icono"):'NO';
+        $intCiudad              = $request->query->get("intCiudad") ? $request->query->get("intCiudad"):'';
         $arrayRestaurantes      = array();
         $strMensaje             = '';
         $strStatus              = 400;
@@ -290,8 +291,8 @@ class InfoRestauranteController extends Controller
                                     'strIdentificacion'     => $strIdentificacion,
                                     'strRazonSocial'        => $strRazonSocial,
                                     'strContador'           => $strContador,
-                                    'strEstado'             => $strEstado
-                                    );
+                                    'strEstado'             => $strEstado,
+                                    'intCiudad'             => $intCiudad);
             $arrayRestaurantes   = (array) $this->getDoctrine()
                                                 ->getRepository(InfoRestaurante::class)
                                                 ->getRestauranteCriterio($arrayParametros);

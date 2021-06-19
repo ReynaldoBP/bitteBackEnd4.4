@@ -107,6 +107,8 @@ class ApiWebController extends FOSRestController
                 break;
                 case 'getCodigoPromocion':$arrayRespuesta = $this->getCodigoPromocion($arrayData);
                 break;
+                case 'getCiudadPorRestaurante':$arrayRespuesta = $this->getCiudadPorRestaurante($arrayData);
+                break;
                  $objResponse->setContent(json_encode(array(
                                                      'status'    => 400,
                                                      'resultado' => "No existe método con la descripción enviado por parámetro",
@@ -3170,5 +3172,45 @@ class ApiWebController extends FOSRestController
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
-
+    /**
+     * Documentación para la función 'getCiudadPorRestaurante'
+     * Función encargada de retornar todos las ciudades por restaurantes según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 18-06-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getCiudadPorRestaurante($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
+        $arrayResultado         = array();
+        $strMensaje             = '';
+        $strStatus              = 200;
+        $objResponse            = new Response;
+        try
+        {
+            $arrayParametros = array('strEstado' => $strEstado);
+            $arrayResultado  = (array) $this->getDoctrine()
+                                            ->getRepository(InfoRestaurante::class)
+                                            ->getCiudadPorRestaurante($arrayParametros);
+            if(isset($arrayResultado['error']) && !empty($arrayResultado['error']))
+            {
+                $strStatus  = 404;
+                throw new \Exception($arrayResultado['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $strStatus = 204;
+            $strMensaje ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayResultado['error'] = $strMensaje;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayResultado,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
 }

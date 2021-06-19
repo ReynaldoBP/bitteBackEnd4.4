@@ -147,6 +147,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 28-01-2020 - Se edita el correo de bienvenida(link de restaurante y term. cond.).
      *
+     * @author Kevin Baque
+     * @version 1.3 18-06-2021 - Se agrega lógica para obtener la cantidad de puntos cuando se crear un cliente.
+     *
      */
     public function createCliente($arrayData)
     {
@@ -208,76 +211,89 @@ class ApiMovilController extends FOSRestController
             }
             if($boolBanderaCambio == 0)
             {
-                 if($boolBanderaCliente == 0)
-                 {
-
-                 $objTipoCliente = $this->getDoctrine()
-                                   ->getRepository(AdmiTipoClientePuntaje::class)
-                                   ->findOneBy(array('ESTADO' => 'ACTIVO',
-                                                     'id'     => $intIdTipoCLiente));
-                if(!is_object($objTipoCliente) || empty($objTipoCliente))
+                if($boolBanderaCliente == 0)
                 {
-                     throw new \Exception('No existe tipo cliente con la descripción enviada por parámetro.');
-                }
-                $arrayParametrosUsuario = array('ESTADO' => 'ACTIVO',
-                                                'id'     => $intIdUsuario);
-
-                $entityCliente = new InfoCliente();
-                $entityCliente->setAUTENTICACIONRS($strAutenticacionRS);
-                $entityCliente->setCONTRASENIA(md5($strContrasenia));
-                $entityCliente->setIDENTIFICACION($strIdentificacion);
-                $entityCliente->setDIRECCION($strDireccion);
-                $entityCliente->setEDAD($strEdad);
-                $entityCliente->setTIPOCOMIDA($strTipoComida);
-                $entityCliente->setGENERO($strGenero);
-                $entityCliente->setESTADO(strtoupper($strEstado));
-                $entityCliente->setSECTOR($strSector);
-                $entityCliente->setTIPOCLIENTEPUNTAJEID($objTipoCliente);
-                $entityCliente->setUSUARIOID($objUsuario);
-                $entityCliente->setNOMBRE($strNombre);
-                $entityCliente->setAPELLIDO($strApellido);
-                $entityCliente->setCORREO($strCorreo);
-                $entityCliente->setUSRCREACION($strUsuarioCreacion);
-                $entityCliente->setFECREACION($strDatetimeActual);
-                $em->persist($entityCliente);
-                $em->flush();
-                $strMensajeError = 'Usuario creado con exito.!';
-                if($boolBanderaCltNew == 1)
-                {
-                    $arrayRestaurantes = $this->getDoctrine()
-                                              ->getRepository(InfoRestaurante::class)
-                                              ->getRestauranteCriterio(array('strEstado'       => "ACTIVO",
-                                                                             'strBanderaBitte' => "S"));
-                    if(empty($arrayRestaurantes['error']))
+                    $objTipoCliente = $this->getDoctrine()
+                                           ->getRepository(AdmiTipoClientePuntaje::class)
+                                           ->findOneBy(array('ESTADO' => 'ACTIVO',
+                                                             'id'     => $intIdTipoCLiente));
+                    if(!is_object($objTipoCliente) || empty($objTipoCliente))
                     {
-                        $intCantPuntos = 4;
-                        foreach ($arrayRestaurantes['resultados'] as $item)
+                        throw new \Exception('No existe tipo cliente con la descripción enviada por parámetro.');
+                    }
+                    $arrayParametrosUsuario = array('ESTADO' => 'ACTIVO',
+                                                    'id'     => $intIdUsuario);
+                    $entityCliente = new InfoCliente();
+                    $entityCliente->setAUTENTICACIONRS($strAutenticacionRS);
+                    $entityCliente->setCONTRASENIA(md5($strContrasenia));
+                    $entityCliente->setIDENTIFICACION($strIdentificacion);
+                    $entityCliente->setDIRECCION($strDireccion);
+                    $entityCliente->setEDAD($strEdad);
+                    $entityCliente->setTIPOCOMIDA($strTipoComida);
+                    $entityCliente->setGENERO($strGenero);
+                    $entityCliente->setESTADO(strtoupper($strEstado));
+                    $entityCliente->setSECTOR($strSector);
+                    $entityCliente->setTIPOCLIENTEPUNTAJEID($objTipoCliente);
+                    $entityCliente->setUSUARIOID($objUsuario);
+                    $entityCliente->setNOMBRE($strNombre);
+                    $entityCliente->setAPELLIDO($strApellido);
+                    $entityCliente->setCORREO($strCorreo);
+                    $entityCliente->setUSRCREACION($strUsuarioCreacion);
+                    $entityCliente->setFECREACION($strDatetimeActual);
+                    $em->persist($entityCliente);
+                    $em->flush();
+                    $strMensajeError = 'Usuario creado con exito.!';
+                    $objParametroBandera = $this->getDoctrine()
+                                                ->getRepository(AdmiParametro::class)
+                                                ->findOneBy(array('DESCRIPCION' => 'BANDERA_PUNTOS_CLT_NUEVOS',
+                                                                  'ESTADO'      => 'ACTIVO'));
+                    if(!is_object($objParametroBandera) || empty($objParametroBandera))
+                    {
+                        throw new \Exception('No existe el parametro BANDERA_PUNTOS_CLT_NUEVOS.');
+                    }
+                    if($boolBanderaCltNew == 1 && $objParametroBandera->getVALOR1() == "S")
+                    {
+                        $objParametro    = $this->getDoctrine()
+                                                ->getRepository(AdmiParametro::class)
+                                                ->findOneBy(array('DESCRIPCION' => 'CANT_PUNTOS_CLT_NUEVOS',
+                                                                  'ESTADO'      => 'ACTIVO'));
+                        if(!is_object($objParametro) || empty($objParametro))
                         {
-                            $objRestaurante = $this->getDoctrine()
-                                                   ->getRepository(InfoRestaurante::class)
-                                                   ->find($item['ID_RESTAURANTE']);
-                            if(is_object($objRestaurante) && !empty($objRestaurante))
+                            throw new \Exception('No existe el parametro CANT_PUNTOS_CLT_NUEVOS.');
+                        }
+                        $arrayRestaurantes = $this->getDoctrine()
+                                                  ->getRepository(InfoRestaurante::class)
+                                                  ->getRestauranteCriterio(array('strEstado'       => "ACTIVO",
+                                                                                 'strBanderaBitte' => "S"));
+                        if(empty($arrayRestaurantes['error']))
+                        {
+                            $intCantPuntos = intval($objParametro->getVALOR1());
+                            foreach ($arrayRestaurantes['resultados'] as $item)
                             {
-                                $entityCltPunto = new InfoClientePunto();
-                                $entityCltPunto->setCLIENTEID($entityCliente);
-                                $entityCltPunto->setRESTAURANTEID($objRestaurante);
-                                $entityCltPunto->setCANTIDADPUNTOS($intCantPuntos);
-                                $entityCltPunto->setESTADO("ACTIVO");
-                                $entityCltPunto->setUSRCREACION($strUsuarioCreacion);
-                                $entityCltPunto->setFECREACION($strDatetimeActual);
-                                $em->persist($entityCltPunto);
-                                $em->flush();
+                                $objRestaurante = $this->getDoctrine()
+                                                    ->getRepository(InfoRestaurante::class)
+                                                    ->find($item['ID_RESTAURANTE']);
+                                if(is_object($objRestaurante) && !empty($objRestaurante))
+                                {
+                                    $entityCltPunto = new InfoClientePunto();
+                                    $entityCltPunto->setCLIENTEID($entityCliente);
+                                    $entityCltPunto->setRESTAURANTEID($objRestaurante);
+                                    $entityCltPunto->setCANTIDADPUNTOS($intCantPuntos);
+                                    $entityCltPunto->setESTADO("ACTIVO");
+                                    $entityCltPunto->setUSRCREACION($strUsuarioCreacion);
+                                    $entityCltPunto->setFECREACION($strDatetimeActual);
+                                    $em->persist($entityCltPunto);
+                                    $em->flush();
+                                }
                             }
                         }
                     }
+                    if ($em->getConnection()->isTransactionActive())
+                    {
+                        $em->getConnection()->commit();
+                        $em->getConnection()->close();
+                    }
                 }
-                     if ($em->getConnection()->isTransactionActive())
-                     {
-                          $em->getConnection()->commit();
-                          $em->getConnection()->close();
-                     }
-                }
-                
                 if($strAutenticacionRS == 'N')
                 {
                     $strNombreClt      = !empty($entityCliente->getNOMBRE()) ? $entityCliente->getNOMBRE():'';
@@ -350,26 +366,26 @@ class ApiMovilController extends FOSRestController
                                       'usrCreacion'    => $entityCliente->getUSRCREACION(),
                                       'feCreacion'     => $entityCliente->getFECREACION());
                 }
-         }
-         else
-         {
-            $entityCliente->setAUTENTICACIONRS($strAutenticacionRS);
-            $entityCliente->setESTADO(strtoupper($strEstado));
-            $entityCliente->setEDAD($strEdad);
-            $entityCliente->setTIPOCOMIDA($strTipoComida);
-            $entityCliente->setGENERO($strGenero);
-            $entityCliente->setUSRCREACION($strUsuarioCreacion);
-            $entityCliente->setFECREACION($strDatetimeActual);
-            $em->persist($entityCliente);
-            $em->flush();
-            $strMensajeError = 'Usuario creado con exito.!';
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-            $arrayCliente = array('id'               => $entityCliente->getId(),
-                                    'identificacion' => $entityCliente->getIDENTIFICACION(),
-                                    'nombre'         => $entityCliente->getNOMBRE(),
-                                    'apellido'       => $entityCliente->getAPELLIDO());
-         }
+            }
+            else
+            {
+                $entityCliente->setAUTENTICACIONRS($strAutenticacionRS);
+                $entityCliente->setESTADO(strtoupper($strEstado));
+                $entityCliente->setEDAD($strEdad);
+                $entityCliente->setTIPOCOMIDA($strTipoComida);
+                $entityCliente->setGENERO($strGenero);
+                $entityCliente->setUSRCREACION($strUsuarioCreacion);
+                $entityCliente->setFECREACION($strDatetimeActual);
+                $em->persist($entityCliente);
+                $em->flush();
+                $strMensajeError = 'Usuario creado con exito.!';
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+                $arrayCliente = array('id'               => $entityCliente->getId(),
+                                        'identificacion' => $entityCliente->getIDENTIFICACION(),
+                                        'nombre'         => $entityCliente->getNOMBRE(),
+                                        'apellido'       => $entityCliente->getAPELLIDO());
+            }
         }
         catch(\Exception $ex)
         {
@@ -2720,6 +2736,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 11-11-2019 Se retorna el icono del restaurante, adicional se cambia el valor razon social por nombre comercial.
      * 
+     * @author Kevin Baque
+     * @version 1.2 18-06-2021 - Se agrega lógica para saber si el cliente en sesión puede ver el restaurante Bitte.
+     *
      * @return array  $objResponse
      */
     public function getCantPtosResEnc($arrayData)
@@ -2738,34 +2757,42 @@ class ApiMovilController extends FOSRestController
         $objController->setContainer($this->container);
         try
         {
+            $objParametroVerBitte = $this->getDoctrine()
+                                         ->getRepository(AdmiParametro::class)
+                                         ->findOneBy(array('DESCRIPCION' => 'CLT_PERMITIDO_BITTE',
+                                                           'ESTADO'      => 'ACTIVO'));
+            if(!is_object($objParametroVerBitte) || empty($objParametroVerBitte))
+            {
+                throw new \Exception('No existe el parametro CLT_PERMITIDO_BITTE.');
+            }
+            $arrayVerBitte = explode(",",$objParametroVerBitte->getVALOR1());
+            $strVerBitte   = (in_array($intIdCliente,$arrayVerBitte)==true)?"S":"N";
             if(empty($intLimiteInicial))
             {
-             $intNumeroEncuesta  = $this->getDoctrine()
-                                       ->getRepository(InfoClienteEncuesta::class)
-                                       ->getCantidadEncuestaCliente(
-                                                              array('clienteId'=>$intIdCliente,
-                                                                    'strEstado' =>array('ACTIVO','PENDIENTE')));
+                $intNumeroEncuesta  = $this->getDoctrine()
+                                           ->getRepository(InfoClienteEncuesta::class)
+                                           ->getCantidadEncuestaCliente(array('clienteId'=>$intIdCliente,
+                                                                              'strEstado' =>array('ACTIVO','PENDIENTE')));
 
-             $arrayParametrosTenedor = array('intIdCliente'     => $intIdCliente,
-                                            'strEstado'         => 'PENDIENTE'
-                                            );
+                $arrayParametrosTenedor = array('intIdCliente'     => $intIdCliente,
+                                                'strEstado'        => 'PENDIENTE');
 
-             $arrayTenedorOro   = $this->getDoctrine()
-                                    ->getRepository(InfoPromocionHistorial::class)
-                                    ->getPromoHistorialTenedorMovil($arrayParametrosTenedor);
-           }
-           if(true)//if(!empty($intLimiteFinal))
-           {
-            $arrayParametros = array('intIdCliente'     => $intIdCliente,
-                                    'strEstado'         => $strEstado,
-                                    'intLimiteInicial'  => $intLimiteInicial,
-                                    'intLimiteFinal'    => $intLimiteFinal
-                                    );      
+                $arrayTenedorOro   = $this->getDoctrine()
+                                          ->getRepository(InfoPromocionHistorial::class)
+                                          ->getPromoHistorialTenedorMovil($arrayParametrosTenedor);
+            }
+            if(true)//if(!empty($intLimiteFinal))
+            {
+                $arrayParametros = array('intIdCliente'      => $intIdCliente,
+                                         'strEstado'         => $strEstado,
+                                         'intLimiteInicial'  => $intLimiteInicial,
+                                         'intLimiteFinal'    => $intLimiteFinal,
+                                         'strVerBitte'       => $strVerBitte);
 
-             $arrayPuntos   = $this->getDoctrine()
-                                    ->getRepository(InfoClienteEncuesta::class)
-                                    ->getCantPtosResEnc($arrayParametros);
-           }
+                $arrayPuntos   = $this->getDoctrine()
+                                      ->getRepository(InfoClienteEncuesta::class)
+                                      ->getCantPtosResEnc($arrayParametros);
+            }
             if(isset($arrayPuntos['error']) && !empty($arrayPuntos['error']))
             {
                 $strStatus  = 404;
