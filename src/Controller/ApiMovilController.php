@@ -1270,6 +1270,18 @@ class ApiMovilController extends FOSRestController
            }
 
             $intValor = $objParametro->getVALOR1();
+            $arrayRestaurantes = $this->getDoctrine()
+                                      ->getRepository(InfoRestaurante::class)
+                                      ->getRestauranteCriterio(array('intIdRestaurante' => $objRestaurante->getId()));
+            if(!empty($arrayRestaurantes) && !empty($arrayRestaurantes['resultados']))
+            {
+                $arrayItemRestaurante = $arrayRestaurantes['resultados'][0];
+                if(!empty($arrayItemRestaurante["ES_AFILIADO"]) && isset($arrayItemRestaurante["ES_AFILIADO"]) 
+                    && $arrayItemRestaurante["ES_AFILIADO"] == "NO")
+                {
+                    $intValor = 0;
+                }
+            }
             $entityCltEncuesta = new InfoClienteEncuesta();
             $entityCltEncuesta->setCLIENTEID($objCliente);
             $entityCltEncuesta->setSUCURSALID($objSucursal);
