@@ -3075,6 +3075,8 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 04-09-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 21-06-2021 - Se agrega lógica para restaurantes no afiliados.
      * @return array  $objResponse
      *
      */
@@ -3125,7 +3127,25 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
             }
-
+            $strCuerpoCorreo = '<div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+                                <div class="">&nbsp;</div>
+                                <div class="">Has ganado '.$objParametro->getVALOR1().' puntos por calificar. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
+                                <div class="">&nbsp;</div>
+                                <div class="">Tus puntos est&aacute;n en procesos de pendientes y en 24 horas se habilitan. Ingresa al app Bitte para que veas que promociones est&aacute;n vigentes y si has ganado suficientes puntos en este restaurante para canjear por comida o bebidas gratis. Para poder canjear comida o bebidas, debes estar en el restaurante e ingresar al app Bitte y elegir la promoci&oacute;n para redimirla.&nbsp;</div>';
+            $arrayRestaurantes = $this->getDoctrine()
+                                      ->getRepository(InfoRestaurante::class)
+                                      ->getRestauranteCriterio(array('intIdRestaurante' => $objRestaurante->getId()));
+            if(!empty($arrayRestaurantes) && !empty($arrayRestaurantes['resultados']))
+            {
+                $arrayItemRestaurante = $arrayRestaurantes['resultados'][0];
+                if(!empty($arrayItemRestaurante["ES_AFILIADO"]) && isset($arrayItemRestaurante["ES_AFILIADO"]) 
+                    && $arrayItemRestaurante["ES_AFILIADO"] == "NO")
+                {
+                    $strCuerpoCorreo = '<div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
+                    <div class="">&nbsp;</div>
+                    <div class="">Este restaurante no es afiliado con los beneficios de Bitte, por lo tanto no ganas puntos para promociones en este restaurante. Sin embargo, si ganas un cup&oacute;n para participar en el Tenedor de Oro que se sortea cada mes con los restaurantes participantes.&nbsp;</div>';
+                }
+            }
             $strAsunto            = "¡GANASTE PUNTOS!";
             $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
             $strMensajeCorreo = '
@@ -3133,11 +3153,7 @@ class ApiMovilController extends FOSRestController
             <div class="">&nbsp;</div>
             <div class="">FELICITACIONES!!!!&nbsp;</div>
             <div class="">&nbsp;</div>
-            <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Has ganado '.$objParametro->getVALOR1().' puntos por calificar. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Tus puntos est&aacute;n en procesos de pendientes y en 24 horas se habilitan. Ingresa al app Bitte para que veas que promociones est&aacute;n vigentes y si has ganado suficientes puntos en este restaurante para canjear por comida o bebidas gratis. Para poder canjear comida o bebidas, debes estar en el restaurante e ingresar al app Bitte y elegir la promoci&oacute;n para redimirla.&nbsp;</div>
+            '.$strCuerpoCorreo.'
             <div class="">&nbsp;</div>
             <div class="">Recuerda siempre usar tu app Bitte para calificar tu experiencia gastron&oacute;mica, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
             <div class="">&nbsp;</div>
