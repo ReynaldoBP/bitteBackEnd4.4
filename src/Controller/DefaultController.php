@@ -201,4 +201,66 @@ error_log(print_r($arrayParametros,1));*/
         //--------------
         return $data;
     }
+
+    /**
+     * Documentación para la función 'subirficheroBanner'
+     *
+     * Método encargado de subir una imagen al servidor según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 21-06-2021
+     * 
+     * @return string  $nombreImg
+     */
+    public function getSubirImgBanner($strImagenBase64,$strIdDiferenciador)
+    {
+        $base_to_php   = explode(',', $strImagenBase64);
+        $data          = base64_decode($base_to_php[1]);
+        $ext           = explode("/",explode(";",$base_to_php[0])[0])[1];
+        $pos           = strpos($ext, "ico");
+        if($pos > 0)
+        {
+            $ext = "ico";
+        }
+        $nombreImg     = ("banner_bitte_".date("YmdHis")."_".$strIdDiferenciador.".".$ext);
+        $strRutaImagen = ("images/banner"."/".$nombreImg);
+        file_put_contents($strRutaImagen,$data);
+        return $nombreImg;
+    }
+    /**
+     * Documentación para la función 'getImgBase64Banner'
+     *
+     * Método encargado de recuperar una imagen al servidor según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 21-06-2021
+     *
+     * @return string  $data
+     *
+     */
+    public function getImgBase64Banner($strNombreImagen)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $img  = @file_get_contents(dirname(__FILE__)."/../../public/images/banner"."/".$strNombreImagen);
+        $ext  = explode('.', $strNombreImagen)[1];
+        $data = ("data:image/".$ext.";base64," . base64_encode($img));
+        return $data;
+    }
+    /**
+     * Documentación para la función 'getEliminarImgBanner'
+     *
+     * Método encargado de eliminar una imagen al servidor según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 21-06-2021
+     *
+     * @return string  $data
+     *
+     */
+    public function getEliminarImgBanner($strNombreImagen)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strRutaImagen = ("images/banner"."/".$strNombreImagen);
+        unlink($strRutaImagen);
+    }
 }

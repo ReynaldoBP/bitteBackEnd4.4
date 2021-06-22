@@ -26,6 +26,7 @@ use App\Entity\AdmiTipoRol;
 use App\Entity\InfoUsuarioRes;
 use App\Entity\InfoContenidoSubido;
 use App\Entity\InfoCodigoPromocion;
+use App\Entity\InfoBanner;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -108,6 +109,12 @@ class ApiWebController extends FOSRestController
                 case 'getCodigoPromocion':$arrayRespuesta = $this->getCodigoPromocion($arrayData);
                 break;
                 case 'getCiudadPorRestaurante':$arrayRespuesta = $this->getCiudadPorRestaurante($arrayData);
+                break;
+                case 'createBanner':$arrayRespuesta = $this->createBanner($arrayData);
+                break;
+                case 'editBanner':$arrayRespuesta = $this->editBanner($arrayData);
+                break;
+                case 'getBanner':$arrayRespuesta = $this->getBanner($arrayData);
                 break;
                  $objResponse->setContent(json_encode(array(
                                                      'status'    => 400,
@@ -3209,6 +3216,209 @@ class ApiWebController extends FOSRestController
         $arrayResultado['error'] = $strMensaje;
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $arrayResultado,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'createBanner'
+     *
+     * Método encargado de crear los banner según los parámetros recibidos.
+     *
+     * @author Kevin Baque
+     * @version 1.0 21-06-2021
+     *
+     * @return array  $objResponse
+     */
+    public function createBanner($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strDescripcion         = $arrayData['strDescripcion']  ? $arrayData['strDescripcion']:'';
+        $strEstado              = $arrayData['strEstado']       ? $arrayData['strEstado']:'ACTIVO';
+        $strImagen              = $arrayData['strImagen']       ? $arrayData['strImagen']:'';
+        $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $strDatetimeActual      = new \DateTime('now');
+        $strMensajeError        = '';
+        $strStatus              = 200;
+        $objResponse            = new Response;
+        $strDatetimeActual      = new \DateTime('now');
+        $em                     = $this->getDoctrine()->getManager();
+        $objController          = new DefaultController();
+        $objController->setContainer($this->container);
+        try
+        {
+            if(!empty($strImagen))
+            {
+                $strRutaImagen = $objController->getSubirImgBanner($strImagen,1);
+            }
+            $em->getConnection()->beginTransaction();
+
+            $entityBanner = new InfoBanner();
+            $entityBanner->setDESCRIPCION($strDescripcion);
+            $entityBanner->setESTADO(strtoupper($strEstado));
+            $entityBanner->setIMAGEN($strRutaImagen);
+            $entityBanner->setUSRCREACION($strUsuarioCreacion);
+            $entityBanner->setFECREACION($strDatetimeActual);
+            $em->persist($entityBanner);
+            $em->flush();
+            $strMensajeError = 'Banner creado con exito.!';
+        }
+        catch(\Exception $ex)
+        {
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 204;
+                $em->getConnection()->rollback();
+            }
+            $strMensajeError = "Fallo al crear un banner, intente nuevamente.\n ". $ex->getMessage();
+        }
+        if ($em->getConnection()->isTransactionActive())
+        {
+            $em->getConnection()->commit();
+            $em->getConnection()->close();
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'editBanner'
+     *
+     * Método encargado de editar los banner según los parámetros recibidos.
+     *
+     * @author Kevin Baque
+     * @version 1.0 21-06-2021
+     *
+     * @return array  $objResponse
+     */
+    public function editBanner($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strIdBanner            = $arrayData['strIdBanner']     ? $arrayData['strIdBanner']:'';
+        $strDescripcion         = $arrayData['strDescripcion']  ? $arrayData['strDescripcion']:'';
+        $strEstado              = $arrayData['strEstado']       ? $arrayData['strEstado']:'ACTIVO';
+        $strImagen              = $arrayData['strImagen']       ? $arrayData['strImagen']:'';
+        $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $strDatetimeActual      = new \DateTime('now');
+        $strMensajeError        = '';
+        $strStatus              = 200;
+        $objResponse            = new Response;
+        $strDatetimeActual      = new \DateTime('now');
+        $em                     = $this->getDoctrine()->getManager();
+        $objController          = new DefaultController();
+        $objController->setContainer($this->container);
+        try
+        {
+            if(empty($strIdBanner))
+            {
+                throw new \Exception('Id del Banner es un campo obligatorio para realizar la búsqueda.');
+            }
+            $em->getConnection()->beginTransaction();
+            $objBanner = $this->getDoctrine()
+                              ->getRepository(InfoBanner::class)
+                              ->find($strIdBanner);
+            if(!is_object($objBanner) || empty($objBanner))
+            {
+                throw new \Exception('Banner no existe.');
+            }
+            if(!empty($strImagen))
+            {
+                $strRutaImagen = $objController->getSubirImgBanner($strImagen,1);
+                if(!empty($objBanner->getIMAGEN()))
+                {
+                    $objController->getEliminarImgBanner($objBanner->getIMAGEN());
+                }
+            }
+            if(!empty($strDescripcion))
+            {
+                $objBanner->setDESCRIPCION($strDescripcion);
+            }
+            if(!empty($strEstado))
+            {
+                $objBanner->setESTADO(strtoupper($strEstado));
+            }
+            if(!empty($strRutaImagen))
+            {
+                $objBanner->setIMAGEN($strRutaImagen);
+            }
+            $objBanner->setUSRMODIFICACION($strUsuarioCreacion);
+            $objBanner->setFEMODIFICACION($strDatetimeActual);
+            $em->persist($objBanner);
+            $em->flush();
+            $strMensajeError = 'Banner creado con exito.!';
+        }
+        catch(\Exception $ex)
+        {
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 204;
+                $em->getConnection()->rollback();
+            }
+            $strMensajeError = "Fallo al editar un banner, intente nuevamente.\n ". $ex->getMessage();
+        }
+        if ($em->getConnection()->isTransactionActive())
+        {
+            $em->getConnection()->commit();
+            $em->getConnection()->close();
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'getBanner'
+     *
+     * Método encargado de retornar todos los banner según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 01-08-2019
+     * 
+     * @return array  $objResponse
+     */
+    public function getBanner($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strIdBanner       = $arrayData['strIdBanner']     ? $arrayData['strIdBanner']:'';
+        $strDescripcion    = $arrayData['strDescripcion']  ? $arrayData['strDescripcion']:'';
+        $strEstado         = $arrayData['strEstado']       ? $arrayData['strEstado']:'';
+        $usuarioCreacion   = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $arrayRespuesta    = array();
+        $strMensajeError   = '';
+        $strStatus         = 200;
+        $objResponse       = new Response;
+        try
+        {
+            $objController = new DefaultController();
+            $objController->setContainer($this->container);
+            $arrayParametros = array('strIdBanner'    => $strIdBanner,
+                                     'strDescripcion' => $strDescripcion,
+                                     'strEstado'      => $strEstado);
+            $arrayBanner     = $this->getDoctrine()
+                                    ->getRepository(InfoBanner::class)
+                                    ->getBannerCriterio($arrayParametros);
+            if(!empty($arrayBanner["error"]))
+            {
+                throw new \Exception($arrayBanner['error']);
+            }
+            foreach($arrayBanner['resultados'] as &$arrayItemBanner)
+            {
+                $arrayRespuesta ['resultados'] []= array('strIdBanner'         =>   $arrayItemBanner['ID_BANNER'],
+                                                         'strDescripcion'      =>   $arrayItemBanner['DESCRIPCION'],
+                                                         'strEstado'           =>   $arrayItemBanner['ESTADO'],
+                                                         'strImagen'           =>   $objController->getImgBase64Banner($arrayItemBanner['IMAGEN']));
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
                                                    'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
