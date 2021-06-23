@@ -39,14 +39,13 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $strSubWhere  = "";
             if(!empty($intIdRestaurante))
             {
-                $strSubSelect = " JOIN INFO_SUCURSAL SUB_ISU 
-                                    ON SUB_ISU.ID_SUCURSAL = A.SUCURSAL_ID ";
                 $strSubWhere  = " AND SUB_ISU.RESTAURANTE_ID = ".$intIdRestaurante." ";
             }
             $strSelect      = "SELECT C.DESCRIPCION AS RED_SOCIAL, A.FE_CREACION, A.CLIENTE_ID, 
-                                D.TITULO, B.IMAGEN, A.ESTADO, A.ID_CLT_ENCUESTA ";
+                                D.TITULO, B.IMAGEN, A.ESTADO, A.ID_CLT_ENCUESTA, SUB_ISU.DESCRIPCION ";
             $strFrom        = "FROM INFO_CLIENTE_ENCUESTA A 
-                                ".$strSubSelect."
+                                    JOIN INFO_SUCURSAL SUB_ISU 
+                                    ON SUB_ISU.ID_SUCURSAL = A.SUCURSAL_ID
                                 INNER JOIN INFO_CONTENIDO_SUBIDO B 
                                     ON A.CONTENIDO_ID = B.`ID_CONTENIDO_SUBIDO`
                                 INNER JOIN INFO_REDES_SOCIALES C 
@@ -71,6 +70,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('TITULO', 'TITULO', 'string');
             $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
             $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
             $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
