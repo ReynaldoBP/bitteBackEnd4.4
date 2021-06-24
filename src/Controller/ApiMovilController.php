@@ -36,6 +36,7 @@ use App\Entity\InfoCodigoPromocionHistorial;
 use App\Entity\AdmiCiudad;
 use App\Entity\InfoCupon;
 use App\Entity\InfoCuponHistorial;
+use App\Entity\InfoPlantilla;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -1862,6 +1863,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 17-12-2019 - Se modifica envío de correo notificando que ganó puntos por calificar y compartir.
      *
+     * @author Kevin Baque
+     * @version 1.3 23-06-2021 - Se agrega lógica para el envío de correos por medio de la tabla InfoPlantilla.
+     *
      */
     public function editContenido($arrayData)
     {
@@ -1929,7 +1933,6 @@ class ApiMovilController extends FOSRestController
                                  ->findOneBy(array('id'     => $intIdRedSocial,
                                                    'ESTADO' => 'ACTIVO'));
             $intPuntosPublicacion = $objParametro->getVALOR1();
-            $strCupon = 'un cup&oacute;n';
 
             if(!is_object($objRedSocial) || empty($objRedSocial))
             {
@@ -1937,26 +1940,24 @@ class ApiMovilController extends FOSRestController
             }
             else
             {
+                $objPlantilla  = $this->getDoctrine()
+                                      ->getRepository(InfoPlantilla::class)
+                                      ->findOneBy(array('DESCRIPCION'=>"CALIFICAR_COMPARTIR"));
+
                 $strTotalPuntos       = intval($objParametroRes->getVALOR1()) + intval($intPuntosPublicacion);
                 $strAsunto            = '¡GANASTE PUNTOS!';
                 $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-                $strMensajeCorreo = '
-                <div class=""><b>¡Hola! '.$strNombreUsuario.',</b>&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">FELICITACIONES!!!!&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Acabas de calificar <strong>y compartir tu foto en redes sociales de tu experiencia</strong> en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>. Has ganado '.$strTotalPuntos.' puntos en este establecimiento.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Adem&aacute;s, has ganado '.$strCupon.' para participar en sorteo mensual del <strong>Tenedor de Oro</strong> por comidas gratis de nuestros restaurantes participantes. Cada mes habr&aacute; un sorteo y el ganador ser&aacute; notificado por correo electr&oacute;nico y tambi&eacute;n aparecer&aacute; el <strong>Tenedor de Oro</strong> en la aplicaci&oacute;n, donde te permitir&aacute; reclamar tu premio en el restaurante asignado.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Los puntos solo pueden ser canjeados por promociones dentro del Restaurante.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-                <div class="">&nbsp;</div>';
+
+                $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
+                $strCuerpoCorreo1   = "¡Hola! ".$strNombreUsuario.". Acabas de calificar y compartir tu foto en redes sociales";
+                $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+
+                $strCuerpoCorreo2   = "¡Has ganado ".$strTotalPuntos." puntos en este establecimiento!";
+                $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
+
+                $strCuerpoCorreo3   = "Además, has ganado un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+                $strMensajeCorreo   = str_replace('strCuerpoCorreo3',$strCuerpoCorreo3,$strMensajeCorreo);
+
                 $strRemitente     = 'notificaciones@bitte.app';
                 $arrayParametros  = array('strAsunto'        => $strAsunto,
                                           'strMensajeCorreo' => $strMensajeCorreo,
@@ -3012,6 +3013,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 03-12-2019
      *
+     * @author Kevin Baque
+     * @version 1.2 23-06-2021 - Se agrega lógica para el envío de correos por medio de la tabla InfoPlantilla.
+     *
      * @return array  $objResponse
      */
     public function enviCorreoPrueba($arrayData)
@@ -3027,27 +3031,40 @@ class ApiMovilController extends FOSRestController
         $boolSucces       = true;
         try
         {
+            $objPlantilla  = $this->getDoctrine()
+                                  ->getRepository(InfoPlantilla::class)
+                                  ->findOneBy(array('DESCRIPCION'=>"CALIFICAR_NO_AFILIADO"));
             $strAsunto        = 'Prueba Correo';
-            $strContrasenia   = uniqid();
-            $strMensajeCorreo = '<div class="">Estimado cliente.</div>
-            <div class="">&nbsp;</div>
-            <div class="">En base a su solicitud el sistema BITTE ha procedido a asignarle una clave temporal.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div><strong>Tu clave temporal es :'.$strContrasenia.'&nbsp;</strong></div>
-            <div class="">&nbsp;</div>
-            <div class="">Recuerda que para mayor seguridad luego de ingresar a BITTE es muy importante cambiar la contraseña.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">
-            <div>
-            <div class="">Nuestro equipo de asistencia estar&aacute; disponible para usted para lo que necesite.&nbsp;</div>
-            <div>&nbsp;</div>
-            </div>
-            </div>
-            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>';
-            $arrayParametros  = array('strAsunto'        => $strAsunto,
-                                      'strMensajeCorreo' => $strMensajeCorreo,
-                                      'strRemitente'     => $strRemitente,
-                                      'strDestinatario'  => $strDestinatario);
+/*
+            $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
+            $strCuerpoCorreo1   = "¡Hola! Patricia Chiquito. Acabas de calificar el restaurante Bitte";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+
+            $strCuerpoCorreo2   = "¡Has ganado 2 puntos en este establecimiento!";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
+
+            $strCuerpoCorreo3   = "Además, has ganado un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo3',$strCuerpoCorreo3,$strMensajeCorreo);
+
+
+            $strMensajeCorreo = stream_get_contents ($objPlantilla->getPLANTILLA());
+            $strCuerpoCorreo1   = "¡Hola! Patricia Chiquito. Acabas de calificar y compartir tu foto en redes sociales";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+
+            $strCuerpoCorreo2   = "¡Has ganado 4 puntos en este establecimiento!";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
+
+            $strCuerpoCorreo3   = "Además, has ganado un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo3',$strCuerpoCorreo3,$strMensajeCorreo);
+*/
+            $strMensajeCorreo = stream_get_contents ($objPlantilla->getPLANTILLA());
+            $strCuerpoCorreo1   = "Acabas de ganar un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+
+            $arrayParametros    = array('strAsunto'        => $strAsunto,
+                                        'strMensajeCorreo' => $strMensajeCorreo,
+                                        'strRemitente'     => $strRemitente,
+                                        'strDestinatario'  => $strDestinatario);
             $objController    = new DefaultController();
             $objController->setContainer($this->container);
             $strMensajeError = $objController->enviaCorreo($arrayParametros);
@@ -3077,6 +3094,10 @@ class ApiMovilController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.1 21-06-2021 - Se agrega lógica para restaurantes no afiliados.
+     * 
+     * @author Kevin Baque
+     * @version 1.2 23-06-2021 - Se agrega lógica para el envío de correos por medio de la tabla InfoPlantilla.
+     *
      * @return array  $objResponse
      *
      */
@@ -3127,55 +3148,58 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
             }
-            $strCuerpoCorreo = '<div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
-                                <div class="">&nbsp;</div>
-                                <div class="">Has ganado '.$objParametro->getVALOR1().' puntos por calificar. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
-                                <div class="">&nbsp;</div>
-                                <div class="">Tus puntos est&aacute;n en procesos de pendientes y en 24 horas se habilitan. Ingresa al app Bitte para que veas que promociones est&aacute;n vigentes y si has ganado suficientes puntos en este restaurante para canjear por comida o bebidas gratis. Para poder canjear comida o bebidas, debes estar en el restaurante e ingresar al app Bitte y elegir la promoci&oacute;n para redimirla.&nbsp;</div>';
             $arrayRestaurantes = $this->getDoctrine()
                                       ->getRepository(InfoRestaurante::class)
                                       ->getRestauranteCriterio(array('intIdRestaurante' => $objRestaurante->getId()));
             if(!empty($arrayRestaurantes) && !empty($arrayRestaurantes['resultados']))
             {
+                $strAsunto            = "¡GANASTE PUNTOS!";
+                $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+
                 $arrayItemRestaurante = $arrayRestaurantes['resultados'][0];
                 if(!empty($arrayItemRestaurante["ES_AFILIADO"]) && isset($arrayItemRestaurante["ES_AFILIADO"]) 
                     && $arrayItemRestaurante["ES_AFILIADO"] == "NO")
                 {
-                    $strCuerpoCorreo = '<div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
-                    <div class="">&nbsp;</div>
-                    <div class="">Este restaurante no es afiliado con los beneficios de Bitte, por lo tanto no ganas puntos para promociones en este restaurante. Sin embargo, si ganas un cup&oacute;n para participar en el Tenedor de Oro que se sortea cada mes con los restaurantes participantes.&nbsp;</div>';
+                    $objPlantilla     = $this->getDoctrine()
+                                             ->getRepository(InfoPlantilla::class)
+                                             ->findOneBy(array('DESCRIPCION'=>"CALIFICAR_NO_AFILIADO"));
+                    $strMensajeCorreo = stream_get_contents ($objPlantilla->getPLANTILLA());
+                    $strCuerpoCorreo1 = "Acabas de ganar un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+                    $strMensajeCorreo = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+                }
+                else
+                {
+                    $objPlantilla     = $this->getDoctrine()
+                                             ->getRepository(InfoPlantilla::class)
+                                             ->findOneBy(array('DESCRIPCION'=>"CALIFICAR"));
+                    $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
+                    $strCuerpoCorreo1   = "¡Hola! ".$strNombreUsuario.". Acabas de calificar el restaurante ".$objRestaurante->getNOMBRECOMERCIAL()." ";
+                    $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+
+                    $strCuerpoCorreo2   = "¡Has ganado ".$objParametro->getVALOR1()." puntos en este establecimiento!";
+                    $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
+
+                    $strCuerpoCorreo3   = "Además, has ganado un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+                    $strMensajeCorreo   = str_replace('strCuerpoCorreo3',$strCuerpoCorreo3,$strMensajeCorreo);
                 }
             }
-            $strAsunto            = "¡GANASTE PUNTOS!";
-            $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-            $strMensajeCorreo = '
-            <div class=""><b>¡Hola! '.$strNombreUsuario.'.</b>&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">FELICITACIONES!!!!&nbsp;</div>
-            <div class="">&nbsp;</div>
-            '.$strCuerpoCorreo.'
-            <div class="">&nbsp;</div>
-            <div class="">Recuerda siempre usar tu app Bitte para calificar tu experiencia gastron&oacute;mica, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class=""><b>¡Sigue disfrutando de salir a comer con tus familiares y amigos!</b>&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-            <div class="">&nbsp;</div>';
-            $strRemitente     = 'notificaciones@bitte.app';
-            $arrayParametros  = array('strAsunto'        => $strAsunto,
-                                      'strMensajeCorreo' => $strMensajeCorreo,
-                                      'strRemitente'     => $strRemitente,
-                                      'strDestinatario'  => $objCliente->getCORREO());
-             $objMessage =  (new \Swift_Message())
-                                        ->setSubject($strAsunto)
-                                        ->setFrom("notificaciones@bitte.app")
-                                        ->setTo($objCliente->getCORREO())
-                                        ->setBody($strMensajeCorreo,'text/html');
-      // error_log("paso".$objCliente->getCORREO()); 
-            $strRespuesta = $this->container->get('mailer')->send($objMessage);
-            /*$objController    = new DefaultController();
-            $objController->setContainer($this->container);
-            $objController->enviaCorreo($arrayParametros);*/
+            if(!empty($strMensajeCorreo))
+            {
+                $strRemitente     = 'notificaciones@bitte.app';
+                $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                          'strMensajeCorreo' => $strMensajeCorreo,
+                                          'strRemitente'     => $strRemitente,
+                                          'strDestinatario'  => $objCliente->getCORREO());
+                 $objMessage =  (new \Swift_Message())
+                                            ->setSubject($strAsunto)
+                                            ->setFrom("notificaciones@bitte.app")
+                                            ->setTo($objCliente->getCORREO())
+                                            ->setBody($strMensajeCorreo,'text/html');
+                $strRespuesta = $this->container->get('mailer')->send($objMessage);
+                /*$objController    = new DefaultController();
+                $objController->setContainer($this->container);
+                $objController->enviaCorreo($arrayParametros);*/
+            }
         }
         catch(\Exception $ex)
         {
