@@ -27,6 +27,7 @@ use App\Entity\InfoUsuarioRes;
 use App\Entity\InfoContenidoSubido;
 use App\Entity\InfoCodigoPromocion;
 use App\Entity\InfoBanner;
+use App\Entity\InfoPlantilla;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -1474,12 +1475,14 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 15-10-2019
-     * 
-     * @return array  $objResponse
-     * 
+     *
      * @author Kevin Baque
      * @version 1.1 08-03-2020 - Se envía correo de perdiste puntos.
      *
+     * @author Kevin Baque
+     * @version 1.2 23-06-2021 - Se agrega lógica para el envío de correos por medio de la tabla InfoPlantilla.
+     *
+     * @return array  $objResponse
      */
     public function editClienteEncuesta($arrayData)
     {
@@ -1559,42 +1562,49 @@ class ApiWebController extends FOSRestController
             $em->persist($objContenido);
             $em->flush();
             $strAsunto            = '¡PERDISTE PUNTOS!';
-            $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-            $strMensajeCorreo = '
-            <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">¡LO SENTIMOS!&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Se han restado '.$intPuntosPerdidos.' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> y a su vez pierdes un cup&oacute;n para el sorteo mensual del <strong>Tenedor de Oro</strong>.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Las razones que el restaurante decidi&oacute; restar tus puntos pueden ser las siguientes:&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">- Foto no coincide con un plato de comida&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">- La foto de la comida no pertenece al men&uacute; del restaurante&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">- Fotos de bebidas no se aceptan&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">- Fotos de personas no se aceptan&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">- Fotos del men&uacute; no se aceptan&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">- Fotos del ambiente del restaurante no se aceptan&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">- Foto borrosa no se acepta&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">A lo mejor fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de tomar la foto y calificar. El objetivo de Bitte es que el Restaurante obtenga una critica constructiva acertada y para eso necesitamos que sigas las reglas de la aplicaci&oacute;n. Puedes guiarte en la secci&oacute;n de informaci&oacute;n de puntos que se encuentra dentro de la aplicaci&oacute;n Bitte.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-            <div class="">&nbsp;</div>';
+            $strNombre            = "";
+            $strApellido          = "";
+            if(!empty($objCliente->getNOMBRE()))
+            {
+                $strNombre = trim($objCliente->getNOMBRE());
+            }
+            if(!empty($objCliente->getAPELLIDO()))
+            {
+                $strApellido = trim($objCliente->getAPELLIDO());
+            }
+
+            if(!empty($strNombre) && !empty($strApellido))
+            {
+                $strNombreUsuario = $strNombre .' '.$strApellido;
+            }
+            else if(!empty($strNombre))
+            {
+                $strNombreUsuario = $strNombre;
+            }
+            else if(!empty($strApellido))
+            {
+                $strNombreUsuario = $strApellido;
+            }
+            else
+            {
+                $strNombreUsuario = $objCliente->getCORREO();
+            }
+            $strNombreImagen  = $objContenido->getIMAGEN();
+            $strRutaImagen    = (dirname(__FILE__)."/../../public/images"."/".$strNombreImagen);
+            $objPlantilla     = $this->getDoctrine()
+                                     ->getRepository(InfoPlantilla::class)
+                                     ->findOneBy(array('DESCRIPCION'=>"PERDER_PUNTOS"));
+            $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
+            $strCuerpoCorreo1   = "Has perdido ".$intPuntosPerdidos." puntos en el restaurante ".$objRestaurante->getNOMBRECOMERCIAL()."";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+
+            $strCuerpoCorreo2   = "A su vez pierdes un cupón para el sorteo mensual del Tenedor de Oro";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
             $strRemitente       = 'notificaciones@bitte.app';
             $arrayParametros    = array('strAsunto'        => $strAsunto,
                                         'strMensajeCorreo' => $strMensajeCorreo,
                                         'strRemitente'     => $strRemitente,
+                                        'strRutaImagen'    => $strRutaImagen,
                                         'strDestinatario'  => $objCliente->getCORREO());
             $objController      = new DefaultController();
             $objController->setContainer($this->container);
@@ -1658,17 +1668,6 @@ class ApiWebController extends FOSRestController
                                        ->getRepository(InfoPromocionHistorial::class)
                                        ->findOneBy(array('id'     => $intIdPromocionHist,
                                                       'ESTADO' => 'PENDIENTE'));
-            /*if(!is_array($arrayPromocionHist) || empty($arrayPromocionHist))
-            {
-                throw new \Exception('Promoción no existe o ha sido completada.');
-            }
-            foreach($arrayPromocionHist as $arrayItem)
-            {
-                $intIdPromocionHist = $arrayItem->getId();
-            }
-            $objPromocionHist = $this->getDoctrine()
-                                     ->getRepository(InfoPromocionHistorial::class)
-                                     ->find($intIdPromocionHist);*/
             if(!is_object($objPromocionHist) || empty($objPromocionHist))
             {
                 throw new \Exception('Promoción no existe o ha sido completada.');
@@ -1726,50 +1725,13 @@ class ApiWebController extends FOSRestController
                 <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
                 <div class="">&nbsp;</div>';
             }
-            else if($strEstado == 'ELIMINADO' && !empty($objPromocionOro))
-            {
-                $boolEnviarCorreo = true;
-                $strAsunto            = '¡PERDISTE PUNTOS!';
-                $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-                $strMensajeCorreo = '
-                <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">¡LO SENTIMOS!&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Se han restado '.$objPromocion->getCANTIDADPUNTOS().' puntos del restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> y a su vez pierdes un cup&oacute;n para el sorteo mensual del <strong>Tenedor de Oro</strong>.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Las razones que el restaurante decidi&oacute; restar tus puntos pueden ser las siguientes:&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">- Foto no coincide con un plato de comida&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">- La foto de la comida no pertenece al men&uacute; del restaurante&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">- Fotos de bebidas no se aceptan&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">- Fotos de personas no se aceptan&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">- Fotos del men&uacute; no se aceptan&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">- Fotos del ambiente del restaurante no se aceptan&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">- Foto borrosa no se acepta&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">A lo mejor fue un error involuntario y te recomendamos a ser m&aacute;s cauteloso al momento de tomar la foto y calificar. El objetivo de Bitte es que el Restaurante obtenga una critica constructiva acertada y para eso necesitamos que sigas las reglas de la aplicaci&oacute;n. Puedes guiarte en la secci&oacute;n de informaci&oacute;n de puntos que se encuentra dentro de la aplicaci&oacute;n Bitte.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-                <div class="">&nbsp;</div>
-                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-                <div class="">&nbsp;</div>';
-            }
             if($boolEnviarCorreo)
             {
                 $strRemitente            = 'notificaciones@bitte.app';
                 $arrayParametros  = array('strAsunto'        => $strAsunto,
-                                            'strMensajeCorreo' => $strMensajeCorreo,
-                                            'strRemitente'     => $strRemitente,
-                                            'strDestinatario'  => $objCliente->getCORREO());
+                                          'strMensajeCorreo' => $strMensajeCorreo,
+                                          'strRemitente'     => $strRemitente,
+                                          'strDestinatario'  => $objCliente->getCORREO());
                 $objController    = new DefaultController();
                 $objController->setContainer($this->container);
                 $objController->enviaCorreo($arrayParametros);

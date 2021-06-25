@@ -1946,10 +1946,36 @@ class ApiMovilController extends FOSRestController
 
                 $strTotalPuntos       = intval($objParametroRes->getVALOR1()) + intval($intPuntosPublicacion);
                 $strAsunto            = '¡GANASTE PUNTOS!';
-                $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+                $strNombre            = "";
+                $strApellido          = "";
+                if(!empty($objCliente->getNOMBRE()))
+                {
+                    $strNombre = trim($objCliente->getNOMBRE());
+                }
+                if(!empty($objCliente->getAPELLIDO()))
+                {
+                    $strApellido = trim($objCliente->getAPELLIDO());
+                }
+
+                if(!empty($strNombre) && !empty($strApellido))
+                {
+                    $strNombreUsuario = $strNombre .' '.$strApellido;
+                }
+                else if(!empty($strNombre))
+                {
+                    $strNombreUsuario = $strNombre;
+                }
+                else if(!empty($strApellido))
+                {
+                    $strNombreUsuario = $strApellido;
+                }
+                else
+                {
+                    $strNombreUsuario = $objCliente->getCORREO();
+                }
 
                 $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
-                $strCuerpoCorreo1   = "¡Hola! ".$strNombreUsuario.". Acabas de calificar y compartir tu foto en redes sociales";
+                $strCuerpoCorreo1   = "¡Hola! ".$strNombreUsuario.". Acabas de calificar el restaurante ".$objRestaurante->getNOMBRECOMERCIAL()." y compartir tu foto en redes sociales";
                 $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
 
                 $strCuerpoCorreo2   = "¡Has ganado ".$strTotalPuntos." puntos en este establecimiento!";
@@ -3154,7 +3180,33 @@ class ApiMovilController extends FOSRestController
             if(!empty($arrayRestaurantes) && !empty($arrayRestaurantes['resultados']))
             {
                 $strAsunto            = "¡GANASTE PUNTOS!";
-                $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+                $strNombre            = "";
+                $strApellido          = "";
+                if(!empty($objCliente->getNOMBRE()))
+                {
+                    $strNombre = trim($objCliente->getNOMBRE());
+                }
+                if(!empty($objCliente->getAPELLIDO()))
+                {
+                    $strApellido = trim($objCliente->getAPELLIDO());
+                }
+
+                if(!empty($strNombre) && !empty($strApellido))
+                {
+                    $strNombreUsuario = $strNombre .' '.$strApellido;
+                }
+                else if(!empty($strNombre))
+                {
+                    $strNombreUsuario = $strNombre;
+                }
+                else if(!empty($strApellido))
+                {
+                    $strNombreUsuario = $strApellido;
+                }
+                else
+                {
+                    $strNombreUsuario = $objCliente->getCORREO();
+                }
 
                 $arrayItemRestaurante = $arrayRestaurantes['resultados'][0];
                 if(!empty($arrayItemRestaurante["ES_AFILIADO"]) && isset($arrayItemRestaurante["ES_AFILIADO"]) 

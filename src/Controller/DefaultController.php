@@ -29,13 +29,16 @@ class DefaultController extends Controller
      * @author Kevin Baque
      * @version 1.0 26-08-2019
      * 
-     * @return array  $objResponse
-     * 
      * @author Kevin Baque
      * @version 1.1 03-12-2019 - Se cambia la manera de instanciar la librería de envio de correo.
      *
      * @author Kevin Baque
      * @version 1.2 09-12-2019 - Se agrega logica para enviar correos de manera asincrona
+     *
+     * @author Kevin Baque
+     * @version 1.3 25-06-2021 - Se agrega opción para enviar archivos adjuntos
+     *
+     * @return array  $objResponse
      *
      */
     public function enviaCorreo($arrayParametros)
@@ -45,6 +48,7 @@ class DefaultController extends Controller
         $strMensajeCorreo = $arrayParametros['strMensajeCorreo'] ? $arrayParametros['strMensajeCorreo']:'';
         $strRemitente     = $arrayParametros['strRemitente'] ? $arrayParametros['strRemitente']:'';
         $strDestinatario  = $arrayParametros['strDestinatario'] ? $arrayParametros['strDestinatario']:'';
+        $strRutaImagen    = $arrayParametros['strRutaImagen']   ? $arrayParametros['strRutaImagen']:'';
         $strRespuesta     = 'Procesando';
         try
         {
@@ -56,12 +60,25 @@ class DefaultController extends Controller
             $process->setWorkingDirectory(getcwd() . "/../");
             $process->start();
 error_log(print_r($arrayParametros,1));*/
-        $objMessage =  (new \Swift_Message())
-                                        ->setSubject($strAsunto)
-                                        ->setFrom($strRemitente)
-                                        ->setTo($strDestinatario)
-                                        ->setBody($strMensajeCorreo, 'text/html');
-        $strRespuesta = $this->get('mailer')->send($objMessage);
+
+            if(!empty($strRutaImagen))
+            {
+                $objMessage =  (new \Swift_Message())
+                                                ->setSubject($strAsunto)
+                                                ->setFrom($strRemitente)
+                                                ->setTo($strDestinatario)
+                                                ->setBody($strMensajeCorreo, 'text/html')
+                                                ->attach(\Swift_Attachment::fromPath($strRutaImagen));
+            }
+            else
+            {
+                $objMessage =  (new \Swift_Message())
+                                                ->setSubject($strAsunto)
+                                                ->setFrom($strRemitente)
+                                                ->setTo($strDestinatario)
+                                                ->setBody($strMensajeCorreo, 'text/html');
+            }
+            $strRespuesta = $this->get('mailer')->send($objMessage);
         } catch (\Exception $e) {
            return  $e->getMessage();
         }
