@@ -1593,22 +1593,26 @@ class ApiWebController extends FOSRestController
             $strRutaImagen    = (dirname(__FILE__)."/../../public/images"."/".$strNombreImagen);
             $objPlantilla     = $this->getDoctrine()
                                      ->getRepository(InfoPlantilla::class)
-                                     ->findOneBy(array('DESCRIPCION'=>"PERDER_PUNTOS"));
-            $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
-            $strCuerpoCorreo1   = "Has perdido ".$intPuntosPerdidos." puntos en el restaurante ".$objRestaurante->getNOMBRECOMERCIAL()."";
-            $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+                                     ->findOneBy(array('DESCRIPCION'=>"PERDER_PUNTOS",
+                                                       'ESTADO'     =>"ACTIVO"));
+            if(!empty($objPlantilla) && is_object($objPlantilla))
+            {
+                $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
+                $strCuerpoCorreo1   = "Has perdido ".$intPuntosPerdidos." puntos en el restaurante ".$objRestaurante->getNOMBRECOMERCIAL()."";
+                $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
 
-            $strCuerpoCorreo2   = "A su vez pierdes un cupón para el sorteo mensual del Tenedor de Oro";
-            $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
-            $strRemitente       = 'notificaciones@bitte.app';
-            $arrayParametros    = array('strAsunto'        => $strAsunto,
-                                        'strMensajeCorreo' => $strMensajeCorreo,
-                                        'strRemitente'     => $strRemitente,
-                                        'strRutaImagen'    => $strRutaImagen,
-                                        'strDestinatario'  => $objCliente->getCORREO());
-            $objController      = new DefaultController();
-            $objController->setContainer($this->container);
-            $objController->enviaCorreo($arrayParametros);
+                $strCuerpoCorreo2   = "A su vez pierdes un cupón para el sorteo mensual del Tenedor de Oro";
+                $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
+                $strRemitente       = 'notificaciones@bitte.app';
+                $arrayParametros    = array('strAsunto'        => $strAsunto,
+                                            'strMensajeCorreo' => $strMensajeCorreo,
+                                            'strRemitente'     => $strRemitente,
+                                            'strRutaImagen'    => $strRutaImagen,
+                                            'strDestinatario'  => $objCliente->getCORREO());
+                $objController      = new DefaultController();
+                $objController->setContainer($this->container);
+                $objController->enviaCorreo($arrayParametros);
+            }
             $strMensajeError = 'Encuesta del cliente y contenido editado con exito.!';
         }
         catch(\Exception $ex)
@@ -1827,6 +1831,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 23-09-2020 - Se agrega link de video al correo de tenedor de oro-cliente.
      *
+     * @author Kevin Baque
+     * @version 1.3 26-06-2021 - Se agrega lógica para el envío de correos por medio de la tabla InfoPlantilla.
+     *
      * @return array  $objResponse
      */
     public function createPromocionHistorial($arrayData)
@@ -1896,59 +1903,44 @@ class ApiWebController extends FOSRestController
             $strMes                  = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"][date("n") - 1];
             $strAsuntoOro            = 'TENEDOR DE ORO';
             $strNombreResUsOro       = $objUsuario->getNOMBRES() .' '.$objUsuario->getAPELLIDOS();
-            $strMensajeResCorreoOro  = '
-            <div class="">Hola '.$objRestaurante->getNOMBRECOMERCIAL().'&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.', '.$strNombreUsuarioOro.' ha sido el/la ganador(a) del <strong>Tenedor de Oro</strong>. Esta persona ir&aacute; al restaurante para recibir su premio.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Como administrador, una vez que el ganador est&eacute; en el restaurante y solicite por medio de app Bitte su <strong>Tenedor de Oro</strong>, podr&aacute;s ingresar a la plataforma web <a href=www.bitte.app target="_blank" >www.bitte.app</a> en la secci&oacute;n de puntos y buscar el nombre del ganador, para de esa forma aceptar la solicitud del Tenedor de Oro y as&iacute; conceder el premio a este ganador.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Una ves que aceptes la solicitud de Tenedor de Oro del cliente, esta se elimina del sistema.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Que bueno es poner contento a tus clientes!.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-            <div class="">&nbsp;</div>';
-            $arrayParametrosResOro  = array('strAsunto'        => $strAsuntoOro,
-                                            'strMensajeCorreo' => $strMensajeResCorreoOro,
-                                            'strRemitente'     => $strRemitenteOro,
-                                            'strDestinatario'  => $objUsuario->getCORREO());
-            $objControllerResOro    = new DefaultController();
-            $objControllerResOro->setContainer($this->container);
-            $objControllerResOro->enviaCorreo($arrayParametrosResOro);
+            $objPlantillaRes         = $this->getDoctrine()
+                                            ->getRepository(InfoPlantilla::class)
+                                            ->findOneBy(array('DESCRIPCION'=>"TENEDOR_ORO_RESTAURANTE",
+                                                              'ESTADO'     =>"ACTIVO"));
+            if(!empty($objPlantillaRes) && is_object($objPlantillaRes))
+            {
+                $strMensajeCorreoRes     = stream_get_contents ($objPlantillaRes->getPLANTILLA());
+                $strCuerpoCorreo1Res     = "En el sorteo de ".$strMes.", ".$strNombreUsuarioOro." ha sido el/la ganador(a) del Tenedor de Oro. Esta persona ir&aacute; al restaurante para recibir su premio.";
+                $strMensajeCorreoOroRes  = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1Res,$strMensajeCorreoRes);
+                $arrayParametrosResOro   = array('strAsunto'        => $strAsuntoOro,
+                                                'strMensajeCorreo' => $strMensajeCorreoOroRes,
+                                                'strRemitente'     => $strRemitenteOro,
+                                                'strDestinatario'  => $objUsuario->getCORREO());
+                $objControllerResOro    = new DefaultController();
+                $objControllerResOro->setContainer($this->container);
+                $objControllerResOro->enviaCorreo($arrayParametrosResOro);
+            }
             sleep(1);
             /* cliente */
-            $strUrlVideo ="https://youtu.be/MYMbKLR3RoU";
-            $strMensajeCorreoOro = '<div class="">Hola '.$strNombreUsuarioOro.' ,</div>
-            <div class="">&nbsp;</div>
-            <div class="">FELICITACIONES!!!🎉 🎊 🎁&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">En el sorteo de '.$strMes.' has sido el ganador de un <strong>Tenedor de Oro</strong> en el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Para obtener el <strong>Tenedor de Oro</strong>, debes de ir al Restaurante a solicitar tu premio. Ingresa a la aplicaci&oacute;n y en la secci&oacute;n de <strong>PUNTOS</strong> has click en el tenedor de oro en la parte superior derecha y te aparecer&aacute; el <strong>Tenedor de Oro</strong> del restaurante asignado.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Debes dar click en "Retirar Premio" y notificarle al salonero sobre tu <strong>Tenedor de Oro</strong>, el restaurante confirmar&aacute; en el sistema que t&uacute; eres el ganador y te entregar&aacute;n tu premio.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">El <strong>Tenedor de Oro</strong> solo puede ser concedido dentro del Restaurante.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Puedes ver el video del proceso de solicitar el <strong>Tenedor de Oro</strong> dando click <a href='.$strUrlVideo.' target="_blank" >AQUI</a>.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-            <div class="">&nbsp;</div>
-            <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-            <div class="">&nbsp;</div>';
+            $objPlantilla  = $this->getDoctrine()
+                                  ->getRepository(InfoPlantilla::class)
+                                  ->findOneBy(array('DESCRIPCION'=>"TENEDOR_ORO",
+                                                    'ESTADO'     =>"ACTIVO"));
+            if(!empty($objPlantilla) && is_object($objPlantilla))
+            {
+                $strMensajeCorreo    = stream_get_contents ($objPlantilla->getPLANTILLA());
+                $strCuerpoCorreo1    = "En el sorteo de ".$strMes." has sido el ganador de un Tenedor de Oro en el restaurante ".$objRestaurante->getNOMBRECOMERCIAL().".";
+                $strMensajeCorreoOro = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+                $strUrlVideo ="https://youtu.be/MYMbKLR3RoU";
 
-            $arrayParametrosOroCliente  = array('strAsunto'     => $strAsuntoOro,
-                                            'strMensajeCorreo' => $strMensajeCorreoOro,
-                                            'strRemitente'     => $strRemitenteOro,
-                                            'strDestinatario'  => $objCliente->getCORREO());
-            
-            $objControllerOroCliente    = new DefaultController();
-            $objControllerOroCliente->setContainer($this->container);
-            $objControllerOroCliente->enviaCorreo($arrayParametrosOroCliente);
-
+                $arrayParametrosOroCliente  = array('strAsunto'     => $strAsuntoOro,
+                                                    'strMensajeCorreo' => $strMensajeCorreoOro,
+                                                    'strRemitente'     => $strRemitenteOro,
+                                                    'strDestinatario'  => $objCliente->getCORREO());
+                $objControllerOroCliente    = new DefaultController();
+                $objControllerOroCliente->setContainer($this->container);
+                $objControllerOroCliente->enviaCorreo($arrayParametrosOroCliente);
+            }
             $entityPromocionHist = new InfoPromocionHistorial();
             $entityPromocionHist->setCLIENTEID($objCliente);
             $entityPromocionHist->setPROMOCIONID($objPromocion);
