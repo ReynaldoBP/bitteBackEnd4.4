@@ -188,7 +188,8 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSelect      = "SELECT IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
-                                      IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,ATC.DESCRIPCION_TIPO_COMIDA, 
+                                      IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,IR.ES_AFILIADO,
+                                      ATC.DESCRIPCION_TIPO_COMIDA, 
                                       IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.NUMERO_CONTACTO, IR.ESTADO, IR.IMAGEN, IR.ICONO
                                       ,(SELECT COUNT(*) FROM INFO_LIKE_RES ILR_RES WHERE ILR_RES.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ILR_RES.ESTADO='ACTIVO') as CANT_LIKE
                                       ,(SELECT IFNULL(AVG(SUB_IRES.RESPUESTA),0) 
@@ -209,7 +210,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                                JOIN ADMI_TIPO_COMIDA ATC ON IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
             $strWhere       = "WHERE IR.ESTADO in (:ESTADO) ";
             $strGroupBy     = " GROUP BY ID_RESTAURANTE,TIPO_IDENTIFICACION,IDENTIFICACION,RAZON_SOCIAL,NOMBRE_COMERCIAL,REPRESENTANTE_LEGAL,
-                                TIPO_COMIDA_ID,DESCRIPCION_TIPO_COMIDA,DIRECCION_TRIBUTARIO,URL_CATALOGO,NUMERO_CONTACTO,ESTADO,IMAGEN,ICONO,
+                                TIPO_COMIDA_ID,ES_AFILIADO,DESCRIPCION_TIPO_COMIDA,DIRECCION_TRIBUTARIO,URL_CATALOGO,NUMERO_CONTACTO,ESTADO,IMAGEN,ICONO,
                                 CANT_LIKE,PRO_ENCUESTAS ";
             if(!empty($intEsRestaurante))
             {
@@ -279,6 +280,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
             $objRsmBuilder->addScalarResult('REPRESENTANTE_LEGAL', 'REPRESENTANTE_LEGAL', 'string');
             $objRsmBuilder->addScalarResult('TIPO_COMIDA_ID', 'TIPO_COMIDA_ID', 'string');
+            $objRsmBuilder->addScalarResult('ES_AFILIADO', 'ES_AFILIADO', 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION_TIPO_COMIDA', 'DESCRIPCION_TIPO_COMIDA', 'string');
             $objRsmBuilder->addScalarResult('DIRECCION_TRIBUTARIO', 'DIRECCION_TRIBUTARIO', 'string');
             $objRsmBuilder->addScalarResult('URL_CATALOGO', 'URL_CATALOGO', 'string');

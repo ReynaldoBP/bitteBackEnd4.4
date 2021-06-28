@@ -1004,6 +1004,7 @@ class ApiMovilController extends FOSRestController
                 }
             }
             $intContadorRes ++;*/
+            $arraySucursal["resultados"][$intIterador]["ES_AFILIADO"] = (!empty($item["ES_AFILIADO"]) && $item["ES_AFILIADO"] == "SI") ? 'S':'N';
             $arrayResultado ['resultados'] []= array('ID_RESTAURANTE'          =>   $arrayItemRestaurante['ID_RESTAURANTE'],
                                                      'TIPO_IDENTIFICACION'     =>   $arrayItemRestaurante['TIPO_IDENTIFICACION'],
                                                      'IDENTIFICACION'          =>   $arrayItemRestaurante['IDENTIFICACION'],
@@ -1023,7 +1024,8 @@ class ApiMovilController extends FOSRestController
                                                      'CANT_LIKE'               =>   $arrayItemRestaurante['CANT_LIKE'],
                                                      'PRO_ENCUESTAS'           =>   $arrayItemRestaurante['PRO_ENCUESTAS'],
                                                      'ID_LIKE'                 =>   $arrayItemRestaurante['ID_LIKE'] ? $arrayItemRestaurante['ID_LIKE']:null,
-                                                     'ES_PUBLICIDAD'           =>  'N');
+                                                     'ES_PUBLICIDAD'           =>  'N',
+                                                     'ES_AFILIADO'             =>  (!empty($arrayItemRestaurante["ES_AFILIADO"]) && $arrayItemRestaurante["ES_AFILIADO"] == "SI") ? 'S':'N');
         }
         $arrayResultado['error'] = $strMensajeError;
         $em->getConnection()->commit();
