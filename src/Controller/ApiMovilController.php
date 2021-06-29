@@ -304,45 +304,22 @@ class ApiMovilController extends FOSRestController
                     $strNombreClt      = !empty($entityCliente->getNOMBRE()) ? $entityCliente->getNOMBRE():'';
                     $strWelcome        = (!empty($entityCliente->getGENERO()) && $entityCliente->getGENERO() == "MASCULINO") ? "Bienvenido":"Bienvenida";
                     $strDistractor     = substr(md5(time()),0,16);
-                    ///$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
-                    //$strActivaCltProd  = "http://bitte.app/bitteCore/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                    //$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                     $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                     $strUrlTermCond    ="https://la.bitte.app/privacy-policy/";
                     $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
                     $strAsunto         = $strWelcome.' Usuario Bitte';
 
-                    $strMensajeCorreo = '<div class="">Hola '.$strNombreClt.' ,</div>
-                   <div class="">&nbsp;</div>
-                   <div class="">FELICITACIONES!!!!&nbsp;</div>
-                   <div class="">&nbsp;</div>
-                   <div class="">Has logrado con &eacute;xito registrarte en Bitte. Nuestra aplicaci&oacute;n te va a permitir ganar puntos para que puedas obtener comida y bebidas gratis en nuestros restaurantes participantes.&nbsp;</div>
-                   <div class="">&nbsp;</div>
-                   <div><strong>Est&aacute;s a un paso de comenzar, solamente debes activar tu cuenta.&nbsp;</strong></div>
-                   <div><a href='.$strActivaCltProd.' target="_blank" >Activar mi cuenta</a></div>
-                   <div class="">&nbsp;</div>
-                   <div class="">En Bitte es muy importante seguir las reglas para que tus puntos sean v&aacute;lidos y no los pierdas. Puedes disfrutar de nuestra aplicaci&oacute;n siguiendo estos pasos:&nbsp;</div>
-                   <div class="">1. Abre la aplicaci&oacute;n y elige tomar foto. Por GPS se ubica el restaurante donde estas y se autoriza para tomar la foto.&nbsp;</div>
-                   <div class="">2. Solo se aceptan fotos de platos de comida.&nbsp;</div>
-                   <div class="">3. Califica tu experiencia gastron&oacute;mica - GANASTE PUNTOS. &nbsp;</div>
-                   <div class="">4. Comparte en redes sociales tu imagen si lo deseas - GANAS M&Aacute;S PUNTOS&nbsp;</div>
-                   <div class="">5. Acumulas y canjea tus puntos en tus restaurantes favoritos. &nbsp;</div>
-                   <div class="">6. Tus puntos tienen una vigencia de 8 meses.&nbsp;</div>
-                   <div class="">7. Tus puntos son v&aacute;lidos solo en el restaurante donde comiste y calificaste.&nbsp;</div>
-                   <div class="">8. El restaurante tiene la potestad de eliminar tus puntos si ve que la foto no concuerda con su men&uacute;.&nbsp;</div>
-                   <div class="">&nbsp;</div>
-                   <div class="">Para mayor informaci&oacute;n consulta <a href='.$strUrlTermCond.' target="_blank" >aqu&iacute;</a> los t&eacute;rminos y condiciones de uso.&nbsp;</div>
-                   <div class="">Para información de los restaurantes participantes has click <a href='.$strUrlRestaurante.' target="_blank" >aqu&iacute;</a>.&nbsp;</div>
-                   <div class="">
-                    Bitte y su red de restaurantes te invitan a que salgas a disfrutar con tu familia y/o amigos experiencias &uacute;nicas.&nbsp;</div>
-                   <div class="">&nbsp;</div>
-                   <div class="">
-                   <div>
-                   <div>&nbsp;</div>
-                   </div>
-                   </div>
-                   <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
-                   <div class="">&nbsp;</div>';
-
+                    $objPlantilla  = $this->getDoctrine()
+                                          ->getRepository(InfoPlantilla::class)
+                                          ->findOneBy(array('DESCRIPCION'=>"BIENVENIDA",
+                                                            'ESTADO'     =>"ACTIVO"));
+                    if(!empty($objPlantilla) && is_object($objPlantilla))
+                    {
+                        $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
+                        $strCuerpoCorreo1   = '<a href='.$strActivaCltProd.' target="_blank" >Activar mi cuenta</a>';
+                        $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+                    }
                    $arrayParametros  = array('strAsunto'        => $strAsunto,
                                              'strMensajeCorreo' => $strMensajeCorreo,
                                              'strRemitente'     => "notificaciones@bitte.app",
