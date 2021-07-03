@@ -9,6 +9,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManager;
 use App\Entity\InfoRestaurante;
 use App\Entity\InfoSucursal;
+use App\Entity\InfoClienteEncuesta;
+use App\Entity\InfoContenidoSubido;
+use App\Entity\InfoRespuesta;
+use App\Controller\DefaultController;
 class InfoSucursalController extends Controller
 {
     /**
@@ -265,6 +269,10 @@ class InfoSucursalController extends Controller
      * @author Kevin Baque
      * @version 1.1 09-06-2021 - Se agrega horario de atención.
      *
+     * @author Kevin Baque
+     * @version 1.2 03-07-2021 - Se agrega bandera para eliminar de forma permanente 
+     *                           las sucursales y todo lo relacionado menos puntos.
+     *
      * @return array  $objResponse
      */
     public function editSucursalAction(Request $request)
@@ -301,6 +309,7 @@ class InfoSucursalController extends Controller
         $strHorarioAtencionSabadoFin    = $request->query->get("horarioAtencionSabadoFin")    ? $request->query->get("horarioAtencionSabadoFin")    :'';
         $strHorarioAtencionDomingoIni   = $request->query->get("horarioAtencionDomingoIni")   ? $request->query->get("horarioAtencionDomingoIni")   :'';
         $strHorarioAtencionDomingoFin   = $request->query->get("horarioAtencionDomingoFin")   ? $request->query->get("horarioAtencionDomingoFin")   :'';
+        $strEliminar                    = $request->query->get("eliminar")                    ? $request->query->get("eliminar")                    :'N';
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
@@ -435,7 +444,47 @@ class InfoSucursalController extends Controller
             }
             $entitySucursal->setUSRMODIFICACION($strUsuarioModificacion);
             $entitySucursal->setFEMODIFICACION($strDatetimeActual);
-            $em->persist($entitySucursal);
+            if(!empty($strEliminar) && $strEliminar == "S")
+            {
+                $objController        = new DefaultController();
+                $objController->setContainer($this->container);
+                $arrayInfoCltEncuesta = $this->getDoctrine()
+                                             ->getRepository(InfoClienteEncuesta::class)
+                                             ->findBy(array('SUCURSAL_ID' => $entitySucursal->getId()));
+                if(!empty($arrayInfoCltEncuesta) && is_array($arrayInfoCltEncuesta))
+                {
+                    foreach($arrayInfoCltEncuesta as $objItem)
+                    {
+                        $arrayContenido = $this->getDoctrine()
+                                               ->getRepository(InfoContenidoSubido::class)
+                                               ->findBy(array('id' => $objItem->getCONTENIDOID()));
+                        if(!empty($arrayContenido) && is_array($arrayContenido))
+                        {
+                            foreach($arrayContenido as $objItemContenido)
+                            {
+                                $objController->getEliminarImg($objItemContenido->getIMAGEN());
+                                $em->remove($objItemContenido);
+                            }
+                        }
+                        $arrayRespuesta = $this->getDoctrine()
+                                               ->getRepository(InfoRespuesta::class)
+                                               ->findBy(array('CLT_ENCUESTA_ID' => $objItem->getId()));
+                        if(!empty($arrayRespuesta) && is_array($arrayRespuesta))
+                        {
+                            foreach($arrayRespuesta as $objItemRespuesta)
+                            {
+                                $em->remove($objItemRespuesta);
+                            }
+                        }
+                        $em->remove($objItem);
+                    }
+                }
+                $em->remove($entitySucursal);
+            }
+            else
+            {
+                $em->persist($entitySucursal);
+            }
             $em->flush();
             $strMensajeError = 'Sucursal editada con exito.!';
         }

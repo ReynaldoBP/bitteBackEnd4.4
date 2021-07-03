@@ -119,11 +119,11 @@ class InfoRespuestaController extends Controller
                     }
                 }
             }
-            $arrayParametros = array('strAnio'   => $strAnio,
-                                     'strMes'    => $strMes,
-                                     'intIdCltEncuesta' => $intIdCltEncuesta,
+            $arrayParametros = array('strAnio'           => $strAnio,
+                                     'strMes'            => $strMes,
+                                     'intIdCltEncuesta'  => $intIdCltEncuesta,
                                      'intIdRestaurante'  => $intIdRestaurante,
-                                     'strEstado' => $strEstado);
+                                     'strEstado'         => $strEstado);
             $arrayRespuesta = (array) $this->getDoctrine()
                                            ->getRepository(InfoRespuesta::class)
                                            ->getRespuestaDashboard($arrayParametros);

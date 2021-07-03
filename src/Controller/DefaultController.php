@@ -218,7 +218,23 @@ error_log(print_r($arrayParametros,1));*/
         //--------------
         return $data;
     }
-
+    /**
+     * Documentación para la función 'getEliminarImg'
+     *
+     * Método encargado de eliminar una imagen al servidor según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 21-06-2021
+     *
+     * @return string  $data
+     *
+     */
+    public function getEliminarImg($strNombreImagen)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strRutaImagen = ("images"."/".$strNombreImagen);
+        unlink($strRutaImagen);
+    }
     /**
      * Documentación para la función 'subirficheroBanner'
      *
