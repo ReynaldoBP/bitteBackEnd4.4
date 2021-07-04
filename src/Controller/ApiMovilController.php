@@ -2774,6 +2774,7 @@ class ApiMovilController extends FOSRestController
         $conIcono          = $arrayData['icono']  ? $arrayData['icono']:'SI';
         $intLimiteInicial  = $arrayData['limiteInicial'];
         $intLimiteFinal    = $arrayData['limiteFinal'];
+        $strLetra          = $arrayData['letra'];
         $arrayPuntos       = array();
         $strMensajeError   = '';
         $strStatus         = 400;
@@ -2812,7 +2813,8 @@ class ApiMovilController extends FOSRestController
                                          'strEstado'         => $strEstado,
                                          'intLimiteInicial'  => $intLimiteInicial,
                                          'intLimiteFinal'    => $intLimiteFinal,
-                                         'strVerBitte'       => $strVerBitte);
+                                         'strVerBitte'       => $strVerBitte,
+					 'strLetra'          => $strLetra);
 
                 $arrayPuntos   = $this->getDoctrine()
                                       ->getRepository(InfoClienteEncuesta::class)
