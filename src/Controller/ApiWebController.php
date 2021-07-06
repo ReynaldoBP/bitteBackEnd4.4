@@ -517,6 +517,10 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 13-09-2019
      * 
+     * @author Kevin Baque
+     * @version 1.2 05-07-2021 - Se agrega bandera para eliminar de forma permanente 
+     *                           las publicidades y todo lo relacionado.
+     *
      * @return array  $objResponse
      */
     public function editPublicidad($arrayData)
@@ -534,6 +538,7 @@ class ApiWebController extends FOSRestController
         $strCiudad              = $arrayData['ciudad'] ? $arrayData['ciudad']:'';
         $strParroquia           = $arrayData['parroquia'] ? $arrayData['parroquia']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
+        $strEliminar            = $arrayData['eliminar'] ? $arrayData['eliminar']:'';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
@@ -545,16 +550,20 @@ class ApiWebController extends FOSRestController
         try
         {
             $em->getConnection()->beginTransaction();
-            if(!empty($imgBase64))
-            {
-                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdPublicidad);
-            }
             $objPublicidad = $this->getDoctrine()
                                   ->getRepository(InfoPublicidad::class)
                                   ->findOneBy(array('id'=>$intIdPublicidad));
             if(!is_object($objPublicidad) || empty($objPublicidad))
             {
                 throw new \Exception('No existe publicidad con la identificación enviada por parámetro.');
+            }
+            if(!empty($imgBase64))
+            {
+                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdPublicidad);
+                if(!empty($objPublicidad->getIMAGEN()))
+                {
+                    $objController->getEliminarImg($objPublicidad->getIMAGEN());
+                }
             }
             if(!empty($strDescrPublicidad))
             {
@@ -602,7 +611,27 @@ class ApiWebController extends FOSRestController
             }
             $objPublicidad->setUSRMODIFICACION($strUsuarioCreacion);
             $objPublicidad->setFEMODIFICACION($strDatetimeActual);
-            $em->persist($objPublicidad);
+            if(!empty($strEliminar) && $strEliminar == "S")
+            {
+                $objController            = new DefaultController();
+                $objController->setContainer($this->container);
+                $arrayInfoVistaPublicidad = $this->getDoctrine()
+                                                 ->getRepository(InfoVistaPublicidad::class)
+                                                 ->findBy(array('PUBLICIDAD_ID' => $objPublicidad->getId()));
+                if(!empty($arrayInfoVistaPublicidad) && is_array($arrayInfoVistaPublicidad))
+                {
+                    foreach($arrayInfoVistaPublicidad as $objItemVistaPublicidad)
+                    {
+                        $em->remove($objItemVistaPublicidad);
+                    }
+                }
+                $objController->getEliminarImg($objPublicidad->getIMAGEN());
+                $em->remove($objPublicidad);
+            }
+            else
+            {
+                $em->persist($objPublicidad);
+            }
             $em->flush();
             $strMensajeError = 'Publicidad editado con exito.!';
         }
@@ -775,6 +804,10 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 17-08-2020 - Se agrega el ingreso de códigos en la promoción.
      *
+     * @author Kevin Baque
+     * @version 1.3 05-07-2021 - Se agrega bandera para eliminar de forma permanente 
+     *                           las promociones y todo lo relacionado.
+     *
      * @return array  $objResponse
      */
     public function editPromocion($arrayData)
@@ -791,6 +824,7 @@ class ApiWebController extends FOSRestController
         $strExcel               = $arrayData['excel'] ? $arrayData['excel']:'';
         $strPremio              = $arrayData['premio'] ? $arrayData['premio']:'NO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $strEliminar            = $arrayData['eliminar']        ? $arrayData['eliminar']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
         $strStatus              = 400;
@@ -801,20 +835,24 @@ class ApiWebController extends FOSRestController
         try
         {
             $em->getConnection()->beginTransaction();
-            if(!empty($imgBase64))
-            {
-                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdPromocion);
-            }
-            else
-            {
-                $strRutaImagen = "";
-            }
             $objPromocion = $this->getDoctrine()
                                  ->getRepository(InfoPromocion::class)
                                  ->findOneBy(array('id'=>$intIdPromocion));
             if(!is_object($objPromocion) || empty($objPromocion))
             {
                 throw new \Exception('No existe promoción con la identificación enviada por parámetro.');
+            }
+            if(!empty($imgBase64))
+            {
+                $strRutaImagen = $objController->subirfichero($imgBase64,$intIdPromocion);
+                if(!empty($objPromocion->getIMAGEN()))
+                {
+                    $objController->getEliminarImg($objPromocion->getIMAGEN());
+                }
+            }
+            else
+            {
+                $strRutaImagen = "";
             }
             if(!empty($intIdRestaurante))
             {
@@ -912,7 +950,37 @@ class ApiWebController extends FOSRestController
             }
             $objPromocion->setUSRMODIFICACION($strUsuarioCreacion);
             $objPromocion->setFEMODIFICACION($strDatetimeActual);
-            $em->persist($objPromocion);
+            if(!empty($strEliminar) && $strEliminar == "S")
+            {
+                $objController          = new DefaultController();
+                $objController->setContainer($this->container);
+                $arrayInfoPromocionHist = $this->getDoctrine()
+                                               ->getRepository(InfoPromocionHistorial::class)
+                                               ->findBy(array('PROMOCION_ID' => $objPromocion->getId()));
+                if(!empty($arrayInfoPromocionHist) && is_array($arrayInfoPromocionHist))
+                {
+                    foreach($arrayInfoPromocionHist as $objItemPromocionHist)
+                    {
+                        $em->remove($objItemPromocionHist);
+                    }
+                }
+                $arrayInfoCodPromocion  = $this->getDoctrine()
+                                               ->getRepository(InfoCodigoPromocion::class)
+                                               ->findBy(array('PROMOCION_ID' => $objPromocion->getId()));
+                if(!empty($arrayInfoCodPromocion) && is_array($arrayInfoCodPromocion))
+                {
+                    foreach($arrayInfoCodPromocion as $objItemCodPromocion)
+                    {
+                        $em->remove($objItemCodPromocion);
+                    }
+                }
+                $objController->getEliminarImg($objPromocion->getIMAGEN());
+                $em->remove($objPromocion);
+            }
+            else
+            {
+                $em->persist($objPromocion);
+            }
             $em->flush();
             $strMensajeError = 'Promoción editado con exito.!';
         }
