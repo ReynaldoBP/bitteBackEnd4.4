@@ -471,6 +471,7 @@ AND IC.EDAD!='SIN EDAD'
         $intLimiteInicial   = $arrayParametros['intLimiteInicial'] ? $arrayParametros['intLimiteInicial']:'0';
         $intLimiteFinal     = $arrayParametros['intLimiteFinal'] ? $arrayParametros['intLimiteFinal']:'100';
         $strVerBitte        = $arrayParametros['strVerBitte']    ? $arrayParametros['strVerBitte']:'N';
+        $strLetra           = $arrayParametros['strLetra']       ? $arrayParametros['strLetra']:'';
         $arrayCantPtos      = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -481,6 +482,11 @@ AND IC.EDAD!='SIN EDAD'
             if($strVerBitte == "N")
             {
                 $strFromAdicional = " AND IRE.ID_RESTAURANTE !=28 ";
+            }
+
+            if(!empty($strLetra))
+            {
+                $strFromAdicional = " AND IRE.NOMBRE_COMERCIAL LIKE '".$strLetra."%' ";
             }
             //SUM(ICE.CANTIDAD_PUNTOS) AS CANT_PUNTOS,
             $strSelect      = "SELECT IRE.NOMBRE_COMERCIAL,
