@@ -87,6 +87,7 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             {
                 $strWhere .= " AND IRE.ID_RESTAURANTE =:ID_RESTAURANTE ";
                 $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
+                $objQueryCount->setParameter("ID_RESTAURANTE", $intIdRestaurante);
             }
             if(!empty($strDescrPromocion))
             {
