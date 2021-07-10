@@ -32,6 +32,16 @@ class InfoContenidoSubido
     private $CLIENTE_ID;
 
     /**
+    * @var InfoSucursal
+    *
+    * @ORM\ManyToOne(targetEntity="InfoSucursal")
+    * @ORM\JoinColumns({
+    * @ORM\JoinColumn(name="SUCURSAL_ID", referencedColumnName="ID_SUCURSAL")
+    * })
+    */
+    private $SUCURSAL_ID;
+
+    /**
     * @var InfoRedesSociales
     *
     * @ORM\ManyToOne(targetEntity="InfoRedesSociales")
@@ -298,6 +308,30 @@ class InfoContenidoSubido
     public function getCLIENTEID()
     {
         return $this->CLIENTE_ID;
+    }
+
+    /**
+     * Set SUCURSALID
+     *
+     * @param \App\Entity\InfoSucursal $SUCURSALID
+     *
+     * @return InfoContenidoSubido
+     */
+    public function setSUCURSALID(\App\Entity\InfoSucursal $SUCURSALID = null)
+    {
+        $this->SUCURSAL_ID = $SUCURSALID;
+
+        return $this;
+    }
+
+    /**
+     * Get SUCURSALID
+     *
+     * @return \App\Entity\InfoSucursal
+     */
+    public function getSUCURSALID()
+    {
+        return $this->SUCURSAL_ID;
     }
 
     /**

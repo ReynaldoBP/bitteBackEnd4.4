@@ -642,4 +642,56 @@ AND IC.EDAD!='SIN EDAD'
         return $arrayEncuesta;
     }
 
+    /**
+     * Documentación para la función 'getClienteEncuestaPorRangoDia'
+     * Método encargado de retornar si el cliente tiene encuestas pendientes
+     * según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 10-07-2021
+     * 
+     * @return array  $arrayCltEncuesta
+     * 
+     */
+    public function getClienteEncuestaPorRangoDia($arrayParametros)
+    {
+        $intCantDia         = $arrayParametros['intCantDia']   ? $arrayParametros['intCantDia']:'';
+        $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $arrayCltEncuesta   = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = " SELECT ICE.ID_CLT_ENCUESTA,
+                                       ICE.SUCURSAL_ID,
+                                       ICE.CLIENTE_ID,
+                                       ICE.ENCUESTA_ID,
+                                       ICE.CONTENIDO_ID,
+                                       ICE.ESTADO,
+                                       ICE.FE_CREACION ";
+            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE ";
+            $strWhere       = " WHERE ICE.FE_CREACION >= DATE_ADD(NOW(),INTERVAL -:intCantDia DAY) 
+                                AND ICE.ESTADO    != 'ELIMINADO' 
+                                AND ICE.CLIENTE_ID = :intIdCliente ";
+            $objQuery->setParameter("intCantDia",$intCantDia);
+            $objQuery->setParameter("intIdCliente",$intIdCliente);
+            $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'string');
+            $objRsmBuilder->addScalarResult('SUCURSAL_ID'    , 'SUCURSAL_ID'    , 'string');
+            $objRsmBuilder->addScalarResult('CLIENTE_ID'     , 'CLIENTE_ID'     , 'string');
+            $objRsmBuilder->addScalarResult('ENCUESTA_ID'    , 'ENCUESTA_ID'    , 'string');
+            $objRsmBuilder->addScalarResult('CONTENIDO_ID'   , 'CONTENIDO_ID'   , 'string');
+            $objRsmBuilder->addScalarResult('ESTADO'         , 'ESTADO'         , 'string');
+            $objRsmBuilder->addScalarResult('FE_CREACION'    , 'FE_CREACION'    , 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayCltEncuesta['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayCltEncuesta['error'] = $strMensajeError;
+        return $arrayCltEncuesta;
+    }
 }

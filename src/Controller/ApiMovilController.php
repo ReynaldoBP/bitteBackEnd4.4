@@ -124,6 +124,8 @@ class ApiMovilController extends FOSRestController
               break;
               case 'canjearCupon':$arrayRespuesta = $this->canjearCupon($arrayData);
               break;
+              case 'getClienteEncuestaPorRangoDia':$arrayRespuesta = $this->getClienteEncuestaPorRangoDia($arrayData);
+              break;
               default:
                $objResponse->setContent(json_encode(array(
                                                    'status'    => 400,
@@ -2081,6 +2083,7 @@ class ApiMovilController extends FOSRestController
     {
         error_reporting( error_reporting() & ~E_NOTICE );
         $intIdCliente       = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
+        $intIdSucursal      = $arrayData['idSucursal'] ? $arrayData['idSucursal']:'';
         $intIdRedSocial     = $arrayData['idRedSocial'] ? $arrayData['idRedSocial']:'NO COMPARTIDO';
         $strDescripcion     = $arrayData['descripcion'] ? $arrayData['descripcion']:'';
         $strEstado          = $arrayData['estado'] ? $arrayData['estado']:'PENDIENTE';
@@ -2128,6 +2131,13 @@ class ApiMovilController extends FOSRestController
             $entityContSub->setUSRCREACION($strUsuarioCreacion);
             $entityContSub->setFECREACION($strDatetimeActual);
             $entityContSub->setCANTIDADPUNTOS(0);
+            $objSucursal = $this->getDoctrine()
+                                ->getRepository(InfoSucursal::class)
+                                ->find($intIdSucursal);
+            if(!empty($objSucursal) && is_object($objSucursal))
+            {
+                $entityContSub->setSUCURSALID($objSucursal);
+            }
             $em->persist($entityContSub);
             $em->flush();
             $strMensajeError = 'Contenido creado con exito.!';
@@ -3475,12 +3485,12 @@ class ApiMovilController extends FOSRestController
         $boolSucces            = true;
         try
         {
-            $arrayParametros = array('estado'      => $strEstado,
+            $arrayParametros = array('strEstado'   => $strEstado,
                                      'idCiudad'    => $intCiudad,
                                      'idProvincia' => $strProvincia);
             $arrayCiudad     = $this->getDoctrine()
-                                    ->getRepository(AdmiCiudad::class)
-                                    ->getCiudad($arrayParametros);
+                                    ->getRepository(InfoRestaurante::class)
+                                    ->getCiudadPorRestaurante($arrayParametros);
             if(isset($arrayCiudad['error']) && !empty($arrayCiudad['error']))
             {
                 $strStatus  = 404;
@@ -3623,6 +3633,52 @@ class ApiMovilController extends FOSRestController
         }
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $strMensaje,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'getClienteEncuestaPorRangoDia'.
+     * 
+     * Función encargada de retornar si el cliente tiene encuestas pendientes
+     *
+     * @author Kevin Baque
+     * @version 1.0 10-07-2021
+     *
+     * @return array  $objResponse
+     */
+    public function getClienteEncuestaPorRangoDia($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdCliente          = $arrayData['intIdCliente'] ? $arrayData['intIdCliente']:'';
+        $arrayCiudad           = array();
+        $strMensajeError       = '';
+        $strStatus             = 200;
+        $objResponse           = new Response;
+        $em                    = $this->getDoctrine()->getManager();
+        $boolSucces            = true;
+        try
+        {
+            $arrayParametros = array('intIdCliente' => $intIdCliente,
+                                     'intCantDia'   => 30);
+            $arrayRespuesta  = $this->getDoctrine()
+                                    ->getRepository(InfoClienteEncuesta::class)
+                                    ->getClienteEncuestaPorRangoDia($arrayParametros);
+            if(isset($arrayRespuesta['error']) && !empty($arrayRespuesta['error']))
+            {
+                $strStatus  = 404;
+                throw new \Exception($arrayRespuesta['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
                                                    'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
