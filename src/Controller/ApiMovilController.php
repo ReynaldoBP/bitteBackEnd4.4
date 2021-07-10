@@ -37,6 +37,7 @@ use App\Entity\AdmiCiudad;
 use App\Entity\InfoCupon;
 use App\Entity\InfoCuponHistorial;
 use App\Entity\InfoPlantilla;
+use App\Entity\InfoUsuarioRes;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -1157,8 +1158,6 @@ class ApiMovilController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 04-09-2019
-     * 
-     * @return array  $objResponse
      *
      * @author Kevin Baque
      * @version 1.1 03-12-2019 - Se agrega envío de correo notificando que ganó puntos
@@ -1166,6 +1165,12 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 25-01-2020 - Se comenta correo por nuevas politicas.
      *
+     * @author Kevin Baque
+     * @version 1.3 10-07-2021 - Se agrega lógica para envío de correo, 
+     *                           en caso de que el usuario administrador Restaurante
+     *                           tenga configurado que reciba las encuesta.
+     *
+     * @return array  $objResponse
      */
     public function createRespuesta($arrayData)
     {
@@ -1188,6 +1193,9 @@ class ApiMovilController extends FOSRestController
         $objResponse        = new Response;
         $em                 = $this->getDoctrine()->getManager();
         $boolSucces         = true;
+        $strCuerpoCorreo    = "";
+        $strResPositiva     = "★";
+        $strNegativa        = "☆";
         try
         {
             $em->getConnection()->beginTransaction();
@@ -1305,6 +1313,58 @@ class ApiMovilController extends FOSRestController
                     {
                         throw new \Exception('No existe la pregunta con la descripción enviada por parámetro.');
                     }
+                    $objOpcionRespuesta = $this->getDoctrine()
+                                               ->getRepository(InfoOpcionRespuesta::class)
+                                               ->findOneBy(array("id"     => $objPregunta->getOPCIONRESPUESTAID()->getId(),
+                                                                 "ESTADO" => "ACTIVO"));
+                    if(!empty($objOpcionRespuesta) && is_object($objOpcionRespuesta))
+                    {
+                        if($objOpcionRespuesta->getTIPORESPUESTA()=="CERRADA")
+                        {
+                            $strEstrellas      = "";
+                            $intTotalEstrellas = intval($objOpcionRespuesta->getVALOR());
+                            for($i=0; $i < intval($objOpcionRespuesta->getVALOR()); $i++)
+                            {
+                                if($i >= $strRespuesta)
+                                {
+                                    $strEstrellas .= $strNegativa;
+                                }
+                                else
+                                {
+                                    $strEstrellas .= $strResPositiva;
+                                }
+                            }
+                            $strCuerpoCorreo .= '
+                            <tr>
+                                <td class="x_x_x_p1"
+                                    style="direction:ltr; text-align:center; color:#000000; font-family:\'UberMoveText-Regular\',\'HelveticaNeue\',Helvetica,Arial,sans-serif; font-size:20px; line-height:26px; padding-bottom:20px; padding-top:7px">
+                                    <b>'.$objPregunta->getDESCRIPCION().'</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="x_x_x_p1"
+                                    style="direction:ltr; text-align:center; color:#000000; font-family:\'UberMoveText-Regular\',\'HelveticaNeue\',Helvetica,Arial,sans-serif; font-size:35px; line-height:26px">
+                                    '.$strEstrellas.'
+                                </td>
+                            </tr>';
+                        }
+                        else
+                        {
+                            $strCuerpoCorreo .= '
+                            <tr>
+                                <td class="x_x_x_p1"
+                                    style="direction:ltr; text-align:center; color:#000000; font-family:\'UberMoveText-Regular\',\'HelveticaNeue\',Helvetica,Arial,sans-serif; font-size:20px; line-height:26px; padding-bottom:20px; padding-top:7px">
+                                    <b>'.$objPregunta->getDESCRIPCION().'</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="x_x_x_p1"
+                                    style="direction:ltr; text-align:center; color:#000000; font-family:\'UberMoveText-Regular\',\'HelveticaNeue\',Helvetica,Arial,sans-serif; font-size:20px; line-height:26px">
+                                    '.$strRespuesta.'
+                                </td>
+                            </tr>';
+                        }
+                    }
                     $entityRespuesta = new InfoRespuesta();
                     $entityRespuesta->setRESPUESTA($strRespuesta);
                     $entityRespuesta->setPREGUNTAID($objPregunta);
@@ -1315,54 +1375,52 @@ class ApiMovilController extends FOSRestController
                     $entityRespuesta->setFECREACION($strDatetimeActual);
                     $em->persist($entityRespuesta);
                     $em->flush();
-                    /*$arrayRespuesta ['respuesta'][] = array('idRespuesta'     => $entityRespuesta->getId(),
-                                                            'intIdCltEncuesta'=> $intIdCltEncuesta,
-                                                            'respuesta'       => $entityRespuesta->getRESPUESTA(),
-                                                            'estadoRespuesta' => $entityRespuesta->getESTADO(),
-                                                            'nombreClt'       => $entityRespuesta->getCLIENTEID()->getNOMBRE(),
-                                                            'apellidoClt'     => $entityRespuesta->getCLIENTEID()->getAPELLIDO(),
-                                                            'correoClt'       => $entityRespuesta->getCLIENTEID()->getCORREO(),
-                                                            'direccionClt'    => $entityRespuesta->getCLIENTEID()->getDIRECCION(),
-                                                            'idPregunta'      => $entityRespuesta->getPREGUNTAID()->getId(),
-                                                            'preguntaDescrip' => $entityRespuesta->getPREGUNTAID()->getDESCRIPCION(),
-                                                            'preguntaObl'     => $entityRespuesta->getPREGUNTAID()->getOBLIGATORIA(),
-                                                            'preguntaDesc'    => $entityRespuesta->getPREGUNTAID()->getDESCRIPCION(),
-                                                            'usrCreacion'     => $entityRespuesta->getUSRCREACION(),
-                                                            'feModificacion'  => $entityRespuesta->getFECREACION());*/
+                }
+                if(!empty($strCuerpoCorreo))
+                {
+                    $arrayUsuarioRes = $this->getDoctrine()
+                                            ->getRepository(InfoUsuarioRes::class)
+                                            ->findBy(array("RESTAURANTEID" => $objRestaurante->getId(),
+                                                           "ESTADO"        => "ACTIVO"));
+                    if(!empty($arrayUsuarioRes) && is_array($arrayUsuarioRes))
+                    {
+                        $objPlantilla   = $this->getDoctrine()
+                                               ->getRepository(InfoPlantilla::class)
+                                               ->findOneBy(array('DESCRIPCION' => "ENCUESTA_RESTAURANTE",
+                                                                 'ESTADO'      => "ACTIVO"));
+                        if(!empty($objPlantilla) && is_object($objPlantilla))
+                        {
+                            $strMensajeCorreo = stream_get_contents ($objPlantilla->getPLANTILLA());
+                            $strCuerpoCorreo .= '
+                            <tr>
+                                <td class="x_p1"
+                                    style="direction:ltr; text-align:justify; color:#000000; font-family:\'UberMoveText-Regular\',\'HelveticaNeue\',Helvetica,Arial,sans-serif; font-size:15px; line-height:26px; padding-bottom:20px; padding-top:7px">
+                                    <br><b>Para más información estadística, por favor has click <a href=\'http://www.bitte.app/\' target="_blank">Aquí.</a> con su usuario y contraseña.</b><br>
+                                </td>
+                            </tr>';
+                            $strMensajeCorreo   = str_replace('strCuerpoCorreo',$strCuerpoCorreo,$strMensajeCorreo);
+                            $strAsunto          = 'Nueva Encuesta';
+                            $strRemitente       = 'notificaciones@bitte.app';
+                            foreach($arrayUsuarioRes as $arrayItemUsuarioRes)
+                            {
+                                if(!empty($arrayItemUsuarioRes->getUSUARIOID()->getCORREO()) && $arrayItemUsuarioRes->getUSUARIOID()->getESTADO() == "ACTIVO"
+                                   && $arrayItemUsuarioRes->getUSUARIOID()->getNOTIFICACION() == "SI")
+                                {
+                                    $arrayParametros    = array('strAsunto'        => $strAsunto,
+                                                                'strMensajeCorreo' => $strMensajeCorreo,
+                                                                'strRemitente'     => $strRemitente,
+                                                                'strDestinatario'  => $arrayItemUsuarioRes->getUSUARIOID()->getCORREO());
+                                    $objController      = new DefaultController();
+                                    $objController->setContainer($this->container);
+                                    $objController->enviaCorreo($arrayParametros);
+
+                                }
+                            }
+                        }
+                    }
                 }
                 $strMensajeError = 'Respuesta creada con exito.!';
             }
-        
-        /*$strAsunto            = '¡GANASTE PUNTOS!';
-        $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
-        $strMensajeCorreo = '
-        <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
-        <div class="">&nbsp;</div>
-        <div class="">FELICITACIONES!!!!&nbsp;</div>
-        <div class="">&nbsp;</div>
-        <div class="">Acabas de calificar el restaurante '.$objRestaurante->getNOMBRECOMERCIAL().'.&nbsp;</div>
-        <div class="">&nbsp;</div>
-        <div class="">Has ganado '.$intValor.' puntos en este establecimiento. Adem&aacute;s, has ganado un cup&oacute;n para participar en sorteo mensual del Tenedor de oro por comidas gratis de nuestros restaurantes participantes.&nbsp;</div>
-        <div class="">&nbsp;</div>
-        <div class="">Al final del mes sabr&aacute;s si eres el ganador del Tenedor de Oro.&nbsp;</div>
-        <div class="">&nbsp;</div>
-        <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!.&nbsp;</div>
-        <div class="">&nbsp;</div>
-        <div class="">Recuerda siempre usar tu app BITTE para calificar tu experiencia, compartir en tus redes sociales, ganar m&aacute;s puntos y comer gratis.&nbsp;</div>
-        <div class="">&nbsp;</div>
-        <div class="">Buen provecho,&nbsp;</div>
-        <div class="">&nbsp;</div>
-        <div class="">Bitte.&nbsp;</div>
-        <div class="">&nbsp;</div>';
-        $strRemitente     = 'notificaciones@bitte.app';
-        $arrayParametros  = array('strAsunto'        => $strAsunto,
-                                  'strMensajeCorreo' => $strMensajeCorreo,
-                                  'strRemitente'     => $strRemitente,
-                                  'strDestinatario'  => $objCliente->getCORREO());
-        $objController    = new DefaultController();
-        $objController->setContainer($this->container);
-        $objController->enviaCorreo($arrayParametros);*/
-        
         }
         catch(\Exception $ex)
         {
@@ -1382,15 +1440,10 @@ class ApiMovilController extends FOSRestController
 
         $arrayRespuesta['mensaje']          = $strMensajeError;
         $arrayRespuesta['intIdCltEncuesta'] = $intIdCltEncuesta;
-        $objResponse->setContent(json_encode(array(
-                                                    'status'           => $strStatus,
-                                                    'objSucursal'      =>$objSucursal,
-                                                    'resultado'        => $arrayRespuesta,
-                                                    'succes'           => $boolSucces
-                                            )
-                                        ));
-
-
+        $objResponse->setContent(json_encode(array('status'      => $strStatus,
+                                                   'objSucursal' => $objSucursal,
+                                                   'resultado'   => $arrayRespuesta,
+                                                   'succes'      => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
