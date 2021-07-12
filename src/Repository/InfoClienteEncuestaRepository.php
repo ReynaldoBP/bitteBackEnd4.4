@@ -669,8 +669,13 @@ AND IC.EDAD!='SIN EDAD'
                                        ICE.ENCUESTA_ID,
                                        ICE.CONTENIDO_ID,
                                        ICE.ESTADO,
-                                       ICE.FE_CREACION ";
-            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE ";
+                                       ICE.FE_CREACION,
+                                       ISU.DESCRIPCION,
+                                       IRE.RAZON_SOCIAL,
+                                       IRE.NOMBRE_COMERCIAL ";
+            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE 
+                                JOIN INFO_SUCURSAL ISU ON ISU.ID_SUCURSAL       = ICE.SUCURSAL_ID
+                                JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
             $strWhere       = " WHERE ICE.FE_CREACION >= DATE_ADD(NOW(),INTERVAL -:intCantDia DAY) 
                                 AND ICE.ESTADO    != 'ELIMINADO' 
                                 AND ICE.CLIENTE_ID = :intIdCliente ";
@@ -683,6 +688,9 @@ AND IC.EDAD!='SIN EDAD'
             $objRsmBuilder->addScalarResult('CONTENIDO_ID'   , 'CONTENIDO_ID'   , 'string');
             $objRsmBuilder->addScalarResult('ESTADO'         , 'ESTADO'         , 'string');
             $objRsmBuilder->addScalarResult('FE_CREACION'    , 'FE_CREACION'    , 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION'    , 'DESCRIPCION'    , 'string');
+            $objRsmBuilder->addScalarResult('RAZON_SOCIAL'   , 'RAZON_SOCIAL'    , 'string');
+            $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL' , 'NOMBRE_COMERCIAL' , 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayCltEncuesta['resultados'] = $objQuery->getResult();

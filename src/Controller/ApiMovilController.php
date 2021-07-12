@@ -635,7 +635,7 @@ class ApiMovilController extends FOSRestController
         $strDiaActual        = date("w");
         $intHoraActual       = date("G");
         $intMinActual        = date("i");
-        error_log("Hora Actual: ".$intHoraActual.':'.$intMinActual);
+        error_log("Dia Actual: ".$strDiaActual." Hora Actual: ".$intHoraActual.':'.$intMinActual);
         try
         {
             $arrayCltEncuesta = $this->getDoctrine()
@@ -678,7 +678,7 @@ class ApiMovilController extends FOSRestController
             foreach ($arraySucursal["resultados"] as &$item)
             {
                 $strAtencion = "";
-                if(!empty($strDiaActual) && $strDiaActual==0)//Domingo
+                if($strDiaActual==0)//Domingo
                 {
                     if(!empty($item["HORA_DOMINGO_INI"]) && isset($item["HORA_DOMINGO_INI"])
                        && !empty($item["HORA_DOMINGO_FIN"]) && isset($item["HORA_DOMINGO_FIN"]))
@@ -2131,12 +2131,15 @@ class ApiMovilController extends FOSRestController
             $entityContSub->setUSRCREACION($strUsuarioCreacion);
             $entityContSub->setFECREACION($strDatetimeActual);
             $entityContSub->setCANTIDADPUNTOS(0);
-            $objSucursal = $this->getDoctrine()
-                                ->getRepository(InfoSucursal::class)
-                                ->find($intIdSucursal);
-            if(!empty($objSucursal) && is_object($objSucursal))
+            if(!empty($intIdSucursal))
             {
-                $entityContSub->setSUCURSALID($objSucursal);
+                $objSucursal = $this->getDoctrine()
+                                    ->getRepository(InfoSucursal::class)
+                                    ->find($intIdSucursal);
+                if(!empty($objSucursal) && is_object($objSucursal))
+                {
+                    $entityContSub->setSUCURSALID($objSucursal);
+                }
             }
             $em->persist($entityContSub);
             $em->flush();
