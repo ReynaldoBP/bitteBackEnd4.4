@@ -6,6 +6,9 @@ use App\Repository\InfoCuponRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * InfoCupon
+ * 
+ * @ORM\Table(name="INFO_CUPON")
  * @ORM\Entity(repositoryClass=InfoCuponRepository::class)
  */
 class InfoCupon

@@ -237,11 +237,26 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             }
             if(!empty($intIdCliente))
             {
-                $strSelect .= " ,(SELECT ILR.ID_LIKE FROM INFO_LIKE_RES ILR WHERE ILR.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ESTADO='ACTIVO' AND CLIENTE_ID=:CLIENTE_ID LIMIT 1) as ID_LIKE ";
+                $strSelect .= " ,(SELECT ILR.ID_LIKE FROM INFO_LIKE_RES ILR WHERE ILR.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ESTADO='ACTIVO' AND CLIENTE_ID=:CLIENTE_ID LIMIT 1) as ID_LIKE 
+                                ,(SELECT IFNULL(AVG(SUB_IRES.RESPUESTA),0) 
+                                FROM INFO_CLIENTE_ENCUESTA SUB_ICE
+                                    INNER JOIN INFO_SUCURSAL SUB_ISU 
+                                        ON SUB_ISU.ID_SUCURSAL = SUB_ICE.SUCURSAL_ID
+                                    INNER JOIN INFO_RESPUESTA SUB_IRES 
+                                        ON SUB_IRES.CLT_ENCUESTA_ID = SUB_ICE.ID_CLT_ENCUESTA
+                                    INNER JOIN INFO_PREGUNTA SUB_IP 
+                                        ON SUB_IP.ID_PREGUNTA = SUB_IRES.PREGUNTA_ID
+                                    INNER JOIN INFO_OPCION_RESPUESTA SUB_IOR 
+                                        ON SUB_IOR.ID_OPCION_RESPUESTA = SUB_IP.OPCION_RESPUESTA_ID
+                                    WHERE SUB_IOR.VALOR = 5 
+                                        AND SUB_ICE.ESTADO = 'ACTIVO' 
+                                        AND SUB_ISU.RESTAURANTE_ID = IR.ID_RESTAURANTE
+                                        AND SUB_ICE.CLIENTE_ID=:CLIENTE_ID) AS PRO_ENCUESTAS_CLT ";
                 $objQuery->setParameter("CLIENTE_ID", $intIdCliente);
                 $objQueryCount->setParameter("CLIENTE_ID", $intIdCliente);
                 $objRsmBuilder->addScalarResult('ID_LIKE', 'ID_LIKE', 'string');
-                $strGroupBy .= " ,ID_LIKE ";
+                $objRsmBuilder->addScalarResult('PRO_ENCUESTAS_CLT', 'PRO_ENCUESTAS_CLT', 'string');
+                $strGroupBy .= " ,ID_LIKE,PRO_ENCUESTAS_CLT ";
             }
             if(!empty($strRazonSocial))
             {

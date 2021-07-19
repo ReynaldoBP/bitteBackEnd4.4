@@ -6,6 +6,9 @@ use App\Repository\InfoCuponHistorialRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * InfoCuponHistorial
+ * 
+ * @ORM\Table(name="INFO_CUPON_HISTORIAL")
  * @ORM\Entity(repositoryClass=InfoCuponHistorialRepository::class)
  */
 class InfoCuponHistorial

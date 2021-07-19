@@ -666,7 +666,6 @@ AND IC.EDAD!='SIN EDAD'
             $strSelect      = " SELECT ICE.ID_CLT_ENCUESTA,
                                        ICE.SUCURSAL_ID,
                                        ICE.CLIENTE_ID,
-                                       ICE.ENCUESTA_ID,
                                        ICE.CONTENIDO_ID,
                                        ICE.ESTADO,
                                        ICE.FE_CREACION,
@@ -684,7 +683,6 @@ AND IC.EDAD!='SIN EDAD'
             $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'string');
             $objRsmBuilder->addScalarResult('SUCURSAL_ID'    , 'SUCURSAL_ID'    , 'string');
             $objRsmBuilder->addScalarResult('CLIENTE_ID'     , 'CLIENTE_ID'     , 'string');
-            $objRsmBuilder->addScalarResult('ENCUESTA_ID'    , 'ENCUESTA_ID'    , 'string');
             $objRsmBuilder->addScalarResult('CONTENIDO_ID'   , 'CONTENIDO_ID'   , 'string');
             $objRsmBuilder->addScalarResult('ESTADO'         , 'ESTADO'         , 'string');
             $objRsmBuilder->addScalarResult('FE_CREACION'    , 'FE_CREACION'    , 'string');
@@ -701,5 +699,64 @@ AND IC.EDAD!='SIN EDAD'
         }
         $arrayCltEncuesta['error'] = $strMensajeError;
         return $arrayCltEncuesta;
+    }
+
+    /**
+     * Documentación para la función 'getClienteContenidoPorRangoDia'
+     * Método encargado de retornar si el cliente tiene encuestas pendientes
+     * según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 19-07-2021
+     * 
+     * @return array  $arrayCltEncuesta
+     * 
+     */
+    public function getClienteContenidoPorRangoDia($arrayParametros)
+    {
+        $intCantDia         = $arrayParametros['intCantDia']   ? $arrayParametros['intCantDia']:'';
+        $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $arrayContenido     = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = " SELECT ICS.ID_CONTENIDO_SUBIDO,
+                                        ICS.SUCURSAL_ID,
+                                        ICS.CLIENTE_ID,
+                                        ICS.ESTADO,
+                                        ICS.FE_CREACION,
+                                        ISU.DESCRIPCION,
+                                        IRE.RAZON_SOCIAL,
+                                        IRE.NOMBRE_COMERCIAL  ";
+            $strFrom        = " FROM INFO_CONTENIDO_SUBIDO ICS
+                                    JOIN INFO_SUCURSAL ISU ON ISU.ID_SUCURSAL       = ICS.SUCURSAL_ID
+                                    JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
+            $strWhere       = " WHERE ICS.FE_CREACION >= DATE_ADD(NOW(),INTERVAL -:intCantDia DAY) 
+                                AND ICS.ESTADO    != 'ELIMINADO' 
+                                AND ICS.CLIENTE_ID = :intIdCliente 
+                                AND ICS.ID_CONTENIDO_SUBIDO NOT IN (SELECT ICE.CONTENIDO_ID FROM INFO_CLIENTE_ENCUESTA ICE) ";
+            $objQuery->setParameter("intCantDia",$intCantDia);
+            $objQuery->setParameter("intIdCliente",$intIdCliente);
+
+            $objRsmBuilder->addScalarResult('ID_CONTENIDO_SUBIDO', 'ID_CONTENIDO_SUBIDO', 'string');
+            $objRsmBuilder->addScalarResult('SUCURSAL_ID'    , 'SUCURSAL_ID'    , 'string');
+            $objRsmBuilder->addScalarResult('CLIENTE_ID'     , 'CLIENTE_ID'     , 'string');
+            $objRsmBuilder->addScalarResult('ESTADO'         , 'ESTADO'         , 'string');
+            $objRsmBuilder->addScalarResult('FE_CREACION'    , 'FE_CREACION'    , 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION'    , 'DESCRIPCION'    , 'string');
+            $objRsmBuilder->addScalarResult('RAZON_SOCIAL'   , 'RAZON_SOCIAL'    , 'string');
+            $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL' , 'NOMBRE_COMERCIAL' , 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayContenido['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayContenido['error'] = $strMensajeError;
+        return $arrayContenido;
     }
 }

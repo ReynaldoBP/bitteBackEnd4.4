@@ -126,6 +126,8 @@ class ApiMovilController extends FOSRestController
               break;
               case 'getClienteEncuestaPorRangoDia':$arrayRespuesta = $this->getClienteEncuestaPorRangoDia($arrayData);
               break;
+              case 'getContenido':$arrayRespuesta = $this->getContenido($arrayData);
+              break;
               default:
                $objResponse->setContent(json_encode(array(
                                                    'status'    => 400,
@@ -1004,6 +1006,7 @@ class ApiMovilController extends FOSRestController
                                                      'CANT_LIKE'               =>   $arrayItemRestaurante['CANT_LIKE'],
                                                      'PRO_ENCUESTAS'           =>   $arrayItemRestaurante['PRO_ENCUESTAS'],
                                                      'ID_LIKE'                 =>   $arrayItemRestaurante['ID_LIKE'] ? $arrayItemRestaurante['ID_LIKE']:null,
+                                                     'PRO_ENCUESTAS_CLT'       =>   $arrayItemRestaurante['PRO_ENCUESTAS_CLT'] ? $arrayItemRestaurante['PRO_ENCUESTAS_CLT']:null,
                                                      'ES_PUBLICIDAD'           =>  'N',
                                                      'ES_AFILIADO'             =>  (!empty($arrayItemRestaurante["ES_AFILIADO"]) && $arrayItemRestaurante["ES_AFILIADO"] == "SI") ? 'S':'N');
         }
@@ -3526,6 +3529,7 @@ class ApiMovilController extends FOSRestController
     {
         error_reporting( error_reporting() & ~E_NOTICE );
         $intIdCliente          = $arrayData['intIdCliente'] ? $arrayData['intIdCliente']:'';
+        $intIdRestaurante      = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
         $strCupon              = $arrayData['strCupon'] ? $arrayData['strCupon']:'';
         $strUsuarioCreacion    = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
         $strDatetimeActual     = new \DateTime('now');
@@ -3537,9 +3541,9 @@ class ApiMovilController extends FOSRestController
         $strMensaje            = "Cupón canjeado con éxito";
         try
         {
-            if(empty($intIdCliente) || empty($strCupon) || empty($strUsuarioCreacion))
+            if(empty($intIdCliente) || empty($strCupon) || empty($strUsuarioCreacion) || empty($intIdRestaurante))
             {
-                throw new \Exception('Id cliente, cupón, usuario creación son campos obligatorios para realizar la transacción.');
+                throw new \Exception('Id cliente, cupón, usuario creación, id restaurante son campos obligatorios para realizar la transacción.');
             }
             $objCliente = $this->getDoctrine()
                                ->getRepository(InfoCliente::class)
@@ -3575,48 +3579,38 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe el parametro CANT_PUNTOS_CLT_CUPON.');
             }
-            $arrayRestaurantes = $this->getDoctrine()
+            $objRestaurante    = $this->getDoctrine()
                                       ->getRepository(InfoRestaurante::class)
-                                      ->getRestauranteCriterio(array('strEstado'       => "ACTIVO",
-                                                                     'strBanderaBitte' => "S"));
-            if(empty($arrayRestaurantes['error']) && !empty($arrayRestaurantes['resultados']))
+                                      ->find($intIdRestaurante);
+            if(!is_object($objRestaurante) || empty($objRestaurante))
             {
-                foreach ($arrayRestaurantes['resultados'] as $item)
-                {
-                    $intCantPuntos     = intval($objParametroCupon->getVALOR1());
-                    $intCantidadPuntos = 0;
-                    $objRestaurante    = $this->getDoctrine()
-                                              ->getRepository(InfoRestaurante::class)
-                                              ->find($item['ID_RESTAURANTE']);
-                    $objInfoCltPunto   = $this->getDoctrine()
-                                              ->getRepository(InfoClientePunto::class)
-                                              ->findOneBy(array('CLIENTE_ID'     => $objCliente->getId(),
-                                                                'RESTAURANTE_ID' => $item['ID_RESTAURANTE'],
-                                                                'ESTADO'         => 'ACTIVO'));
-                    if(!empty($objInfoCltPunto) && is_object($objInfoCltPunto))
-                    {
-                        $intCantidadPuntos = $intCantPuntos + intval($objInfoCltPunto->getCANTIDADPUNTOS());
-                        $objInfoCltPunto->setCANTIDADPUNTOS($intCantidadPuntos);
-                        $em->persist($objInfoCltPunto);
-                        $em->flush();
-                    }
-                    else
-                    {
-                        $entityCltPunto = new InfoClientePunto();
-                        $entityCltPunto->setCLIENTEID($objCliente);
-                        $entityCltPunto->setRESTAURANTEID($objRestaurante);
-                        $entityCltPunto->setCANTIDADPUNTOS($intCantPuntos);
-                        $entityCltPunto->setESTADO("ACTIVO");
-                        $entityCltPunto->setUSRCREACION($strUsuarioCreacion);
-                        $entityCltPunto->setFECREACION($strDatetimeActual);
-                        $em->persist($entityCltPunto);
-                        $em->flush();
-                    }
-                }
+                throw new \Exception('No existe Restaurante con los parámetros enviados.');
+            }
+            $intCantPuntos     = intval($objParametroCupon->getVALOR1());
+            $intCantidadPuntos = 0;
+            $objInfoCltPunto   = $this->getDoctrine()
+                                      ->getRepository(InfoClientePunto::class)
+                                      ->findOneBy(array('CLIENTE_ID'     => $objCliente->getId(),
+                                                        'RESTAURANTE_ID' => $intIdRestaurante,
+                                                        'ESTADO'         => 'ACTIVO'));
+            if(!empty($objInfoCltPunto) && is_object($objInfoCltPunto))
+            {
+                $intCantidadPuntos = $intCantPuntos + intval($objInfoCltPunto->getCANTIDADPUNTOS());
+                $objInfoCltPunto->setCANTIDADPUNTOS($intCantidadPuntos);
+                $em->persist($objInfoCltPunto);
+                $em->flush();
             }
             else
             {
-                throw new \Exception('No existe restaurantes, con los parámetros enviados.');
+                $entityCltPunto = new InfoClientePunto();
+                $entityCltPunto->setCLIENTEID($objCliente);
+                $entityCltPunto->setRESTAURANTEID($objRestaurante);
+                $entityCltPunto->setCANTIDADPUNTOS($intCantPuntos);
+                $entityCltPunto->setESTADO("ACTIVO");
+                $entityCltPunto->setUSRCREACION($strUsuarioCreacion);
+                $entityCltPunto->setFECREACION($strDatetimeActual);
+                $em->persist($entityCltPunto);
+                $em->flush();
             }
             if ($em->getConnection()->isTransactionActive())
             {
@@ -3627,10 +3621,10 @@ class ApiMovilController extends FOSRestController
         catch(\Exception $ex)
         {
             $boolSucces = false;
+            $strStatus  = 204;
             $strMensaje = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 204;
                 $em->getConnection()->rollback();
             }
         }
@@ -3655,7 +3649,9 @@ class ApiMovilController extends FOSRestController
     {
         error_reporting( error_reporting() & ~E_NOTICE );
         $intIdCliente          = $arrayData['intIdCliente'] ? $arrayData['intIdCliente']:'';
-        $arrayCiudad           = array();
+        $arrayRespuesta        = array();
+        $arrayCltEncuesta      = array();
+        $arrayContenido        = array();
         $strMensajeError       = '';
         $strStatus             = 200;
         $objResponse           = new Response;
@@ -3663,16 +3659,73 @@ class ApiMovilController extends FOSRestController
         $boolSucces            = true;
         try
         {
-            $arrayParametros = array('intIdCliente' => $intIdCliente,
-                                     'intCantDia'   => 30);
-            $arrayRespuesta  = $this->getDoctrine()
-                                    ->getRepository(InfoClienteEncuesta::class)
-                                    ->getClienteEncuestaPorRangoDia($arrayParametros);
-            if(isset($arrayRespuesta['error']) && !empty($arrayRespuesta['error']))
+            $arrayParametros  = array('intIdCliente' => $intIdCliente,
+                                      'intCantDia'   => 30);
+            $arrayCltEncuesta = $this->getDoctrine()
+                                     ->getRepository(InfoClienteEncuesta::class)
+                                     ->getClienteEncuestaPorRangoDia($arrayParametros);
+            if(isset($arrayCltEncuesta['error']) && !empty($arrayCltEncuesta['error']))
             {
-                $strStatus  = 404;
+                $strStatus  = 204;
                 throw new \Exception($arrayRespuesta['error']);
             }
+            $arrayContenido = $this->getDoctrine()
+                                   ->getRepository(InfoClienteEncuesta::class)
+                                   ->getClienteContenidoPorRangoDia($arrayParametros);
+            if(isset($arrayContenido['error']) && !empty($arrayContenido['error']))
+            {
+                $strStatus  = 204;
+                throw new \Exception($arrayRespuesta['error']);
+            }
+            $arrayRespuesta["resultados"] = array_merge($arrayContenido["resultados"],$arrayCltEncuesta["resultados"]);
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'getContenido'.
+     * 
+     * Función encargada de retornar la imagen del contenido.
+     *
+     * @author Kevin Baque
+     * @version 1.0 19-07-2021
+     *
+     * @return array  $objResponse
+     */
+    public function getContenido($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdContenido        = $arrayData['intIdContenido'] ? $arrayData['intIdContenido']:'';
+        $arrayRespuesta        = array();
+        $strMensajeError       = '';
+        $strStatus             = 200;
+        $objResponse           = new Response;
+        $em                    = $this->getDoctrine()->getManager();
+        $boolSucces            = true;
+        try
+        {
+            $objController = new DefaultController();
+            $objController->setContainer($this->container);
+            $objContenido  = $this->getDoctrine()
+                                  ->getRepository(InfoContenidoSubido::class)
+                                  ->find($intIdContenido);
+
+            if(empty($objContenido) && !is_object($objContenido))
+            {
+                $strStatus  = 204;
+                throw new \Exception("No existe información con los parámetros enviados.");
+            }
+            $arrayRespuesta['resultados'][] = array("IMAGEN"=>(!empty($objContenido->getIMAGEN())) ? $objController->getImgBase64($objContenido->getIMAGEN()):"");
         }
         catch(\Exception $ex)
         {
