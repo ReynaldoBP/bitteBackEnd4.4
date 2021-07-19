@@ -13,6 +13,13 @@ use App\Entity\InfoClienteEncuesta;
 use App\Entity\InfoContenidoSubido;
 use App\Entity\InfoRespuesta;
 use App\Controller\DefaultController;
+use App\Controller\ApiWebController;
+use App\Entity\InfoBitacora;
+use App\Entity\InfoDetalleBitacora;
+use App\Entity\AdmiPais;
+use App\Entity\AdmiProvincia;
+use App\Entity\AdmiCiudad;
+use App\Entity\AdmiParroquia;
 class InfoSucursalController extends Controller
 {
     /**
@@ -95,6 +102,9 @@ class InfoSucursalController extends Controller
      * @author Kevin Baque
      * @version 1.1 09-06-2021 - Se agrega horario de atención.
      *
+     * @author Kevin Baque
+     * @version 1.2 15-07-2021 - Se agrega lógica para ingresar historial de creación.
+     *
      * @return array  $objResponse
      */
     public function createSucursalAction(Request $request)
@@ -130,13 +140,15 @@ class InfoSucursalController extends Controller
         $strHorarioAtencionSabadoFin    = $request->query->get("horarioAtencionSabadoFin")    ? $request->query->get("horarioAtencionSabadoFin")    :'';
         $strHorarioAtencionDomingoIni   = $request->query->get("horarioAtencionDomingoIni")   ? $request->query->get("horarioAtencionDomingoIni")   :'';
         $strHorarioAtencionDomingoFin   = $request->query->get("horarioAtencionDomingoFin")   ? $request->query->get("horarioAtencionDomingoFin")   :'';
+        $arrayBitacoraDetalle = array();
         $strDatetimeActual    = new \DateTime('now');
         $strMensajeError      = '';
-        $strStatus            = 400;
+        $strStatus            = 200;
         $objResponse          = new Response;
         $strDatetimeActual    = new \DateTime('now');
         $em                   = $this->getDoctrine()->getManager();
-
+        $objApiWebController  = new ApiWebController();
+        $objApiWebController->setContainer($this->container);
         try
         {
             $em->getConnection()->beginTransaction();
@@ -228,16 +240,171 @@ class InfoSucursalController extends Controller
                 $entitySucursal->setHORA_DOMINGO_FIN($strHorarioAtencionDomingoFin);
             }
 
-
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Restaurante",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $objRestaurante->getNOMBRECOMERCIAL(),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strDescripcion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Es Matriz",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEsMatriz,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Es Centro Comercial",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEnCentroComercial,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Dirección",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strDireccion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Número de contacto",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strNumeroContacto,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado de Facturación",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEstadoFacturacion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEstado,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Latitud",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $floatLatitud,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Longitud",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $floatLongitud,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($strPais))
+            {
+                $objPais = $this->getDoctrine()
+                                ->getRepository(AdmiPais::class)
+                                ->find($strPais);
+                if(is_object($objPais) && !empty($objPais))
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "País",
+                                                   'VALOR_ANTERIOR' => "",
+                                                   'VALOR_ACTUAL'   => $objPais->getPAIS_NOMBRE(),
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                }
+            }
+            if(!empty($strProvincia))
+            {
+                $objProvincia = $this->getDoctrine()
+                                     ->getRepository(AdmiProvincia::class)
+                                     ->find($strProvincia);
+                if(is_object($objProvincia) && !empty($objProvincia))
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Provincia",
+                                                   'VALOR_ANTERIOR' => "",
+                                                   'VALOR_ACTUAL'   => $objProvincia->getPROVINCIANOMBRE(),
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                }
+            }
+            if(!empty($strCiudad))
+            {
+                $objCiudad = $this->getDoctrine()
+                                  ->getRepository(AdmiCiudad::class)
+                                  ->find($strCiudad);
+                if(is_object($objCiudad) && !empty($objCiudad))
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Ciudad",
+                                                   'VALOR_ANTERIOR' => "",
+                                                   'VALOR_ACTUAL'   => $objCiudad->getCIUDAD_NOMBRE(),
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                }
+            }
+            if(!empty($strParroquia))
+            {
+                $objParroquia = $this->getDoctrine()
+                                     ->getRepository(AdmiParroquia::class)
+                                     ->find($strParroquia);
+                if(is_object($objParroquia) && !empty($objParroquia))
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Parroquia",
+                                                   'VALOR_ANTERIOR' => "",
+                                                   'VALOR_ACTUAL'   => $objParroquia->getPARROQUIANOMBRE(),
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                }
+            }
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Lunes Ini",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionLunesIni,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Lunes Fin",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionLunesFin,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Martes Ini",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionMartesIni,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Martes Fin",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionMartesFin,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Miercoles Ini",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionMiercolesIni,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Miercoles Fin",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionMiercolesFin,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Jueves Ini",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionJuevesIni,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Jueves Fin",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionJuevesFin,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Viernes Ini",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionViernesIni,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Viernes Fin",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionViernesFin,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Sábado Ini",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionSabadoIni,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Sábado Fin",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionSabadoFin,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Domingo Ini",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionDomingoIni,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Domingo Fin",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strHorarioAtencionDomingoFin,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
             $em->persist($entitySucursal);
             $em->flush();
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $objApiWebController->createBitacora(array("strAccion"            => "Creación",
+                                                           "strModulo"            => "Sucursal",
+                                                           "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                                           "intReferenciaId"      => $entitySucursal->getId(),
+                                                           "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Sucursal creado con exito.!';
         }
         catch(\Exception $ex)
         {
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
+                $strStatus = 204;
                 $em->getConnection()->rollback();
             }
             $strMensajeError = "Fallo al crear una sucursal, intente nuevamente.\n ". $ex->getMessage();
@@ -273,6 +440,9 @@ class InfoSucursalController extends Controller
      * @version 1.2 03-07-2021 - Se agrega bandera para eliminar de forma permanente 
      *                           las sucursales y todo lo relacionado menos puntos.
      *
+     * @author Kevin Baque
+     * @version 1.3 18-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
      * @return array  $objResponse
      */
     public function editSucursalAction(Request $request)
@@ -294,7 +464,7 @@ class InfoSucursalController extends Controller
         $strNumeroContacto              = $request->query->get("numeroContacto")              ? $request->query->get("numeroContacto")              :'';
         $strEstado                      = $request->query->get("estado")                      ? $request->query->get("estado")                      :'';
         $strEstadoFacturacion           = $request->query->get("estadoFacturacion")           ? $request->query->get("estadoFacturacion")           :'';
-        $strUsuarioModificacion         = $request->query->get("usuarioModificacion")         ? $request->query->get("usuarioModificacion")         :'';
+        $strUsuarioCreacion             = $request->query->get("usuarioModificacion")         ? $request->query->get("usuarioModificacion")         :'';
         $strHorarioAtencionLunesIni     = $request->query->get("horarioAtencionLunesIni")     ? $request->query->get("horarioAtencionLunesIni")     :'';
         $strHorarioAtencionLunesFin     = $request->query->get("horarioAtencionLunesFin")     ? $request->query->get("horarioAtencionLunesFin")     :'';
         $strHorarioAtencionMartesIni    = $request->query->get("horarioAtencionMartesIni")    ? $request->query->get("horarioAtencionMartesIni")    :'';
@@ -310,12 +480,14 @@ class InfoSucursalController extends Controller
         $strHorarioAtencionDomingoIni   = $request->query->get("horarioAtencionDomingoIni")   ? $request->query->get("horarioAtencionDomingoIni")   :'';
         $strHorarioAtencionDomingoFin   = $request->query->get("horarioAtencionDomingoFin")   ? $request->query->get("horarioAtencionDomingoFin")   :'';
         $strEliminar                    = $request->query->get("eliminar")                    ? $request->query->get("eliminar")                    :'N';
+        $arrayBitacoraDetalle   = array();
         $strMensajeError        = '';
-        $strStatus              = 400;
+        $strStatus              = 200;
         $objResponse            = new Response;
         $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
-
+        $objApiWebController    = new ApiWebController();
+        $objApiWebController->setContainer($this->container);
         try
         {
             $em->getConnection()->beginTransaction();
@@ -333,116 +505,284 @@ class InfoSucursalController extends Controller
                 }
             }
             $entitySucursal = $em->getRepository(InfoSucursal::class)->find($intIdSucursal);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Restaurante",
+                                           'VALOR_ANTERIOR' => $entitySucursal->getRESTAURANTEID()->getNOMBRECOMERCIAL(),
+                                           'VALOR_ACTUAL'   => $objRestaurante->getNOMBRECOMERCIAL(),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
             $entitySucursal->setRESTAURANTEID($objRestaurante);
             if(!empty($strDescripcion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getDESCRIPCION(),
+                                               'VALOR_ACTUAL'   => $strDescripcion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setDESCRIPCION($strDescripcion);
             }
             if(!empty($strEsMatriz))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Es Matriz",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getESMATRIZ(),
+                                               'VALOR_ACTUAL'   => $strEsMatriz,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setESMATRIZ($strEsMatriz);
             }
             if(!empty($strEnCentroComercial))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Es Centro Comercial",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getENCENTROCOMERCIAL(),
+                                               'VALOR_ACTUAL'   => $strEnCentroComercial,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setENCENTROCOMERCIAL($strEnCentroComercial);
             }
             if(!empty($strDireccion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Dirección",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getDIRECCION(),
+                                               'VALOR_ACTUAL'   => $strDireccion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setDIRECCION($strDireccion);
             }
             if(!empty($strNumeroContacto))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Número de contacto",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getNUMEROCONTACTO(),
+                                               'VALOR_ACTUAL'   => $strNumeroContacto,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setNUMEROCONTACTO($strNumeroContacto);
             }
             if(!empty($strEstadoFacturacion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado de Facturación",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getESTADOFACTURACION(),
+                                               'VALOR_ACTUAL'   => $strEstadoFacturacion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setESTADOFACTURACION(strtoupper($strEstadoFacturacion));
             }
             if(!empty($strEstado))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getESTADO(),
+                                               'VALOR_ACTUAL'   => $strEstado,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setESTADO(strtoupper($strEstado));
             }
             if(!empty($floatLatitud))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Latitud",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getLATITUD(),
+                                               'VALOR_ACTUAL'   => $floatLatitud,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setLATITUD($floatLatitud);
             }
             if(!empty($floatLongitud))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Longitud",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getLONGITUD(),
+                                               'VALOR_ACTUAL'   => $floatLongitud,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setLONGITUD($floatLongitud);
             }
             if(!empty($strPais))
             {
-                $entitySucursal->setPAIS($strPais);
+                $strNombrePaisAnterior = "";
+                if(!empty($entitySucursal->getPAIS()))
+                {
+                    $objPaisAnterior = $this->getDoctrine()
+                                            ->getRepository(AdmiPais::class)
+                                            ->find($entitySucursal->getPAIS());
+                    $strNombrePaisAnterior = (!empty($objPaisAnterior) && is_object($objPaisAnterior)) ? $objPaisAnterior->getPAIS_NOMBRE():"";
+                }
+                $objPais = $this->getDoctrine()
+                                ->getRepository(AdmiPais::class)
+                                ->find($strPais);
+                if(is_object($objPais) && !empty($objPais))
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "País",
+                                                'VALOR_ANTERIOR' => $strNombrePaisAnterior,
+                                                'VALOR_ACTUAL'   => $objPais->getPAIS_NOMBRE(),
+                                                'USUARIO_ID'     => $strUsuarioCreacion);
+                    $entitySucursal->setPAIS($strPais);
+                }
             }
             if(!empty($strProvincia))
             {
-                $entitySucursal->setPROVINCIA($strProvincia);
+                $strNombreProvinciaAnterior = "";
+                if(!empty($entitySucursal->getPROVINCIA()))
+                {
+                    $objProvinciaAnterior = $this->getDoctrine()
+                                                 ->getRepository(AdmiProvincia::class)
+                                                 ->find($entitySucursal->getPROVINCIA());
+                    $strNombreProvinciaAnterior = (!empty($objProvinciaAnterior) && is_object($objProvinciaAnterior)) ? $objProvinciaAnterior->getPROVINCIANOMBRE():"";
+                }
+                $objProvincia = $this->getDoctrine()
+                                     ->getRepository(AdmiProvincia::class)
+                                     ->find($strProvincia);
+                if(is_object($objProvincia) && !empty($objProvincia))
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Provincia",
+                                                    'VALOR_ANTERIOR' => $strNombreProvinciaAnterior,
+                                                    'VALOR_ACTUAL'   => $objProvincia->getPROVINCIANOMBRE(),
+                                                    'USUARIO_ID'     => $strUsuarioCreacion);
+                    $entitySucursal->setPROVINCIA($strProvincia);
+                }
             }
             if(!empty($strCiudad))
             {
-                $entitySucursal->setCIUDAD($strCiudad);
+                $strNombreCiudadAnterior = "";
+                if(!empty($entitySucursal->getCIUDAD()))
+                {
+                    $objCiudadAnterior = $this->getDoctrine()
+                                              ->getRepository(AdmiCiudad::class)
+                                              ->find($entitySucursal->getCIUDAD());
+                    $strNombreCiudadAnterior = (!empty($objCiudadAnterior) && is_object($objCiudadAnterior)) ? $objCiudadAnterior->getCIUDAD_NOMBRE():"";
+                }
+                $objCiudad = $this->getDoctrine()
+                                  ->getRepository(AdmiCiudad::class)
+                                  ->find($strCiudad);
+                if(is_object($objCiudad) && !empty($objCiudad))
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Ciudad",
+                                                   'VALOR_ANTERIOR' => $strNombreCiudadAnterior,
+                                                   'VALOR_ACTUAL'   => $objCiudad->getCIUDAD_NOMBRE(),
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                    $entitySucursal->setCIUDAD($strCiudad);
+                }
             }
             if(!empty($strParroquia))
             {
-                $entitySucursal->setPARROQUIA($strParroquia);
+                $strNombreParroquiaAnterior = "";
+                if(!empty($entitySucursal->getPARROQUIA()))
+                {
+                    $objParroquiaAnterior = $this->getDoctrine()
+                                                 ->getRepository(AdmiParroquia::class)
+                                                 ->find($entitySucursal->getPARROQUIA());
+                    $strNombreParroquiaAnterior = (!empty($objParroquiaAnterior) && is_object($objParroquiaAnterior)) ? $objParroquiaAnterior->getPARROQUIANOMBRE():"";
+                }
+                $objParroquia = $this->getDoctrine()
+                                     ->getRepository(AdmiParroquia::class)
+                                     ->find($strParroquia);
+                if(is_object($objParroquia) && !empty($objParroquia))
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Parroquia",
+                                                   'VALOR_ANTERIOR' => $strNombreParroquiaAnterior,
+                                                   'VALOR_ACTUAL'   => $objParroquia->getPARROQUIANOMBRE(),
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                    $entitySucursal->setPARROQUIA($strParroquia);
+                }
             }
             if(!empty($strHorarioAtencionLunesIni))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Lunes Ini",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_LUNES_INI(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionLunesIni,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_LUNES_INI($strHorarioAtencionLunesIni);
             }
             if(!empty($strHorarioAtencionLunesFin))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Lunes Fin",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_LUNES_FIN(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionLunesFin,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_LUNES_FIN($strHorarioAtencionLunesFin);
             }
             if(!empty($strHorarioAtencionMartesIni))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Martes Ini",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_MARTES_INI(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionMartesIni,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_MARTES_INI($strHorarioAtencionMartesIni);
             }
             if(!empty($strHorarioAtencionMartesFin))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Martes Fin",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_MARTES_FIN(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionMartesFin,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_MARTES_FIN($strHorarioAtencionMartesFin);
             }
             if(!empty($strHorarioAtencionMiercolesIni))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Miercoles Ini",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_MIERCOLES_INI(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionMiercolesIni,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_MIERCOLES_INI($strHorarioAtencionMiercolesIni);
             }
             if(!empty($strHorarioAtencionMiercolesFin))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Miercoles Fin",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_MIERCOLES_FIN(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionMiercolesFin,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_MIERCOLES_FIN($strHorarioAtencionMiercolesFin);
             }
             if(!empty($strHorarioAtencionJuevesIni))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Jueves Ini",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_JUEVES_INI(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionJuevesIni,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_JUEVES_INI($strHorarioAtencionJuevesIni);
             }
             if(!empty($strHorarioAtencionJuevesFin))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Jueves Fin",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_JUEVES_FIN(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionJuevesFin,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_JUEVES_FIN($strHorarioAtencionJuevesFin);
             }
             if(!empty($strHorarioAtencionViernesIni))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Viernes Ini",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_VIERNES_INI(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionViernesIni,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_VIERNES_INI($strHorarioAtencionViernesIni);
             }
             if(!empty($strHorarioAtencionViernesFin))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Viernes Fin",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_VIERNES_FIN(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionViernesFin,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_VIERNES_FIN($strHorarioAtencionViernesFin);
             }
             if(!empty($strHorarioAtencionSabadoIni))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Sábado Ini",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_SABADO_INI(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionSabadoIni,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_SABADO_INI($strHorarioAtencionSabadoIni);
             }
             if(!empty($strHorarioAtencionSabadoFin))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Sábado Fin",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_SABADO_FIN(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionSabadoFin,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_SABADO_FIN($strHorarioAtencionSabadoFin);
             }
             if(!empty($strHorarioAtencionDomingoIni))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Domingo Ini",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_DOMINGO_INI(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionDomingoIni,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_DOMINGO_INI($strHorarioAtencionDomingoIni);
             }
             if(!empty($strHorarioAtencionDomingoFin))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Hora Domingo Fin",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getHORA_DOMINGO_FIN(),
+                                               'VALOR_ACTUAL'   => $strHorarioAtencionDomingoFin,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setHORA_DOMINGO_FIN($strHorarioAtencionDomingoFin);
             }
-            $entitySucursal->setUSRMODIFICACION($strUsuarioModificacion);
+            $entitySucursal->setUSRMODIFICACION($strUsuarioCreacion);
             $entitySucursal->setFEMODIFICACION($strDatetimeActual);
             if(!empty($strEliminar) && $strEliminar == "S")
             {
@@ -486,13 +826,22 @@ class InfoSucursalController extends Controller
                 $em->persist($entitySucursal);
             }
             $em->flush();
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $objApiWebController->createBitacora(array("strAccion"            => (!empty($strEliminar) && $strEliminar == "S")? 
+                                                                                     "Eliminación":"Modificación",
+                                                           "strModulo"            => "Sucursal",
+                                                           "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                                           "intReferenciaId"      => $intIdSucursal,
+                                                           "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Sucursal editada con exito.!';
         }
         catch(\Exception $ex)
         {
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
+                $strStatus = 204;
                 $em->getConnection()->rollback();
             }
             $strMensajeError = "Fallo al editar una sucursal, intente nuevamente.\n ". $ex->getMessage();
@@ -502,12 +851,9 @@ class InfoSucursalController extends Controller
             $em->getConnection()->commit();
             $em->getConnection()->close();
         }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }

@@ -233,7 +233,7 @@ class InfoPublicidadController extends Controller
         $conImagen              = $request->query->get("imagen") ? $request->query->get("imagen"):'NO';
         $arrayPublicidad          = array();
         $strMensajeError        = '';
-        $strStatus              = 400;
+        $strStatus              = 200;
         $objResponse            = new Response;
         try
         {
@@ -248,7 +248,7 @@ class InfoPublicidadController extends Controller
                                             ->getPublicidadCriterio($arrayParametros);
             if(isset($arrayPublicidad['error']) && !empty($arrayPublicidad['error']))
             {
-                $strStatus  = 404;
+                $strStatus  = 204;
                 throw new \Exception($arrayPublicidad['error']);
             }
         }
@@ -267,12 +267,9 @@ class InfoPublicidadController extends Controller
                 }
             }
         }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayPublicidad,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayPublicidad,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }

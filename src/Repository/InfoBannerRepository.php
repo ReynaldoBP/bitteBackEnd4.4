@@ -19,7 +19,7 @@ class InfoBannerRepository extends \Doctrine\ORM\EntityRepository
      * Método encargado de retornar todos los banner según los parámetros enviados.
      * 
      * @author Kevin Baque
-     * @version 1.0 16-07-2019
+     * @version 1.0 16-07-2021
      * 
      * @return array  $arrayResultado
      * 

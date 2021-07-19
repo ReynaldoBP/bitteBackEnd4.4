@@ -280,7 +280,7 @@ class InfoPublicidadComidaController extends Controller
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
-        $strStatus              = 400;
+        $strStatus              = 200;
         $objResponse            = new Response;
         $em                     = $this->getDoctrine()->getManager();
         try
@@ -314,7 +314,7 @@ class InfoPublicidadComidaController extends Controller
         {
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
+                $strStatus = 204;
                 $em->getConnection()->rollback();
             }
             
@@ -325,12 +325,9 @@ class InfoPublicidadComidaController extends Controller
             $em->getConnection()->commit();
             $em->getConnection()->close();
         }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }

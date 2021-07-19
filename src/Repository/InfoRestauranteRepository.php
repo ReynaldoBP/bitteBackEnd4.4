@@ -78,7 +78,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                                     IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.NUMERO_CONTACTO, IR.ESTADO, IR.CODIGO,IR.ES_AFILIADO, IR.IMAGEN, IR.ICONO ";
                 $strOrder       = " order by IR.RAZON_SOCIAL ASC, IR.ESTADO ASC ";
                 $objQuery->setParameter("ESTADO", $strEstado);
-                if(!empty($intCiudad))
+                if(!empty($intCiudad) && $intCiudad!="TODAS")
                 {
                     $strFrom   .= " LEFT JOIN INFO_SUCURSAL ISUR ON  ISUR.RESTAURANTE_ID     = IR.ID_RESTAURANTE
                                                                  AND ISUR.ESTADO             = :strEstadoActivo

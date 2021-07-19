@@ -33,6 +33,7 @@ class InfoPublicidadRepository extends \Doctrine\ORM\EntityRepository
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         $objRsmBuilderCount = new ResultSetMappingBuilder($this->_em);
         $objQueryCount      = $this->_em->createNativeQuery(null, $objRsmBuilderCount);
+        $strOrderBy         = " Order by PB.DESCRIPCION ASC ";
         try
         {
             if(!empty($strContador) && $strContador == 'SI')
@@ -86,7 +87,7 @@ class InfoPublicidadRepository extends \Doctrine\ORM\EntityRepository
                 $objRsmBuilder->addScalarResult('USR_MODIFICACION', 'USR_MODIFICACION', 'string');
                 $objRsmBuilder->addScalarResult('FE_MODIFICACION', 'FE_MODIFICACION', 'date');
                 $objRsmBuilderCount->addScalarResult('CANTIDAD', 'Cantidad', 'integer');
-                $strSql       = $strSelect.$strFrom.$strWhere;
+                $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
                 $objQuery->setSQL($strSql);
                 $arrayPublicidad['resultados'] = $objQuery->getResult();
             }

@@ -27,6 +27,12 @@ use App\Entity\InfoUsuarioRes;
 use App\Entity\InfoContenidoSubido;
 use App\Entity\InfoCodigoPromocion;
 use App\Entity\InfoBanner;
+use App\Entity\InfoBitacora;
+use App\Entity\InfoDetalleBitacora;
+use App\Entity\AdmiPais;
+use App\Entity\AdmiProvincia;
+use App\Entity\AdmiCiudad;
+use App\Entity\AdmiParroquia;
 use App\Entity\InfoPlantilla;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
@@ -117,6 +123,10 @@ class ApiWebController extends FOSRestController
                 break;
                 case 'getBanner':$arrayRespuesta = $this->getBanner($arrayData);
                 break;
+                case 'getBitacora':$arrayRespuesta = $this->getBitacora($arrayData);
+                break;
+                case 'getBitacoraDetalle':$arrayRespuesta = $this->getBitacoraDetalle($arrayData);
+                break;
                  $objResponse->setContent(json_encode(array(
                                                      'status'    => 400,
                                                      'resultado' => "No existe método con la descripción enviado por parámetro",
@@ -141,6 +151,9 @@ class ApiWebController extends FOSRestController
      *
      * @author Kevin Baque
      * @version 1.2 15-06-2021 - Se agrega la creación de afiliado en el restaurante.
+     *
+     * @author Kevin Baque
+     * @version 1.3 15-07-2021 - Se agrega lógica para ingresar historial de creación.
      *
      * @return array  $objResponse
      */
@@ -170,6 +183,7 @@ class ApiWebController extends FOSRestController
         $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
         $objController          = new DefaultController();
+        $arrayBitacoraDetalle   = array();
         $objController->setContainer($this->container);
         try
         {
@@ -229,6 +243,63 @@ class ApiWebController extends FOSRestController
             $entityRestaurante->setFECREACION($strDatetimeActual);
             $em->persist($entityRestaurante);
             $em->flush();
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo Comida",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $objTipoComida->getDESCRIPCION(),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo Identificación",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strTipoIdentificacion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Identificación",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strIdentificacion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Razón Social",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strRazonSocial,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Nombre Comercial",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strNombreComercial,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Representante Legal",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strRepresentanteLegal,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Dirección Tributario",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strDireccionTributario,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Url Catalogo",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strUrlCatalogo,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Número Contacto",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strNumeroContacto,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => strtoupper($strEstado),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Genera Código",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => strtoupper($strCodigo),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Es Afiliado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => strtoupper($strEsAfiliado),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Creación",
+                                            "strModulo"            => "Restaurante",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $entityRestaurante->getId(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Restaurante creado con exito.!';
         }
         catch(\Exception $ex)
@@ -245,12 +316,9 @@ class ApiWebController extends FOSRestController
             $em->getConnection()->commit();
             $em->getConnection()->close();
         }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -266,6 +334,9 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.3 15-06-2021 - Se agrega la creación de afiliado en el restaurante.
+     *
+     * @author Kevin Baque
+     * @version 1.4 15-07-2021 - Se agrega lógica para ingresar historial de modificación.
      *
      * @return array  $objResponse
      */
@@ -296,6 +367,7 @@ class ApiWebController extends FOSRestController
         $em                     = $this->getDoctrine()->getManager();
         $objController          = new DefaultController();
         $objController->setContainer($this->container);
+        $arrayBitacoraDetalle   = array();
         try
         {
             if(!empty($imgBase64))
@@ -338,50 +410,98 @@ class ApiWebController extends FOSRestController
                 {
                     throw new \Exception('Tipo de comida no existe.');
                 }
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo Comida",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getTIPOCOMIDAID()->getDESCRIPCION(),
+                                               'VALOR_ACTUAL'   => $objTipoComida->getDESCRIPCION(),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setTIPOCOMIDAID($objTipoComida);
             }
             if(!empty($strTipoIdentificacion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo Identificación",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getTIPOIDENTIFICACION(),
+                                               'VALOR_ACTUAL'   => $strTipoIdentificacion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setTIPOIDENTIFICACION(strtoupper($strTipoIdentificacion));
             }
             if(!empty($strIdentificacion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Identificación",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getIDENTIFICACION(),
+                                               'VALOR_ACTUAL'   => $strIdentificacion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setIDENTIFICACION($strIdentificacion);
             }
             if(!empty($strRazonSocial))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Razón Social",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getRAZONSOCIAL(),
+                                               'VALOR_ACTUAL'   => $strRazonSocial,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setRAZONSOCIAL($strRazonSocial);
             }
             if(!empty($strNombreComercial))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Nombre Comercial",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getNOMBRECOMERCIAL(),
+                                               'VALOR_ACTUAL'   => $strNombreComercial,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setNOMBRECOMERCIAL($strNombreComercial);
             }
             if(!empty($strRepresentanteLegal))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Representante Legal",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getREPRESENTANTELEGAL(),
+                                               'VALOR_ACTUAL'   => $strRepresentanteLegal,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setREPRESENTANTELEGAL($strRepresentanteLegal);
             }
             if(!empty($strDireccionTributario))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Dirección Tributario",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getDIRECCIONTRIBUTARIO(),
+                                               'VALOR_ACTUAL'   => $strDireccionTributario,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setDIRECCIONTRIBUTARIO($strDireccionTributario);
             }
             if(!empty($strUrlCatalogo))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Url Catalogo",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getURLCATALOGO(),
+                                               'VALOR_ACTUAL'   => $strUrlCatalogo,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setURLCATALOGO($strUrlCatalogo);
             }
             if(!empty($strNumeroContacto))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Número Contacto",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getNUMEROCONTACTO(),
+                                               'VALOR_ACTUAL'   => $strNumeroContacto,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setNUMEROCONTACTO($strNumeroContacto);
             }
             if(!empty($strEstado))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getESTADO(),
+                                               'VALOR_ACTUAL'   => strtoupper($strEstado),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setESTADO(strtoupper($strEstado));
             }
             if(!empty($strCodigo))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Genera Código",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getCODIGO(),
+                                               'VALOR_ACTUAL'   => strtoupper($strCodigo),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setCODIGO(strtoupper($strCodigo));
             }
             if(!empty($strEsAfiliado))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Es Afiliado",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getES_AFILIADO(),
+                                               'VALOR_ACTUAL'   => strtoupper($strEsAfiliado),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setES_AFILIADO(strtoupper($strEsAfiliado));
             }
             if(!empty($strRutaImagen))
@@ -396,6 +516,14 @@ class ApiWebController extends FOSRestController
             $objRestaurante->setFEMODIFICACION($strDatetimeActual);
             $em->persist($objRestaurante);
             $em->flush();
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Modificación",
+                                            "strModulo"            => "Restaurante",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $objRestaurante->getId(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Restaurante editado con exito.!';
         }
         catch(\Exception $ex)
@@ -427,7 +555,10 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 13-09-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 18-07-2021 - Se agrega lógica para ingresar historial de creación.
+     *
      * @return array  $objResponse
      */
     public function createPublicidad($arrayData)
@@ -439,18 +570,19 @@ class ApiWebController extends FOSRestController
         $strEdadMaxima          = $arrayData['edadMaxima'] ? $arrayData['edadMaxima']:'';
         $strEdadMinima          = $arrayData['edadMinima'] ? $arrayData['edadMinima']:'';
         $strGenero              = $arrayData['genero'] ? $arrayData['genero']:'';
-        $strPais                = $arrayData['pais'] ? $arrayData['pais']:'';
-        $strProvincia           = $arrayData['provincia'] ? $arrayData['provincia']:'';
-        $strCiudad              = $arrayData['ciudad'] ? $arrayData['ciudad']:'';
-        $strParroquia           = $arrayData['parroquia'] ? $arrayData['parroquia']:'';
+        $strPais                = $arrayData['pais'] ? $arrayData['pais']:'TODOS';
+        $strProvincia           = $arrayData['provincia'] ? $arrayData['provincia']:'TODOS';
+        $strCiudad              = $arrayData['ciudad'] ? $arrayData['ciudad']:'TODOS';
+        $strParroquia           = $arrayData['parroquia'] ? $arrayData['parroquia']:'TODOS';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
-        $strStatus              = 400;
+        $strStatus              = 200;
         $objResponse            = new Response;
         $em                     = $this->getDoctrine()->getManager();
         $objController          = new DefaultController();
+        $arrayBitacoraDetalle   = array();
         $objController->setContainer($this->container);
         try
         {
@@ -476,13 +608,137 @@ class ApiWebController extends FOSRestController
             $entityPublicidad->setFECREACION($strDatetimeActual);
             $em->persist($entityPublicidad);
             $em->flush();
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strDescrPublicidad,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Orientación",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strOrientacion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Edad máxima",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEdadMaxima,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Edad mínima",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEdadMinima,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Género",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strGenero,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($strPais))
+            {
+                if($strPais == "TODOS")
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "País",
+                                                   'VALOR_ANTERIOR' => "",
+                                                   'VALOR_ACTUAL'   => "TODOS",
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                }
+                else
+                {
+                    $objPais = $this->getDoctrine()
+                                    ->getRepository(AdmiPais::class)
+                                    ->find($strPais);
+                    if(is_object($objPais) && !empty($objPais))
+                    {
+                        $arrayBitacoraDetalle[]= array('CAMPO'          => "País",
+                                                       'VALOR_ANTERIOR' => "",
+                                                       'VALOR_ACTUAL'   => $objPais->getPAIS_NOMBRE(),
+                                                       'USUARIO_ID'     => $strUsuarioCreacion);
+                    }
+                }
+            }
+            if(!empty($strProvincia))
+            {
+                if($strProvincia == "TODOS")
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Provincia",
+                                                   'VALOR_ANTERIOR' => "",
+                                                   'VALOR_ACTUAL'   => "TODOS",
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                }
+                else
+                {
+                    $objProvincia = $this->getDoctrine()
+                                         ->getRepository(AdmiProvincia::class)
+                                         ->find($strProvincia);
+                    if(is_object($objProvincia) && !empty($objProvincia))
+                    {
+                        $arrayBitacoraDetalle[]= array('CAMPO'          => "Provincia",
+                                                       'VALOR_ANTERIOR' => "",
+                                                       'VALOR_ACTUAL'   => $objProvincia->getPROVINCIANOMBRE(),
+                                                       'USUARIO_ID'     => $strUsuarioCreacion);
+                    }
+                }
+            }
+            if(!empty($strCiudad))
+            {
+                if($strCiudad == "TODOS")
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Ciudad",
+                                                   'VALOR_ANTERIOR' => "",
+                                                   'VALOR_ACTUAL'   => "TODOS",
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                }
+                else
+                {
+                    $objCiudad = $this->getDoctrine()
+                                      ->getRepository(AdmiCiudad::class)
+                                      ->find($strCiudad);
+                    if(is_object($objCiudad) && !empty($objCiudad))
+                    {
+                        $arrayBitacoraDetalle[]= array('CAMPO'          => "Ciudad",
+                                                       'VALOR_ANTERIOR' => "",
+                                                       'VALOR_ACTUAL'   => $objCiudad->getCIUDAD_NOMBRE(),
+                                                       'USUARIO_ID'     => $strUsuarioCreacion);
+                    }
+                }
+            }
+            if(!empty($strParroquia))
+            {
+                if($strParroquia == "TODOS")
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Parroquia",
+                                                   'VALOR_ANTERIOR' => "",
+                                                   'VALOR_ACTUAL'   => "TODOS",
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                }
+                else
+                {
+                    $objParroquia = $this->getDoctrine()
+                                        ->getRepository(AdmiParroquia::class)
+                                        ->find($strParroquia);
+                    if(is_object($objParroquia) && !empty($objParroquia))
+                    {
+                        $arrayBitacoraDetalle[]= array('CAMPO'          => "Parroquia",
+                                                       'VALOR_ANTERIOR' => "",
+                                                       'VALOR_ACTUAL'   => $objParroquia->getPARROQUIANOMBRE(),
+                                                       'USUARIO_ID'     => $strUsuarioCreacion);
+                    }
+                }
+            }
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEstado,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Creación",
+                                            "strModulo"            => "Publicidad",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $entityPublicidad->getId(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Publicidad creado con exito.!';
         }
         catch(\Exception $ex)
         {
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
+                $strStatus = 204;
                 $em->getConnection()->rollback();
             }
             $strMensajeError = "Fallo al crear una Publicidad, intente nuevamente.\n ". $ex->getMessage();
@@ -501,12 +757,9 @@ class ApiWebController extends FOSRestController
                                  'usrCreacion'    => $entityPublicidad->getUSRCREACION(),
                                  'feCreacion'     => $entityPublicidad->getFECREACION(),
                                  'mensaje'        => $strMensajeError);
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayPublicidad,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayPublicidad,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -521,6 +774,9 @@ class ApiWebController extends FOSRestController
      * @version 1.2 05-07-2021 - Se agrega bandera para eliminar de forma permanente 
      *                           las publicidades y todo lo relacionado.
      *
+     * @author Kevin Baque
+     * @version 1.3 16-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
      * @return array  $objResponse
      */
     public function editPublicidad($arrayData)
@@ -533,19 +789,20 @@ class ApiWebController extends FOSRestController
         $strEdadMaxima          = $arrayData['edadMaxima'] ? $arrayData['edadMaxima']:'';
         $strEdadMinima          = $arrayData['edadMinima'] ? $arrayData['edadMinima']:'';
         $strGenero              = $arrayData['genero'] ? $arrayData['genero']:'';
-        $strPais                = $arrayData['pais'] ? $arrayData['pais']:'';
-        $strProvincia           = $arrayData['provincia'] ? $arrayData['provincia']:'';
-        $strCiudad              = $arrayData['ciudad'] ? $arrayData['ciudad']:'';
-        $strParroquia           = $arrayData['parroquia'] ? $arrayData['parroquia']:'';
+        $strPais                = $arrayData['pais'] ? $arrayData['pais']:'TODOS';
+        $strProvincia           = $arrayData['provincia'] ? $arrayData['provincia']:'TODOS';
+        $strCiudad              = $arrayData['ciudad'] ? $arrayData['ciudad']:'TODOS';
+        $strParroquia           = $arrayData['parroquia'] ? $arrayData['parroquia']:'TODOS';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
         $strEliminar            = $arrayData['eliminar'] ? $arrayData['eliminar']:'';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
-        $strStatus              = 400;
+        $strStatus              = 200;
         $objResponse            = new Response;
         $em                     = $this->getDoctrine()->getManager();
         $objController          = new DefaultController();
+        $arrayBitacoraDetalle   = array();
         $objController->setContainer($this->container);
         try
         {
@@ -567,6 +824,10 @@ class ApiWebController extends FOSRestController
             }
             if(!empty($strDescrPublicidad))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                               'VALOR_ANTERIOR' => $objPublicidad->getDESCRIPCION(),
+                                               'VALOR_ACTUAL'   => $strDescrPublicidad,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPublicidad->setDESCRIPCION($strDescrPublicidad);
             }
             if(!empty($strRutaImagen))
@@ -575,38 +836,174 @@ class ApiWebController extends FOSRestController
             }
             if(!empty($strOrientacion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Orientación",
+                                               'VALOR_ANTERIOR' => $objPublicidad->getORIENTACION(),
+                                               'VALOR_ACTUAL'   => $strOrientacion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPublicidad->setORIENTACION($strOrientacion);
             }
             if(!empty($strEdadMaxima))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Edad máxima",
+                                               'VALOR_ANTERIOR' => $objPublicidad->getEDADMAXIMA(),
+                                               'VALOR_ACTUAL'   => $strEdadMaxima,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPublicidad->setEDADMAXIMA($strEdadMaxima);
             }
             if(!empty($strEdadMinima))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Edad mínima",
+                                               'VALOR_ANTERIOR' => $objPublicidad->getEDADMINIMA(),
+                                               'VALOR_ACTUAL'   => $strEdadMinima,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPublicidad->setEDADMINIMA($strEdadMinima);
             }
             if(!empty($strGenero))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Género",
+                                               'VALOR_ANTERIOR' => $objPublicidad->getGENERO(),
+                                               'VALOR_ACTUAL'   => $strGenero,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPublicidad->setGENERO($strGenero);
             }
             if(!empty($strPais))
             {
-                $objPublicidad->setPAIS($strPais);
+                $strNombrePaisAnterior = "";
+                if(!empty($objPublicidad->getPAIS()) && $objPublicidad->getPAIS() != "TODOS")
+                {
+                    $objPaisAnterior = $this->getDoctrine()
+                                            ->getRepository(AdmiPais::class)
+                                            ->find($objPublicidad->getPAIS());
+                    $strNombrePaisAnterior = (!empty($objPaisAnterior) && is_object($objPaisAnterior)) ? $objPaisAnterior->getPAIS_NOMBRE():"";
+                }
+                if($strPais == "TODOS")
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "País",
+                                                   'VALOR_ANTERIOR' => $strNombrePaisAnterior,
+                                                   'VALOR_ACTUAL'   => "TODOS",
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                    $objPublicidad->setPAIS($strPais);
+                }
+                else
+                {
+                    $objPais = $this->getDoctrine()
+                                    ->getRepository(AdmiPais::class)
+                                    ->find($strPais);
+                    if(is_object($objPais) && !empty($objPais))
+                    {
+                        $arrayBitacoraDetalle[]= array('CAMPO'          => "País",
+                                                       'VALOR_ANTERIOR' => $strNombrePaisAnterior,
+                                                       'VALOR_ACTUAL'   => $objPais->getPAIS_NOMBRE(),
+                                                       'USUARIO_ID'     => $strUsuarioCreacion);
+                        $objPublicidad->setPAIS($strPais);
+                    }
+                }
             }
             if(!empty($strProvincia))
             {
-                $objPublicidad->setPROVINCIA($strProvincia);
+                $strNombreProvinciaAnterior = "";
+                if(!empty($objPublicidad->getPROVINCIA()) && $objPublicidad->getPROVINCIA() != "TODOS")
+                {
+                    $objProvinciaAnterior = $this->getDoctrine()
+                                                 ->getRepository(AdmiProvincia::class)
+                                                 ->find($objPublicidad->getPROVINCIA());
+                    $strNombreProvinciaAnterior = (!empty($objProvinciaAnterior) && is_object($objProvinciaAnterior)) ? $objProvinciaAnterior->getPROVINCIANOMBRE():"";
+                }
+                if($strProvincia == "TODOS")
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Provincia",
+                                                   'VALOR_ANTERIOR' => $strNombreProvinciaAnterior,
+                                                   'VALOR_ACTUAL'   => "TODOS",
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                    $objPublicidad->setPROVINCIA($strProvincia);
+                }
+                else
+                {
+                    $objProvincia = $this->getDoctrine()
+                                         ->getRepository(AdmiProvincia::class)
+                                         ->find($strProvincia);
+                    if(is_object($objProvincia) && !empty($objProvincia))
+                    {
+                        $arrayBitacoraDetalle[]= array('CAMPO'          => "Provincia",
+                                                       'VALOR_ANTERIOR' => $strNombreProvinciaAnterior,
+                                                       'VALOR_ACTUAL'   => $objProvincia->getPROVINCIANOMBRE(),
+                                                       'USUARIO_ID'     => $strUsuarioCreacion);
+                        $objPublicidad->setPROVINCIA($strProvincia);
+                    }
+                }
             }
             if(!empty($strCiudad))
             {
-                $objPublicidad->setCIUDAD($strCiudad);
+                $strNombreCiudadAnterior = "";
+                if(!empty($objPublicidad->getCIUDAD()) && $objPublicidad->getCIUDAD() != "TODOS")
+                {
+                    $objCiudadAnterior = $this->getDoctrine()
+                                              ->getRepository(AdmiCiudad::class)
+                                              ->find($objPublicidad->getCIUDAD());
+                    $strNombreCiudadAnterior = (!empty($objCiudadAnterior) && is_object($objCiudadAnterior)) ? $objCiudadAnterior->getCIUDAD_NOMBRE():"";
+                }
+                if($strCiudad == "TODOS")
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Ciudad",
+                                                   'VALOR_ANTERIOR' => $strNombreCiudadAnterior,
+                                                   'VALOR_ACTUAL'   => "TODOS",
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                    $objPublicidad->setCIUDAD($strCiudad);
+                }
+                else
+                {
+                    $objCiudad = $this->getDoctrine()
+                                      ->getRepository(AdmiCiudad::class)
+                                      ->find($strCiudad);
+                    if(is_object($objCiudad) && !empty($objCiudad))
+                    {
+                        $arrayBitacoraDetalle[]= array('CAMPO'          => "Ciudad",
+                                                       'VALOR_ANTERIOR' => $strNombreCiudadAnterior,
+                                                       'VALOR_ACTUAL'   => $objCiudad->getCIUDAD_NOMBRE(),
+                                                       'USUARIO_ID'     => $strUsuarioCreacion);
+                        $objPublicidad->setCIUDAD($strCiudad);
+                    }
+                }
             }
             if(!empty($strParroquia))
             {
-                $objPublicidad->setPARROQUIA($strParroquia);
+                $strNombreParroquiaAnterior = "";
+                if(!empty($objPublicidad->getPARROQUIA()) && $objPublicidad->getPARROQUIA() != "TODOS")
+                {
+                    $objParroquiaAnterior = $this->getDoctrine()
+                                                 ->getRepository(AdmiParroquia::class)
+                                                 ->find($objPublicidad->getPARROQUIA());
+                    $strNombreParroquiaAnterior = (!empty($objParroquiaAnterior) && is_object($objParroquiaAnterior)) ? $objParroquiaAnterior->getPARROQUIANOMBRE():"";
+                }
+                if($strParroquia == "TODOS")
+                {
+                    $arrayBitacoraDetalle[]= array('CAMPO'          => "Parroquia",
+                                                   'VALOR_ANTERIOR' => $strNombreParroquiaAnterior,
+                                                   'VALOR_ACTUAL'   => "TODOS",
+                                                   'USUARIO_ID'     => $strUsuarioCreacion);
+                    $objPublicidad->setPARROQUIA($strParroquia);
+                }
+                else
+                {
+                    $objParroquia = $this->getDoctrine()
+                                         ->getRepository(AdmiParroquia::class)
+                                         ->find($strParroquia);
+                    if(is_object($objParroquia) && !empty($objParroquia))
+                    {
+                        $arrayBitacoraDetalle[]= array('CAMPO'          => "Parroquia",
+                                                       'VALOR_ANTERIOR' => $strNombreParroquiaAnterior,
+                                                       'VALOR_ACTUAL'   => $objParroquia->getPARROQUIANOMBRE(),
+                                                       'USUARIO_ID'     => $strUsuarioCreacion);
+                        $objPublicidad->setPARROQUIA($strParroquia);
+                    }
+                }
             }
             if(!empty($strEstado))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                               'VALOR_ANTERIOR' => $objPublicidad->getESTADO(),
+                                               'VALOR_ACTUAL'   => $strEstado,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPublicidad->setESTADO(strtoupper($strEstado));
             }
             $objPublicidad->setUSRMODIFICACION($strUsuarioCreacion);
@@ -633,13 +1030,21 @@ class ApiWebController extends FOSRestController
                 $em->persist($objPublicidad);
             }
             $em->flush();
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Modificación",
+                                            "strModulo"            => "Publicidad",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $objPublicidad->getId(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Publicidad editado con exito.!';
         }
         catch(\Exception $ex)
         {
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
+                $strStatus = 204;
                 $em->getConnection()->rollback();
             }
             
@@ -650,12 +1055,9 @@ class ApiWebController extends FOSRestController
             $em->getConnection()->commit();
             $em->getConnection()->close();
         }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -3077,7 +3479,6 @@ class ApiWebController extends FOSRestController
                                                         "ESTADO"=>"ACTIVO"));
                 foreach($arrayCodigoPromo as $arrayItem)
                 {
-                    error_log($arrayItem->getId());
                     $objCodigoPromo = $this->getDoctrine()
                                         ->getRepository(InfoCodigoPromocion::class)
                                         ->find($arrayItem->getId());
@@ -3439,6 +3840,189 @@ class ApiWebController extends FOSRestController
             $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
         $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'createBitacora'
+     *
+     * Método encargado de crear la bitacora según los parámetros recibidos.
+     *
+     * @author Kevin Baque
+     * @version 1.0 13-07-2021
+     *
+     * @return array  $objResponse
+     */
+    public function createBitacora($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strAccion              = $arrayData['strAccion']            ? $arrayData['strAccion']:'';
+        $strModulo              = $arrayData['strModulo']            ? $arrayData['strModulo']:'';
+        $strUsuarioCreacion     = $arrayData['strUsuarioCreacion']   ? $arrayData['strUsuarioCreacion']:'';
+        $intReferenciaId        = $arrayData['intReferenciaId']      ? $arrayData['intReferenciaId']:'';
+        $arrayBitacoraDetalle   = $arrayData['arrayBitacoraDetalle'] ? $arrayData['arrayBitacoraDetalle']:'';
+        $strDatetimeActual      = new \DateTime('now');
+        $strMensajeError        = '';
+        $strStatus              = 200;
+        $objResponse            = new Response;
+        $em                     = $this->getDoctrine()->getManager();
+        try
+        {
+            error_log("Creacion de bitacora");
+            error_log("--------------");
+            error_log("strAccion         : ".$strAccion);
+            error_log("strModulo         : ".$strModulo);
+            error_log("intReferenciaId   : ".$intReferenciaId);
+            error_log("strUsuarioCreacion: ".$strUsuarioCreacion);
+            error_log("--------------");
+            $em->getConnection()->beginTransaction();
+            $entityBitacora = new InfoBitacora();
+            $entityBitacora->setACCION($strAccion);
+            $entityBitacora->setMODULO($strModulo);
+            $entityBitacora->setREFERENCIAID($intReferenciaId);
+            
+            $entityBitacora->setFECREACION($strDatetimeActual->format('Y-m-d H:i:s'));
+            if(!empty($strUsuarioCreacion))
+            {
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(infoUsuario::class)
+                                   ->findOneBy(array('id'=>$strUsuarioCreacion));
+                if(!empty($objUsuario) && is_object($objUsuario))
+                {
+                    $entityBitacora->setUSUARIOID($objUsuario);
+                }
+            }
+            $em->persist($entityBitacora);
+            $em->flush();
+            if(!empty($arrayBitacoraDetalle) && is_array($arrayBitacoraDetalle))
+            {
+                error_log("Creacion detalle bitacora");
+                foreach($arrayBitacoraDetalle as $arrayItemDetalle)
+                {
+                    if(!empty($arrayItemDetalle) && ($arrayItemDetalle["VALOR_ANTERIOR"] != $arrayItemDetalle["VALOR_ACTUAL"])
+                       || $strAccion == "Eliminación")
+                    {
+                        error_log("CAMPO          : ".$arrayItemDetalle["CAMPO"]);
+                        error_log("VALOR_ANTERIOR : ".$arrayItemDetalle["VALOR_ANTERIOR"]);
+                        error_log("VALOR_ACTUAL   : ".$arrayItemDetalle["VALOR_ACTUAL"]);
+                        $entityDetalleBitacora = new InfoDetalleBitacora();
+                        $entityDetalleBitacora->setBITACORAID($entityBitacora);
+                        $entityDetalleBitacora->setCAMPO($arrayItemDetalle["CAMPO"]);
+                        $entityDetalleBitacora->setVALORANTERIOR($arrayItemDetalle["VALOR_ANTERIOR"]);
+                        $entityDetalleBitacora->setVALORACTUAL($arrayItemDetalle["VALOR_ACTUAL"]);
+                        $entityDetalleBitacora->setFECREACION($strDatetimeActual->format('Y-m-d H:i:s'));
+                        if(!empty($arrayItemDetalle["USUARIO_ID"]))
+                        {
+                            $objUsuario = $this->getDoctrine()
+                                               ->getRepository(infoUsuario::class)
+                                               ->findOneBy(array('id'=>$arrayItemDetalle["USUARIO_ID"]));
+                            if(!empty($objUsuario) && is_object($objUsuario))
+                            {
+                                $entityDetalleBitacora->setUSUARIOID($objUsuario);
+                            }
+                        }
+                        $em->persist($entityDetalleBitacora);
+                        $em->flush();
+                    }
+                }
+            }
+            $strMensajeError = 'Bitacora creado con exito.!';
+        }
+        catch(\Exception $ex)
+        {
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 204;
+                $em->getConnection()->rollback();
+            }
+            $strMensajeError = "Fallo al crear una bitacora, intente nuevamente.\n ". $ex->getMessage();
+            error_log($strMensajeError);
+        }
+        if ($em->getConnection()->isTransactionActive())
+        {
+            $em->getConnection()->commit();
+            $em->getConnection()->close();
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'getBitacora'
+     *
+     * Método encargado de retornar todos las bitacoras según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 13-07-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getBitacora($arrayData)
+    {
+        $intIdBitacora          = $arrayData['intIdBitacora']   ? $arrayData['intIdBitacora']:'';
+        $strAccion              = $arrayData['strAccion']       ? $arrayData['strAccion']:'';
+        $strModulo              = $arrayData['strModulo']       ? $arrayData['strModulo']:'';
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $arrayRespuesta    = array();
+        $strMensajeError   = '';
+        $strStatus         = 200;
+        $objResponse       = new Response;
+        try
+        {
+            $arrayParametros = array('intIdBitacora'  => $intIdBitacora,
+                                     'strModulo'      => $strModulo,
+                                     'strAccion'      => $strAccion);
+            $arrayRespuesta  = $this->getDoctrine()
+                                    ->getRepository(InfoBitacora::class)
+                                    ->getBitacoraCriterio($arrayParametros);
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayRespuesta['error']      = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'getBitacoraDetalle'
+     *
+     * Método encargado de retornar todos los detalles de las bitacora según los parámetros enviados.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 13-07-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getBitacoraDetalle($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdBitacora     = $arrayData['intIdBitacora']   ? $arrayData['intIdBitacora']:'';
+        $arrayRespuesta    = array();
+        $strMensajeError   = '';
+        $strStatus         = 200;
+        $objResponse       = new Response;
+        try
+        {
+            $arrayRespuesta  = $this->getDoctrine()
+                                    ->getRepository(InfoDetalleBitacora::class)
+                                    ->getBitacoraDetalleCriterio(array('intIdBitacora' => $intIdBitacora));
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayRespuesta['error']      = $strMensajeError;
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $arrayRespuesta,
                                                    'succes'    => true)));

@@ -270,7 +270,7 @@ class InfoRestauranteController extends Controller
         $strTipoIdentificacion  = $request->query->get("tipoIdentificacion") ? $request->query->get("tipoIdentificacion"):'';
         $strIdentificacion      = $request->query->get("identificacion") ? $request->query->get("identificacion"):'';
         $strRazonSocial         = $request->query->get("razonSocial") ? $request->query->get("razonSocial"):'';
-        $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
+        $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'';
         $strContador            = $request->query->get("strContador") ? $request->query->get("strContador"):'NO';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
         $conImagen              = $request->query->get("imagen") ? $request->query->get("imagen"):'NO';
