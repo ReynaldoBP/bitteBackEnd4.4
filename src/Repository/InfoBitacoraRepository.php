@@ -42,6 +42,7 @@ class InfoBitacoraRepository extends \Doctrine\ORM\EntityRepository
             $strSelect  = " SELECT IBI.ID_BITACORA,
                                    IBI.ACCION,
                                    IBI.MODULO,
+                                   IBI.REFERENCIA_VALOR,
                                    concat(IUS.NOMBRES,concat(' ',IUS.APELLIDOS)) AS USUARIO,
                                    IUS.CORREO,
                                    IBI.FE_CREACION ";
@@ -63,12 +64,13 @@ class InfoBitacoraRepository extends \Doctrine\ORM\EntityRepository
                 $strWhere .= " AND lower(IBI.MODULO) LIKE lower(:MODULO)";
                 $objQuery->setParameter("MODULO", '%' . trim($strModulo) . '%');
             }
-            $objRsmBuilder->addScalarResult('ID_BITACORA', 'ID_BITACORA', 'string');
-            $objRsmBuilder->addScalarResult('ACCION', 'ACCION', 'string');
-            $objRsmBuilder->addScalarResult('MODULO'     , 'MODULO'     , 'string');
-            $objRsmBuilder->addScalarResult('USUARIO'    , 'USUARIO'    , 'string');
-            $objRsmBuilder->addScalarResult('CORREO'     , 'CORREO'     , 'string');
-            $objRsmBuilder->addScalarResult('FE_CREACION', 'FE_CREACION', 'string');
+            $objRsmBuilder->addScalarResult('ID_BITACORA'      , 'ID_BITACORA'      , 'string');
+            $objRsmBuilder->addScalarResult('ACCION'           , 'ACCION'           , 'string');
+            $objRsmBuilder->addScalarResult('MODULO'           , 'MODULO'           , 'string');
+            $objRsmBuilder->addScalarResult('REFERENCIA_VALOR' , 'REFERENCIA_VALOR' , 'string');
+            $objRsmBuilder->addScalarResult('USUARIO'          , 'USUARIO'          , 'string');
+            $objRsmBuilder->addScalarResult('CORREO'           , 'CORREO'           , 'string');
+            $objRsmBuilder->addScalarResult('FE_CREACION'      , 'FE_CREACION'      , 'string');
 
             $strSql  = $strSelect.$strFrom.$strOrderBy;
             $objQuery->setSQL($strSql);

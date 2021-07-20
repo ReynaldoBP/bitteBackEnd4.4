@@ -396,6 +396,7 @@ class InfoSucursalController extends Controller
                                                            "strModulo"            => "Sucursal",
                                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
                                                            "intReferenciaId"      => $entitySucursal->getId(),
+                                                           "strReferenciaValor"   => $entitySucursal->getRESTAURANTEID()->getNOMBRECOMERCIAL()." / ".$entitySucursal->getDESCRIPCION(),
                                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
             }
             $strMensajeError = 'Sucursal creado con exito.!';
@@ -504,7 +505,8 @@ class InfoSucursalController extends Controller
                     throw new \Exception('No existe restaurante con la parámetros enviados.');
                 }
             }
-            $entitySucursal = $em->getRepository(InfoSucursal::class)->find($intIdSucursal);
+            $entitySucursal      = $em->getRepository(InfoSucursal::class)->find($intIdSucursal);
+            $strReferenciaValor  = $entitySucursal->getRESTAURANTEID()->getNOMBRECOMERCIAL()." / ".$entitySucursal->getDESCRIPCION();
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Restaurante",
                                            'VALOR_ANTERIOR' => $entitySucursal->getRESTAURANTEID()->getNOMBRECOMERCIAL(),
                                            'VALOR_ACTUAL'   => $objRestaurante->getNOMBRECOMERCIAL(),
@@ -833,6 +835,7 @@ class InfoSucursalController extends Controller
                                                            "strModulo"            => "Sucursal",
                                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
                                                            "intReferenciaId"      => $intIdSucursal,
+                                                           "strReferenciaValor"   => $strReferenciaValor,
                                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
             }
             $strMensajeError = 'Sucursal editada con exito.!';

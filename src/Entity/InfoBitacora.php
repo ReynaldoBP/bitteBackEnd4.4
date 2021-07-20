@@ -35,6 +35,11 @@ class InfoBitacora
     private $REFERENCIA_ID;
 
     /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $REFERENCIA_VALOR;
+
+    /**
     * @var InfoUsuario
     *
     * @ORM\ManyToOne(targetEntity="InfoUsuario")
@@ -88,6 +93,18 @@ class InfoBitacora
     public function getREFERENCIAID(): ?int
     {
         return $this->REFERENCIA_ID;
+    }
+
+    public function getREFERENCIA_VALOR(): ?string
+    {
+        return $this->REFERENCIA_VALOR;
+    }
+
+    public function setREFERENCIA_VALOR(string $REFERENCIA_VALOR): self
+    {
+        $this->REFERENCIA_VALOR = $REFERENCIA_VALOR;
+
+        return $this;
     }
 
     /**

@@ -243,6 +243,11 @@ class ApiWebController extends FOSRestController
             $entityRestaurante->setFECREACION($strDatetimeActual);
             $em->persist($entityRestaurante);
             $em->flush();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo Comida",
                                            'VALOR_ANTERIOR' => "",
                                            'VALOR_ACTUAL'   => $objTipoComida->getDESCRIPCION(),
@@ -298,6 +303,7 @@ class ApiWebController extends FOSRestController
                                             "strModulo"            => "Restaurante",
                                             "strUsuarioCreacion"   => $strUsuarioCreacion,
                                             "intReferenciaId"      => $entityRestaurante->getId(),
+                                            "strReferenciaValor"   => $entityRestaurante->getNOMBRECOMERCIAL(),
                                             "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
             }
             $strMensajeError = 'Restaurante creado con exito.!';
@@ -310,11 +316,6 @@ class ApiWebController extends FOSRestController
                 $em->getConnection()->rollback();
             }
             $strMensajeError = "Fallo al crear un restaurante, intente nuevamente.\n ". $ex->getMessage();
-        }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
         }
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $strMensajeError,
@@ -522,6 +523,7 @@ class ApiWebController extends FOSRestController
                                             "strModulo"            => "Restaurante",
                                             "strUsuarioCreacion"   => $strUsuarioCreacion,
                                             "intReferenciaId"      => $objRestaurante->getId(),
+                                            "strReferenciaValor"   => $objRestaurante->getNOMBRECOMERCIAL(),
                                             "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
             }
             $strMensajeError = 'Restaurante editado con exito.!';
@@ -730,6 +732,7 @@ class ApiWebController extends FOSRestController
                                             "strModulo"            => "Publicidad",
                                             "strUsuarioCreacion"   => $strUsuarioCreacion,
                                             "intReferenciaId"      => $entityPublicidad->getId(),
+                                            "strReferenciaValor"   => $entityPublicidad->getDESCRIPCION(),
                                             "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
             }
             $strMensajeError = 'Publicidad creado con exito.!';
@@ -1036,6 +1039,7 @@ class ApiWebController extends FOSRestController
                                             "strModulo"            => "Publicidad",
                                             "strUsuarioCreacion"   => $strUsuarioCreacion,
                                             "intReferenciaId"      => $objPublicidad->getId(),
+                                            "strReferenciaValor"   => $objPublicidad->getDESCRIPCION(),
                                             "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
             }
             $strMensajeError = 'Publicidad editado con exito.!';
@@ -1074,7 +1078,10 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.2 17-08-2020 - Se agrega la creación de codigo en la promoción.
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.3 19-07-2021 - Se agrega lógica para ingresar historial de creación.
+     *
      * @return array  $objResponse
      */
     public function createPromocion($arrayData)
@@ -1091,6 +1098,7 @@ class ApiWebController extends FOSRestController
         $strPremio              = $arrayData['premio'] ? $arrayData['premio']:'NO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
+        $arrayBitacoraDetalle   = array();
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
@@ -1158,9 +1166,50 @@ class ApiWebController extends FOSRestController
                     }
                 }
             }
-
             $em->persist($entityPromocion);
             $em->flush();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Restaurante",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $objRestaurante->getNOMBRECOMERCIAL(),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strDescrPromocion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Tenedor de Oro",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strPremio,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Cant. Puntos",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $intCantPuntos,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Acepta Puntos Globaless",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strAceptaGlobal,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEstado,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Código",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strCodigo,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Creación",
+                                            "strModulo"            => "Promoción",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $entityPromocion->getId(),
+                                            "strReferenciaValor"   => $entityPromocion->getDESCRIPCIONTIPOPROMOCION()." / ".$entityPromocion->getRESTAURANTEID()->getNOMBRECOMERCIAL(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Promoción creado con exito.!';
         }
         catch(\Exception $ex)
@@ -1179,17 +1228,9 @@ class ApiWebController extends FOSRestController
                 $em->getConnection()->rollback();
             }
         }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -1210,6 +1251,9 @@ class ApiWebController extends FOSRestController
      * @version 1.3 05-07-2021 - Se agrega bandera para eliminar de forma permanente 
      *                           las promociones y todo lo relacionado.
      *
+     * @author Kevin Baque
+     * @version 1.4 19-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
      * @return array  $objResponse
      */
     public function editPromocion($arrayData)
@@ -1228,6 +1272,7 @@ class ApiWebController extends FOSRestController
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strEliminar            = $arrayData['eliminar']        ? $arrayData['eliminar']:'';
         $strDatetimeActual      = new \DateTime('now');
+        $arrayBitacoraDetalle   = array();
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
@@ -1325,33 +1370,71 @@ class ApiWebController extends FOSRestController
                         }
                     }
                 }
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Restaurante",
+                                               'VALOR_ANTERIOR' => $objPromocion->getRESTAURANTEID()->getNOMBRECOMERCIAL(),
+                                               'VALOR_ACTUAL'   => $objRestaurante->getNOMBRECOMERCIAL(),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPromocion->setRESTAURANTEID($objRestaurante);
             }
             if(!empty($strDescrPromocion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                               'VALOR_ANTERIOR' => $objPromocion->getDESCRIPCIONTIPOPROMOCION(),
+                                               'VALOR_ACTUAL'   => $strDescrPromocion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPromocion->setDESCRIPCIONTIPOPROMOCION($strDescrPromocion);
             }
             $objPromocion->setIMAGEN($strRutaImagen);
             if(!empty($strPremio))
             {
+                if($strPremio == "SI")
+                {
+                    $intCantPuntos = 0;
+                }
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Tenedor de Oro",
+                                               'VALOR_ANTERIOR' => $objPromocion->getPREMIO(),
+                                               'VALOR_ACTUAL'   => $strPremio,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPromocion->setPREMIO($strPremio);
             }
-            $objPromocion->setCANTIDADPUNTOS($intCantPuntos);
-            
+
+            if($intCantPuntos>=0)
+            {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Cant. Puntos",
+                                               'VALOR_ANTERIOR' => $objPromocion->getCANTIDADPUNTOS(),
+                                               'VALOR_ACTUAL'   => $intCantPuntos,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $objPromocion->setCANTIDADPUNTOS($intCantPuntos);
+            }
+
             if(!empty($strAceptaGlobal))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Acepta Puntos Globales",
+                                               'VALOR_ANTERIOR' => $objPromocion->getACEPTAGLOBAL(),
+                                               'VALOR_ACTUAL'   => $strAceptaGlobal,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPromocion->setACEPTAGLOBAL($strAceptaGlobal);
             }
             if(!empty($strEstado))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                               'VALOR_ANTERIOR' => $objPromocion->getESTADO(),
+                                               'VALOR_ACTUAL'   => $strEstado,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPromocion->setESTADO(strtoupper($strEstado));
             }
             if(!empty($strCodigo))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Código",
+                                               'VALOR_ANTERIOR' => $objPromocion->getCODIGO(),
+                                               'VALOR_ACTUAL'   => $strCodigo,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objPromocion->setCODIGO(strtoupper($strCodigo));
             }
             $objPromocion->setUSRMODIFICACION($strUsuarioCreacion);
             $objPromocion->setFEMODIFICACION($strDatetimeActual);
+            $intIdPromocion = $objPromocion->getId();
+            $strPromocion   = $objPromocion->getDESCRIPCIONTIPOPROMOCION()." / ".$objPromocion->getRESTAURANTEID()->getNOMBRECOMERCIAL();
             if(!empty($strEliminar) && $strEliminar == "S")
             {
                 $objController          = new DefaultController();
@@ -1384,7 +1467,22 @@ class ApiWebController extends FOSRestController
                 $em->persist($objPromocion);
             }
             $em->flush();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
             $strMensajeError = 'Promoción editado con exito.!';
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => (!empty($strEliminar) && $strEliminar == "S")? 
+                                                                       "Eliminación":"Modificación",
+                                            "strModulo"            => "Promoción",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $intIdPromocion,
+                                            "strReferenciaValor"   => $strPromocion,
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
         }
         catch(\Exception $ex)
         {
@@ -1402,17 +1500,9 @@ class ApiWebController extends FOSRestController
                 $em->getConnection()->rollback();
             }
         }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -1952,6 +2042,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 23-06-2021 - Se agrega lógica para el envío de correos por medio de la tabla InfoPlantilla.
      *
+     * @author Kevin Baque
+     * @version 1.3 20-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
      * @return array  $objResponse
      */
     public function editClienteEncuesta($arrayData)
@@ -1961,6 +2054,7 @@ class ApiWebController extends FOSRestController
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'ELIMINADO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
+        $arrayBitacoraDetalle   = array();
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
@@ -2012,7 +2106,7 @@ class ApiWebController extends FOSRestController
                 throw new \Exception('No existe el contenido con la descripción enviada por parámetro.');
             }
             $objRedSocial = $this->getDoctrine()
-                                 ->getRepository(InfoContenidoSubido::class)
+                                 ->getRepository(InfoRedesSociales::class)
                                  ->find($objContenido->getREDESSOCIALESID());
             $intPuntosPerdidos = 0;
             if(is_object($objRedSocial) && $objRedSocial->getDESCRIPCION() == "NO COMPARTIDO")
@@ -2023,6 +2117,11 @@ class ApiWebController extends FOSRestController
             {
                 $intPuntosPerdidos = intval($objClienteEncuesta->getCANTIDADPUNTOS()) + intval($objContenido->getCANTIDADPUNTOS());
             }
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => $objContenido->getESTADO(),
+                                           'VALOR_ACTUAL'   => "Eliminado",
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+
             if(!empty($strEstado))
             {
                 $objContenido->setESTADO(strtoupper($strEstado));
@@ -2060,6 +2159,10 @@ class ApiWebController extends FOSRestController
                 $strNombreUsuario = $objCliente->getCORREO();
             }
             $strNombreImagen  = $objContenido->getIMAGEN();
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Foto",
+                                           'VALOR_ANTERIOR' => $strNombreImagen,
+                                           'VALOR_ACTUAL'   => "",
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
             $strRutaImagen    = (dirname(__FILE__)."/../../public/images"."/".$strNombreImagen);
             $objPlantilla     = $this->getDoctrine()
                                      ->getRepository(InfoPlantilla::class)
@@ -2082,6 +2185,15 @@ class ApiWebController extends FOSRestController
                 $objController      = new DefaultController();
                 $objController->setContainer($this->container);
                 $objController->enviaCorreo($arrayParametros);
+            }
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Modificación",
+                                            "strModulo"            => "Data Encuesta",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $objClienteEncuesta->getId(),
+                                            "strReferenciaValor"   => $objRestaurante->getNOMBRECOMERCIAL()." / ".$objSucursal->getDESCRIPCION(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
             }
             $strMensajeError = 'Encuesta del cliente y contenido editado con exito.!';
         }
@@ -2114,8 +2226,6 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 30-09-2019
-     * 
-     * @return array  $objResponse
      *
      * @author Kevin Baque
      * @version 1.1 03-12-2019 - Se agrega envío de correo notificando que canjio puntos.
@@ -2123,6 +2233,13 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.2 19-02-2020 - Envío de correo cuando es tenedor de oro.
      *
+     * @author Kevin Baque
+     * @version 1.3 21-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
+     * @author Kevin Baque
+     * @version 1.4 21-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
+     * @return array  $objResponse
      */
     public function editPromocionHistorial($arrayData)
     {
@@ -2130,6 +2247,7 @@ class ApiWebController extends FOSRestController
         $intIdPromocionHist     = $arrayData['idPromocionHist'] ? $arrayData['idPromocionHist']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'COMPLETADO';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $arrayBitacoraDetalle   = array();
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
         $strStatus              = 400;
@@ -2146,6 +2264,10 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception('Promoción no existe o ha sido completada.');
             }
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "Pendiente",
+                                           'VALOR_ACTUAL'   => "Completado",
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
             $objCliente     = $this->getDoctrine()
                                    ->getRepository(InfoCliente::class)
                                    ->find($objPromocionHist->getCLIENTEID()->getId());
@@ -2210,7 +2332,21 @@ class ApiWebController extends FOSRestController
                 $objController->setContainer($this->container);
                 $objController->enviaCorreo($arrayParametros);
             }
-
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $strReferenciaValor = $objRestaurante->getNOMBRECOMERCIAL()." / ".$objPromocion->getDESCRIPCIONTIPOPROMOCION()." / ".$objCliente->getNOMBRE()." ".$objCliente->getAPELLIDO();
+                $this->createBitacora(array("strAccion"            => "Redimir",
+                                            "strModulo"            => "Puntos",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $intIdPromocionHist,
+                                            "strReferenciaValor"   => $strReferenciaValor,
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Historial de la promoción editado con exito.!';
         }
         catch(\Exception $ex)
@@ -2222,17 +2358,9 @@ class ApiWebController extends FOSRestController
             }
             $strMensajeError = "Fallo al editar Historial de la promoción, intente nuevamente.\n ". $ex->getMessage();
         }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -2304,22 +2432,26 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.3 26-06-2021 - Se agrega lógica para el envío de correos por medio de la tabla InfoPlantilla.
      *
+     * @author Kevin Baque
+     * @version 1.4 19-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
      * @return array  $objResponse
      */
     public function createPromocionHistorial($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $intIdPromocion     = $arrayData['idPromocion'] ? $arrayData['idPromocion']:'';
-        $intIdCliente       = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
-        $strEstado          = $arrayData['estado'] ? $arrayData['estado']:'PENDIENTE';
-        $strUsuarioCreacion = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
-        $strDatetimeActual  = new \DateTime('now');
-        $strMensajeError    = '';
-        $strStatus          = 400;
-        $intCantidadPuntos  = 0;
-        $intCantPuntospromo = 0;
-        $objResponse        = new Response;
-        $em                 = $this->getDoctrine()->getManager();
+        $intIdPromocion       = $arrayData['idPromocion'] ? $arrayData['idPromocion']:'';
+        $intIdCliente         = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
+        $strEstado            = $arrayData['estado'] ? $arrayData['estado']:'PENDIENTE';
+        $strUsuarioCreacion   = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $arrayBitacoraDetalle = array();
+        $strDatetimeActual    = new \DateTime('now');
+        $strMensajeError      = '';
+        $strStatus            = 400;
+        $intCantidadPuntos    = 0;
+        $intCantPuntospromo   = 0;
+        $objResponse          = new Response;
+        $em                   = $this->getDoctrine()->getManager();
         try
         {
             $em->getConnection()->beginTransaction();
@@ -2419,28 +2551,39 @@ class ApiWebController extends FOSRestController
             $entityPromocionHist->setFECREACION($strDatetimeActual);
             $em->persist($entityPromocionHist);
             $em->flush();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => "Pendiente",
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $strReferenciaValor = $objRestaurante->getNOMBRECOMERCIAL()." / ".$objPromocion->getDESCRIPCIONTIPOPROMOCION()." / ".$objCliente->getNOMBRE()." ".$objCliente->getAPELLIDO();
+                $this->createBitacora(array("strAccion"            => "Redimir",
+                                            "strModulo"            => "Tenedor de Oro",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $entityPromocionHist->getId(),
+                                            "strReferenciaValor"   => $strReferenciaValor,
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Historial de la Promoción creado con exito.!';
         }
         catch(\Exception $ex)
         {
+            $strStatus = 404;
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
                 $em->getConnection()->rollback();
             }
             $strMensajeError ="Fallo al crear el Historial de la Promoción, intente nuevamente.\n ". $ex->getMessage();
         }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -3864,6 +4007,7 @@ class ApiWebController extends FOSRestController
         $strModulo              = $arrayData['strModulo']            ? $arrayData['strModulo']:'';
         $strUsuarioCreacion     = $arrayData['strUsuarioCreacion']   ? $arrayData['strUsuarioCreacion']:'';
         $intReferenciaId        = $arrayData['intReferenciaId']      ? $arrayData['intReferenciaId']:'';
+        $strReferenciaValor     = $arrayData['strReferenciaValor']   ? $arrayData['strReferenciaValor']:'';
         $arrayBitacoraDetalle   = $arrayData['arrayBitacoraDetalle'] ? $arrayData['arrayBitacoraDetalle']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
@@ -3877,6 +4021,7 @@ class ApiWebController extends FOSRestController
             error_log("strAccion         : ".$strAccion);
             error_log("strModulo         : ".$strModulo);
             error_log("intReferenciaId   : ".$intReferenciaId);
+            error_log("strReferenciaValor: ".$strReferenciaValor);
             error_log("strUsuarioCreacion: ".$strUsuarioCreacion);
             error_log("--------------");
             $em->getConnection()->beginTransaction();
@@ -3884,7 +4029,7 @@ class ApiWebController extends FOSRestController
             $entityBitacora->setACCION($strAccion);
             $entityBitacora->setMODULO($strModulo);
             $entityBitacora->setREFERENCIAID($intReferenciaId);
-            
+            $entityBitacora->setREFERENCIA_VALOR($strReferenciaValor);
             $entityBitacora->setFECREACION($strDatetimeActual->format('Y-m-d H:i:s'));
             if(!empty($strUsuarioCreacion))
             {
@@ -3966,10 +4111,10 @@ class ApiWebController extends FOSRestController
      */
     public function getBitacora($arrayData)
     {
+        error_reporting( error_reporting() & ~E_NOTICE );
         $intIdBitacora          = $arrayData['intIdBitacora']   ? $arrayData['intIdBitacora']:'';
         $strAccion              = $arrayData['strAccion']       ? $arrayData['strAccion']:'';
         $strModulo              = $arrayData['strModulo']       ? $arrayData['strModulo']:'';
-        error_reporting( error_reporting() & ~E_NOTICE );
         $arrayRespuesta    = array();
         $strMensajeError   = '';
         $strStatus         = 200;
@@ -4007,16 +4152,28 @@ class ApiWebController extends FOSRestController
     public function getBitacoraDetalle($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $intIdBitacora     = $arrayData['intIdBitacora']   ? $arrayData['intIdBitacora']:'';
-        $arrayRespuesta    = array();
-        $strMensajeError   = '';
-        $strStatus         = 200;
-        $objResponse       = new Response;
+        $intIdBitacora        = $arrayData['intIdBitacora'] ? $arrayData['intIdBitacora']:'';
+        $arrayRespuesta       = array();
+        $strMensajeError      = '';
+        $strStatus            = 200;
+        $objResponse          = new Response;
         try
         {
             $arrayRespuesta  = $this->getDoctrine()
                                     ->getRepository(InfoDetalleBitacora::class)
                                     ->getBitacoraDetalleCriterio(array('intIdBitacora' => $intIdBitacora));
+            if(!empty($arrayRespuesta["resultados"]))
+            {
+                foreach($arrayRespuesta["resultados"] as &$arrayItem)
+                {
+                    if($arrayItem['CAMPO'] == "Foto" && !empty($arrayItem['VALOR_ANTERIOR']))
+                    {
+                        $objController = new DefaultController();
+                        $objController->setContainer($this->container);
+                        $arrayItem['VALOR_ANTERIOR'] = $objController->getImgBase64($arrayItem['VALOR_ANTERIOR']);
+                    }
+                }
+            }
         }
         catch(\Exception $ex)
         {

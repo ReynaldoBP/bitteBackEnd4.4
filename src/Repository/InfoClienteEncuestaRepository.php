@@ -671,7 +671,21 @@ AND IC.EDAD!='SIN EDAD'
                                        ICE.FE_CREACION,
                                        ISU.DESCRIPCION,
                                        IRE.RAZON_SOCIAL,
-                                       IRE.NOMBRE_COMERCIAL ";
+                                       IRE.NOMBRE_COMERCIAL,
+                                       (SELECT IFNULL(AVG(SUB_IRES.RESPUESTA),0) 
+                                                FROM INFO_CLIENTE_ENCUESTA SUB_ICE
+                                                    INNER JOIN INFO_SUCURSAL SUB_ISU 
+                                                        ON SUB_ISU.ID_SUCURSAL = SUB_ICE.SUCURSAL_ID
+                                                    INNER JOIN INFO_RESPUESTA SUB_IRES 
+                                                        ON SUB_IRES.CLT_ENCUESTA_ID = SUB_ICE.ID_CLT_ENCUESTA
+                                                    INNER JOIN INFO_PREGUNTA SUB_IP 
+                                                        ON SUB_IP.ID_PREGUNTA = SUB_IRES.PREGUNTA_ID
+                                                    INNER JOIN INFO_OPCION_RESPUESTA SUB_IOR 
+                                                        ON SUB_IOR.ID_OPCION_RESPUESTA = SUB_IP.OPCION_RESPUESTA_ID
+                                                    WHERE SUB_IOR.VALOR = 5 
+                                                        AND SUB_ICE.ESTADO = 'ACTIVO' 
+                                                        AND SUB_ISU.RESTAURANTE_ID = IRE.ID_RESTAURANTE
+                                                        AND SUB_ICE.CLIENTE_ID=ICE.CLIENTE_ID) AS PRO_ENCUESTAS_CLT ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE 
                                 JOIN INFO_SUCURSAL ISU ON ISU.ID_SUCURSAL       = ICE.SUCURSAL_ID
                                 JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
@@ -689,6 +703,7 @@ AND IC.EDAD!='SIN EDAD'
             $objRsmBuilder->addScalarResult('DESCRIPCION'    , 'DESCRIPCION'    , 'string');
             $objRsmBuilder->addScalarResult('RAZON_SOCIAL'   , 'RAZON_SOCIAL'    , 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL' , 'NOMBRE_COMERCIAL' , 'string');
+            $objRsmBuilder->addScalarResult('PRO_ENCUESTAS_CLT', 'PRO_ENCUESTAS_CLT' , 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayCltEncuesta['resultados'] = $objQuery->getResult();
@@ -729,7 +744,21 @@ AND IC.EDAD!='SIN EDAD'
                                         ICS.FE_CREACION,
                                         ISU.DESCRIPCION,
                                         IRE.RAZON_SOCIAL,
-                                        IRE.NOMBRE_COMERCIAL  ";
+                                        IRE.NOMBRE_COMERCIAL,
+                                        (SELECT IFNULL(AVG(SUB_IRES.RESPUESTA),0) 
+                                                FROM INFO_CLIENTE_ENCUESTA SUB_ICE
+                                                    INNER JOIN INFO_SUCURSAL SUB_ISU 
+                                                        ON SUB_ISU.ID_SUCURSAL = SUB_ICE.SUCURSAL_ID
+                                                    INNER JOIN INFO_RESPUESTA SUB_IRES 
+                                                        ON SUB_IRES.CLT_ENCUESTA_ID = SUB_ICE.ID_CLT_ENCUESTA
+                                                    INNER JOIN INFO_PREGUNTA SUB_IP 
+                                                        ON SUB_IP.ID_PREGUNTA = SUB_IRES.PREGUNTA_ID
+                                                    INNER JOIN INFO_OPCION_RESPUESTA SUB_IOR 
+                                                        ON SUB_IOR.ID_OPCION_RESPUESTA = SUB_IP.OPCION_RESPUESTA_ID
+                                                    WHERE SUB_IOR.VALOR = 5 
+                                                        AND SUB_ICE.ESTADO = 'ACTIVO' 
+                                                        AND SUB_ISU.RESTAURANTE_ID = IRE.ID_RESTAURANTE
+                                                        AND SUB_ICE.CLIENTE_ID=ICS.CLIENTE_ID) AS PRO_ENCUESTAS_CLT ";
             $strFrom        = " FROM INFO_CONTENIDO_SUBIDO ICS
                                     JOIN INFO_SUCURSAL ISU ON ISU.ID_SUCURSAL       = ICS.SUCURSAL_ID
                                     JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
@@ -748,6 +777,7 @@ AND IC.EDAD!='SIN EDAD'
             $objRsmBuilder->addScalarResult('DESCRIPCION'    , 'DESCRIPCION'    , 'string');
             $objRsmBuilder->addScalarResult('RAZON_SOCIAL'   , 'RAZON_SOCIAL'    , 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL' , 'NOMBRE_COMERCIAL' , 'string');
+            $objRsmBuilder->addScalarResult('PRO_ENCUESTAS_CLT', 'PRO_ENCUESTAS_CLT' , 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayContenido['resultados'] = $objQuery->getResult();

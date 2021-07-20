@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManager;
 use App\Entity\InfoUsuario;
 use App\Entity\AdmiTipoRol;
+use App\Controller\ApiWebController;
 use App\Controller\DefaultController;
 
 class UsuarioController extends Controller
@@ -115,6 +116,9 @@ class UsuarioController extends Controller
      * @author Kevin Baque
      * @version 1.1 07-06-2021 - Se agrega campo, para saber si el usuario recibirá notificaciones de las encuesta.
      *
+     * @author Kevin Baque
+     * @version 1.2 19-07-2021 - Se agrega lógica para ingresar historial de creación.
+     *
      * @return array  $objResponse
      *
      */
@@ -139,6 +143,8 @@ class UsuarioController extends Controller
         $objResponse            = new Response;
         $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
+        $objApiWebController    = new ApiWebController();
+        $objApiWebController->setContainer($this->container);
         $strDescripcion='';
         try
         {
@@ -183,6 +189,34 @@ class UsuarioController extends Controller
             $entityUsuario->setCIUDAD($strCiudad);
             $entityUsuario->setUSRCREACION($strUsuarioCreacion);
             $entityUsuario->setFECREACION($strDatetimeActual);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Rol",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $objTipoRol->getDESCRIPCION_TIPO_ROL(),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Identificación",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strIdentificacion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Nombres",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strNombres,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Apellidos",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strApellidos,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Correo",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strCorreo,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEstado,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Notificación",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strNotificacion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
             $em->persist($entityUsuario);
             $em->flush();
             $strMensajeError = 'Usuario creado con exito.!';
@@ -196,29 +230,33 @@ class UsuarioController extends Controller
                                  'usrCreacion'    => $entityUsuario->getUSRCREACION(),
                                  'feCreacion'     => $entityUsuario->getFECREACION(),
                                  'mensaje'        => $strMensajeError);        
-
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $objApiWebController->createBitacora(array("strAccion"            => "Creación",
+                                                           "strModulo"            => "Usuario",
+                                                           "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                                           "intReferenciaId"      => $entityUsuario->getId(),
+                                                           "strReferenciaValor"   => $entityUsuario->getNOMBRES(). " ".$entityUsuario->getAPELLIDOS(),
+                                                           "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
         }
         catch(\Exception $ex)
         {
+            $strStatus = 404;
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
                 $em->getConnection()->rollback();
             }
             $arrayUsuario = "Fallo al crear un Usuario, intente nuevamente.\n ". $ex->getMessage();
         }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayUsuario,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayUsuario,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -233,6 +271,9 @@ class UsuarioController extends Controller
      * 
      * @author Kevin Baque
      * @version 1.1 07-06-2021 - Se agrega campo, para saber si el usuario recibirá notificaciones de las encuesta.
+     *
+     * @author Kevin Baque
+     * @version 1.2 19-07-2021 - Se agrega lógica para ingresar historial de modificación.
      *
      * @return array  $objResponse
      */
@@ -257,6 +298,8 @@ class UsuarioController extends Controller
         $strStatus              = 400;
         $objResponse            = new Response;
         $strDatetimeActual      = new \DateTime('now');
+        $objApiWebController    = new ApiWebController();
+        $objApiWebController->setContainer($this->container);
         $em                     = $this->getDoctrine()->getManager();
         $strDescripcion='';
         try
@@ -280,18 +323,34 @@ class UsuarioController extends Controller
                 {
                     throw new \Exception('No existe rol con la descripción enviada por parámetro.');
                 }
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Rol",
+                                               'VALOR_ANTERIOR' => $objUsuario->getTIPOROLID()->getDESCRIPCION_TIPO_ROL(),
+                                               'VALOR_ACTUAL'   => $objTipoRol->getDESCRIPCION_TIPO_ROL(),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objUsuario->setTIPOROLID($objTipoRol);
             }
             if(!empty($strIdentificacion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Identificación",
+                                               'VALOR_ANTERIOR' => $objUsuario->getIDENTIFICACION(),
+                                               'VALOR_ACTUAL'   => $strIdentificacion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objUsuario->setIDENTIFICACION($strIdentificacion);
             }
             if(!empty($strNombres))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Nombres",
+                                               'VALOR_ANTERIOR' => $objUsuario->getNOMBRES(),
+                                               'VALOR_ACTUAL'   => $strNombres,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objUsuario->setNOMBRES($strNombres);
             }
             if(!empty($strApellidos))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Apellidos",
+                                               'VALOR_ANTERIOR' => $objUsuario->getAPELLIDOS(),
+                                               'VALOR_ACTUAL'   => $strApellidos,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objUsuario->setAPELLIDOS($strApellidos);
             }
             if(!empty($strContrasenia))
@@ -304,14 +363,26 @@ class UsuarioController extends Controller
             }
             if(!empty($strCorreo))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Correo",
+                                               'VALOR_ANTERIOR' => $objUsuario->getCORREO(),
+                                               'VALOR_ACTUAL'   => $strCorreo,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objUsuario->setCORREO($strCorreo);
             }
             if(!empty($strEstado))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                               'VALOR_ANTERIOR' => $objUsuario->getESTADO(),
+                                               'VALOR_ACTUAL'   => $strEstado,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objUsuario->setESTADO(strtoupper($strEstado));
             }
             if(!empty($strNotificacion))
             {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Notificación",
+                                               'VALOR_ANTERIOR' => $objUsuario->getNOTIFICACION(),
+                                               'VALOR_ACTUAL'   => $strNotificacion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
                 $objUsuario->setNOTIFICACION(strtoupper($strNotificacion));
             }
             if(!empty($strPais))
@@ -326,29 +397,34 @@ class UsuarioController extends Controller
             $objUsuario->setFEMODIFICACION($strDatetimeActual);
             $em->persist($objUsuario);
             $em->flush();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
             $strMensajeError = 'Usuario editado con exito.!';
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $objApiWebController->createBitacora(array("strAccion"            => "Modificación",
+                                                           "strModulo"            => "Usuario",
+                                                           "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                                           "intReferenciaId"      => $objUsuario->getId(),
+                                                           "strReferenciaValor"   => $objUsuario->getNOMBRES(). " ".$objUsuario->getAPELLIDOS(),
+                                                           "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
         }
         catch(\Exception $ex)
         {
+            $strStatus = 404;
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
                 $em->getConnection()->rollback();
             }
-            
             $strMensajeError = "Fallo al editar un Usuario, intente nuevamente.\n ". $ex->getMessage();
         }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }

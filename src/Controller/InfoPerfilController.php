@@ -12,6 +12,7 @@ use App\Entity\AdmiAccion;
 use App\Entity\AdmiModulo;
 use App\Entity\InfoModuloAccion;
 use App\Entity\InfoUsuario;
+use App\Controller\ApiWebController;
 class InfoPerfilController extends Controller
 {
     /**
@@ -22,7 +23,10 @@ class InfoPerfilController extends Controller
      * 
      * @author Kevin Baque
      * @version 1.0 10-09-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 21-07-2021 - Se agrega lógica para ingresar historial de creación.
+     *
      * @return array  $objResponse
      */
     public function createPerfilAction(Request $request)
@@ -33,6 +37,9 @@ class InfoPerfilController extends Controller
         $strDescripcion         = $request->query->get("descripcion") ? $request->query->get("descripcion"):'';
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
+        $arrayBitacoraDetalle   = array();
+        $objApiWebController    = new ApiWebController();
+        $objApiWebController->setContainer($this->container);
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
@@ -78,6 +85,23 @@ class InfoPerfilController extends Controller
             $entityPerfil->setFECREACION($strDatetimeActual);
             $em->persist($entityPerfil);
             $em->flush();
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Módulo",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $objModuloAccion->getMODULOID()->getDESCRIPCION(),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Acción",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $objModuloAccion->getACCIONID()->getDESCRIPCION(),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $objApiWebController->createBitacora(array("strAccion"            => "Creación",
+                                                           "strModulo"            => "Permisos",
+                                                           "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                                           "intReferenciaId"      => $entityPerfil->getId(),
+                                                           "strReferenciaValor"   => $objUsuario->getNOMBRES()." ".$objUsuario->getAPELLIDOS(),
+                                                           "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Perfil creado con exito.!';
         }
         catch(\Exception $ex)
@@ -271,7 +295,10 @@ class InfoPerfilController extends Controller
      * 
      * @author Kevin Baque
      * @version 1.0 10-09-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 21-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
      * @return array  $objResponse
      */
     public function deletePerfilAction(Request $request)
@@ -283,9 +310,11 @@ class InfoPerfilController extends Controller
         $strDescripcion         = $request->query->get("descripcion") ? $request->query->get("descripcion"):'';
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
-        $strDatetimeActual      = new \DateTime('now');
+        $arrayBitacoraDetalle   = array();
         $strMensajeError        = '';
         $strStatus              = 400;
+        $objApiWebController    = new ApiWebController();
+        $objApiWebController->setContainer($this->container);
         $objResponse            = new Response;
         $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
@@ -323,8 +352,26 @@ class InfoPerfilController extends Controller
             {
                 throw new \Exception('No existe Perfil con la descripción enviada por parámetro.');
             }
+            $intIdPerfil = $objPerfil->getId();
             $em->remove($objPerfil);
             $em->flush();
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Módulo",
+                                           'VALOR_ANTERIOR' => $objModuloAccion->getMODULOID()->getDESCRIPCION(),
+                                           'VALOR_ACTUAL'   => "",
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Acción",
+                                           'VALOR_ANTERIOR' => $objModuloAccion->getACCIONID()->getDESCRIPCION(),
+                                           'VALOR_ACTUAL'   => "",
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $objApiWebController->createBitacora(array("strAccion"            => "Modificación",
+                                                           "strModulo"            => "Permisos",
+                                                           "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                                           "intReferenciaId"      => $intIdPerfil,
+                                                           "strReferenciaValor"   => $objUsuario->getNOMBRES()." ".$objUsuario->getAPELLIDOS(),
+                                                           "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Perfil eliminado con exito.!';
         }
         catch(\Exception $ex)

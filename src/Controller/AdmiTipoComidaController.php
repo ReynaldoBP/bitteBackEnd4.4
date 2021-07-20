@@ -7,6 +7,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\AdmiTipoComida;
+use App\Controller\ApiWebController;
 class AdmiTipoComidaController extends Controller
 {
     /**
@@ -66,6 +67,9 @@ class AdmiTipoComidaController extends Controller
      * @author Kevin Baque
      * @version 1.0 29-08-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 19-07-2021 - Se agrega lógica para ingresar historial de modificación.
+     *
      * @return array  $objResponse
      */
     public function editTipoComidaAction(Request $request)
@@ -76,10 +80,11 @@ class AdmiTipoComidaController extends Controller
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
         $strDatetimeActual      = new \DateTime('now');
+        $objApiWebController    = new ApiWebController();
+        $objApiWebController->setContainer($this->container);
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
-        $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
         try
         {
@@ -87,34 +92,54 @@ class AdmiTipoComidaController extends Controller
             $entityComida = $this->getDoctrine()
                                  ->getRepository(AdmiTipoComida::class)
                                  ->findOneBy(array('id'=>$intIdTipoComida));
-            $entityComida->setDESCRIPCION($strDescripcion);
-            $entityComida->setESTADO(strtoupper($strEstado));
+            if(!empty($strDescripcion))
+            {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                               'VALOR_ANTERIOR' => $entityComida->getDESCRIPCION(),
+                                               'VALOR_ACTUAL'   => $strDescripcion,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $entityComida->setDESCRIPCION($strDescripcion);
+            }
+            if(!empty($strEstado))
+            {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                               'VALOR_ANTERIOR' => $entityComida->getESTADO(),
+                                               'VALOR_ACTUAL'   => $strEstado,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $entityComida->setESTADO(strtoupper($strEstado));
+            }
             $entityComida->setUSRMODIFICACION($strUsuarioCreacion);
             $entityComida->setFEMODIFICACION($strDatetimeActual);
             $em->persist($entityComida);
             $em->flush();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $objApiWebController->createBitacora(array("strAccion"            => "Modificación",
+                                                           "strModulo"            => "Tipo de Comida",
+                                                           "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                                           "intReferenciaId"      => $entityComida->getId(),
+                                                           "strReferenciaValor"   => $entityComida->getDESCRIPCION(),
+                                                           "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Tipo de comida editado con exito.!';
         }
         catch(\Exception $ex)
         {
+            $strStatus = 404;
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
                 $em->getConnection()->rollback();
             }
             $strMensajeError = "Fallo al editar un Tipo de comida, intente nuevamente.\n ". $ex->getMessage();
         }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -127,7 +152,10 @@ class AdmiTipoComidaController extends Controller
      * 
      * @author Kevin Baque
      * @version 1.0 29-08-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 19-07-2021 - Se agrega lógica para ingresar historial de creación.
+     *
      * @return array  $objResponse
      */
     public function createTipoComidaAction(Request $request)
@@ -137,10 +165,11 @@ class AdmiTipoComidaController extends Controller
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
         $strDatetimeActual      = new \DateTime('now');
+        $objApiWebController    = new ApiWebController();
+        $objApiWebController->setContainer($this->container);
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
-        $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
         try
         {
@@ -152,28 +181,42 @@ class AdmiTipoComidaController extends Controller
             $entityComida->setFECREACION($strDatetimeActual);
             $em->persist($entityComida);
             $em->flush();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strDescripcion,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strEstado,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $objApiWebController->createBitacora(array("strAccion"            => "Creación",
+                                                           "strModulo"            => "Tipo de Comida",
+                                                           "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                                           "intReferenciaId"      => $entityComida->getId(),
+                                                           "strReferenciaValor"   => $entityComida->getDESCRIPCION(),
+                                                           "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
             $strMensajeError = 'Tipo de comida creado con exito.!';
         }
         catch(\Exception $ex)
         {
+            $strStatus = 404;
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
                 $em->getConnection()->rollback();
             }
             $strMensajeError = "Fallo al crear un Tipo de comida, intente nuevamente.\n ". $ex->getMessage();
         }
-        if ($em->getConnection()->isTransactionActive())
-        {
-            $em->getConnection()->commit();
-            $em->getConnection()->close();
-        }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
