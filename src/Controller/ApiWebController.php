@@ -4115,6 +4115,8 @@ class ApiWebController extends FOSRestController
         $intIdBitacora          = $arrayData['intIdBitacora']   ? $arrayData['intIdBitacora']:'';
         $strAccion              = $arrayData['strAccion']       ? $arrayData['strAccion']:'';
         $strModulo              = $arrayData['strModulo']       ? $arrayData['strModulo']:'';
+        $strFechaIni            = $arrayData['strFechaIni']     ? $arrayData['strFechaIni']:'';
+        $strFechaFin            = $arrayData['strFechaFin']     ? $arrayData['strFechaFin']:'';
         $arrayRespuesta    = array();
         $strMensajeError   = '';
         $strStatus         = 200;
@@ -4123,7 +4125,9 @@ class ApiWebController extends FOSRestController
         {
             $arrayParametros = array('intIdBitacora'  => $intIdBitacora,
                                      'strModulo'      => $strModulo,
-                                     'strAccion'      => $strAccion);
+                                     'strAccion'      => $strAccion,
+                                     'strFechaIni'    => $strFechaIni,
+                                     'strFechaFin'    => $strFechaFin);
             $arrayRespuesta  = $this->getDoctrine()
                                     ->getRepository(InfoBitacora::class)
                                     ->getBitacoraCriterio($arrayParametros);

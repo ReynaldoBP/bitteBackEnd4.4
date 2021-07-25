@@ -28,7 +28,9 @@ class InfoBitacoraRepository extends \Doctrine\ORM\EntityRepository
     {
         $intIdBitacora   = $arrayParametros['intIdBitacora']  ? $arrayParametros['intIdBitacora']:'';
         $strModulo       = $arrayParametros['strModulo']      ? $arrayParametros['strModulo']:'';
-        $strAccion       = $arrayParametros['strAccion'] ? $arrayParametros['strAccion']:'';
+        $strAccion       = $arrayParametros['strAccion']      ? $arrayParametros['strAccion']:'';
+        $strFechaIni     = $arrayParametros['strFechaIni']    ? $arrayParametros['strFechaIni']:'';
+        $strFechaFin     = $arrayParametros['strFechaFin']    ? $arrayParametros['strFechaFin']:'';
         $arrayResultado  = array();
         $objRsmBuilder   = new ResultSetMappingBuilder($this->_em);
         $objQuery        = $this->_em->createNativeQuery(null, $objRsmBuilder);
@@ -49,6 +51,10 @@ class InfoBitacoraRepository extends \Doctrine\ORM\EntityRepository
             $strFrom    = " FROM INFO_BITACORA IBI
                                  JOIN INFO_USUARIO IUS ON IUS.ID_USUARIO=IBI.USUARIO_ID ";
             $strOrderBy = " ORDER BY IBI.FE_CREACION DESC ";
+            if(!empty($strFechaIni) && !empty($strFechaFin))
+            {
+                $strWhere = " WHERE IBI.FE_CREACION BETWEEN '".$strFechaIni." 00:00:00' AND '".$strFechaFin." 23:59:59' ";
+            }
             if(!empty($intIdBitacora))
             {
                 $strWhere .= " WHERE IBI.ID_BITACORA = :ID_BITACORA ";
@@ -72,7 +78,7 @@ class InfoBitacoraRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CORREO'           , 'CORREO'           , 'string');
             $objRsmBuilder->addScalarResult('FE_CREACION'      , 'FE_CREACION'      , 'string');
 
-            $strSql  = $strSelect.$strFrom.$strOrderBy;
+            $strSql  = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayResultado['resultados'] = $objQuery->getResult();
         }
