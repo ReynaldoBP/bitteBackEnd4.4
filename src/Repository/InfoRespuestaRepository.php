@@ -826,4 +826,60 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $arrayRespuesta['error'] = $strMensajeError;
         return $arrayRespuesta;
     }
+    /**
+     * Documentación para la función 'getPromedioPregunta'
+     *
+     * Método encargado de retornar el promedio de las respuestas
+     * según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 28-07-2021
+     * 
+     * @return array  $arrayRespuesta
+     * 
+     */
+    public function getPromedioPregunta($arrayParametros)
+    {
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $intValorPregunta    = $arrayParametros['intValorPregunta']  ? $arrayParametros['intValorPregunta']:'';
+        $intIdPregunta      = $arrayParametros['intIdPregunta']    ? $arrayParametros['intIdPregunta']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = " SELECT IPG.DESCRIPCION, IFNULL(AVG(IRES.RESPUESTA),0) AS PROMEDIO ";
+            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
+                                INNER JOIN INFO_SUCURSAL ISU 
+                                    ON ISU.ID_SUCURSAL = ICE.SUCURSAL_ID
+                                INNER JOIN INFO_RESPUESTA IRES 
+                                    ON IRES.CLT_ENCUESTA_ID = ICE.ID_CLT_ENCUESTA
+                                INNER JOIN INFO_PREGUNTA IPG
+                                    ON IPG.ID_PREGUNTA = IRES.PREGUNTA_ID
+                                INNER JOIN INFO_OPCION_RESPUESTA IOR
+                                    ON IOR.ID_OPCION_RESPUESTA = IPG.OPCION_RESPUESTA_ID ";
+            $strWhere       = " WHERE IOR.VALOR            = :intValorPregunta
+                                    AND ICE.ESTADO         = :strEstado
+                                    AND IPG.ID_PREGUNTA    = :intIdPregunta
+                                    AND ISU.RESTAURANTE_ID = :intIdRestaurante ";
+
+            $objQuery->setParameter("intValorPregunta" ,$intValorPregunta);
+            $objQuery->setParameter("strEstado"       ,"ACTIVO");
+            $objQuery->setParameter("intIdPregunta"   ,$intIdPregunta);
+            $objQuery->setParameter("intIdRestaurante",$intIdRestaurante);
+
+            $objRsmBuilder->addScalarResult('DESCRIPCION' , 'DESCRIPCION' , 'string');
+            $objRsmBuilder->addScalarResult('PROMEDIO'    , 'PROMEDIO'    , 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayRespuesta['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        return $arrayRespuesta;
+    }
 }

@@ -2,39 +2,29 @@
 
 namespace App\Entity;
 
-use App\Repository\InfoCuponRepository;
+use App\Repository\AdmiTipoCuponRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * InfoCupon
- * 
- * @ORM\Table(name="INFO_CUPON")
- * @ORM\Entity(repositoryClass=InfoCuponRepository::class)
+ * AdmiTipoCupon
+ *
+ * @ORM\Table(name="ADMI_TIPO_CUPON")
+ * @ORM\Entity(repositoryClass=AdmiTipoCuponRepository::class)
  */
-class InfoCupon
+class AdmiTipoCupon
 {
     /**
-     * @ORM\Column(name="ID_CUPON", type="integer", nullable=false)
+     * @ORM\Column(name="ID_TIPO_CUPON", type="integer")
      * @ORM\Id()
-     * @ORM\GeneratedValue()
+     * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
     private $id;
 
     /**
-    * @var AdmiTipoCupon
-    *
-    * @ORM\ManyToOne(targetEntity="AdmiTipoCupon")
-    * @ORM\JoinColumns({
-    * @ORM\JoinColumn(name="TIPO_CUPON_ID", referencedColumnName="ID_TIPO_CUPON")
-    * })
-    */
-    private $TIPOCUPONID;
-
-    /**
-     * @ORM\Column(type="string", length=100)
+     * @ORM\Column(type="string", length=255)
      */
-    private $CUPON;
+    private $DESCRIPCION;
 
     /**
      * @ORM\Column(type="string", length=100)
@@ -52,7 +42,7 @@ class InfoCupon
     private $FE_CREACION;
 
     /**
-     * @ORM\Column(type="string", length=225, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $USR_MODIFICACION;
 
@@ -66,38 +56,14 @@ class InfoCupon
         return $this->id;
     }
 
-    /**
-     * Set TIPOCUPONID
-     *
-     * @param \App\Entity\AdmiTipoCupon $TIPOCUPONID
-     *
-     * @return InfoCupon
-     */
-    public function setTIPOCUPONID(\App\Entity\AdmiTipoCupon $TIPOCUPONID = null)
+    public function getDESCRIPCION(): ?string
     {
-        $this->TIPOCUPONID = $TIPOCUPONID;
-
-        return $this;
+        return $this->DESCRIPCION;
     }
 
-    /**
-     * Get TIPOCUPONID
-     *
-     * @return \App\Entity\AdmiTipoCupon
-     */
-    public function getTIPOCUPONID()
+    public function setDESCRIPCION(string $DESCRIPCION): self
     {
-        return $this->TIPOCUPONID;
-    }
-
-    public function getCUPON(): ?string
-    {
-        return $this->CUPON;
-    }
-
-    public function setCUPON(string $CUPON): self
-    {
-        $this->CUPON = $CUPON;
+        $this->DESCRIPCION = $DESCRIPCION;
 
         return $this;
     }

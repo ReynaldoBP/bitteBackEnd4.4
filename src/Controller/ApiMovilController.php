@@ -35,9 +35,11 @@ use App\Entity\InfoCodigoPromocion;
 use App\Entity\InfoCodigoPromocionHistorial;
 use App\Entity\AdmiCiudad;
 use App\Entity\InfoCupon;
+use App\Entity\AdmiTipoCupon;
 use App\Entity\InfoCuponHistorial;
 use App\Entity\InfoPlantilla;
 use App\Entity\InfoUsuarioRes;
+use App\Entity\InfoBanner;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -127,6 +129,10 @@ class ApiMovilController extends FOSRestController
               case 'getClienteEncuestaPorRangoDia':$arrayRespuesta = $this->getClienteEncuestaPorRangoDia($arrayData);
               break;
               case 'getContenido':$arrayRespuesta = $this->getContenido($arrayData);
+              break;
+              case 'getBanner':$arrayRespuesta = $this->getBanner($arrayData);
+              break;
+              case 'getSucursalPorRestaurante':$arrayRespuesta = $this->getSucursalPorRestaurante($arrayData);
               break;
               default:
                $objResponse->setContent(json_encode(array(
@@ -923,69 +929,31 @@ class ApiMovilController extends FOSRestController
         {
             $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
-        /*if($conImagen == 'SI')
-        {
-            foreach ($arrayRestaurante['resultados'] as &$item)
-            {
-                if($item['IMAGEN'])
-                {
-                    $item['IMAGEN'] = $objController->getImgBase64($item['IMAGEN']);
-                }
-            }
-        }
-
-        if($conIcono == 'SI')
-        {
-            foreach ($arrayRestaurante['resultados'] as &$item)
-            {
-                if($item['ICONO'])
-                {
-                    $item['ICONO'] = $objController->getImgBase64($item['ICONO']);
-                }
-            }
-        }
-        $objParametro    = $this->getDoctrine()
-                                ->getRepository(AdmiParametro::class)
-                                ->findOneBy(array('ESTADO'      => 'ACTIVO',
-                                                  'DESCRIPCION' => 'NUM_PUBLICIDAD'));
-        if(!is_object($objParametro) || empty($objParametro))
-        {
-            throw new \Exception('No existe parametrizado el número de publicidad.');
-        }*/
         $arrayResultado = array();
         foreach($arrayRestaurante['resultados'] as &$arrayItemRestaurante)
         {
-            /*if($intContadorRes == $objParametro->getVALOR1())
+            $arrayResultadoProPreg = array();
+            $objPregunta           = $this->getDoctrine()
+                                          ->getRepository(InfoPregunta::class)
+                                          ->findBy(array('ESTADO' => "ACTIVO"));
+            if(!empty($objPregunta) && is_array($objPregunta))
             {
-                $arrayPublicidad = (array) $this->getDoctrine()
-                                                ->getRepository(InfoPublicidad::class)
-                                                ->getPublicidadCriterioMovil(array('GENERO'      => 'TODOS',
-                                                                                   'ORIENTACION' => 'HORIZONTAL'));
-                if(empty($arrayPublicidad))
+                foreach($objPregunta as $objItemPregunta)
                 {
-                    $arrayItemRestaurante['ES_PUBLICIDAD'] = 'N';
-                }
-                else
-                {
-                    $arrayResultado ['resultados'] []= array('NOMBRE_COMERCIAL' =>   $arrayPublicidad['resultados'][0]['DESCRIPCION'],
-                                                             'ICONO'            =>   (!empty($arrayPublicidad['resultados'][0]['IMAGEN']) && $conIcono == 'SI')? $objController->getImgBase64($arrayPublicidad['resultados'][0]['IMAGEN']) :null,
-                                                             'ES_PUBLICIDAD'    =>  'S');
-                    $intContadorRes                  = 0;
-                    if((!empty($intIdRestaurante) && !empty($intIdCliente)) && (!empty($arrayPublicidad['resultados'][0]['ID_PUBLICIDAD'])))
+                    if($objItemPregunta->getOPCIONRESPUESTAID()->getDESCRIPCION() == "5 Estrellas")
                     {
-                        $entityVistaPubl = new InfoVistaPublicidad();
-                        $entityVistaPubl->setCLIENTEID($this->getDoctrine()->getRepository(InfoCliente::class)->find($intIdCliente));
-                        $entityVistaPubl->setRESTAURANTEID($this->getDoctrine()->getRepository(InfoRestaurante::class)->find($intIdRestaurante));
-                        $entityVistaPubl->setPUBLICIDADID($this->getDoctrine()->getRepository(InfoPublicidad::class)->find($arrayPublicidad['resultados'][0]['ID_PUBLICIDAD']));
-                        $entityVistaPubl->setESTADO(strtoupper('ACTIVO'));
-                        $entityVistaPubl->setUSRCREACION($strUsuarioCreacion);
-                        $entityVistaPubl->setFECREACION($strDatetimeActual);
-                        $em->persist($entityVistaPubl);
-                        $em->flush();
+                        $arrayPromedioPregunta = $this->getDoctrine()
+                                                      ->getRepository(InfoRespuesta::class)
+                                                      ->getPromedioPregunta(array("intIdRestaurante" => $arrayItemRestaurante['ID_RESTAURANTE'],
+                                                                                  "intValorPregunta" => $objItemPregunta->getOPCIONRESPUESTAID()->getVALOR(),
+                                                                                  "intIdPregunta"    => $objItemPregunta->getId()));
+                        if(!empty($arrayPromedioPregunta["resultados"]))
+                        {
+                            $arrayResultadoProPreg [] = $arrayPromedioPregunta["resultados"][0];
+                        }
                     }
                 }
             }
-            $intContadorRes ++;*/
             $arraySucursal["resultados"][$intIterador]["ES_AFILIADO"] = (!empty($item["ES_AFILIADO"]) && $item["ES_AFILIADO"] == "SI") ? 'S':'N';
             $arrayResultado ['resultados'] []= array('ID_RESTAURANTE'          =>   $arrayItemRestaurante['ID_RESTAURANTE'],
                                                      'TIPO_IDENTIFICACION'     =>   $arrayItemRestaurante['TIPO_IDENTIFICACION'],
@@ -997,6 +965,7 @@ class ApiMovilController extends FOSRestController
                                                      'DESCRIPCION_TIPO_COMIDA' =>   $arrayItemRestaurante['DESCRIPCION_TIPO_COMIDA'],
                                                      'DIRECCION_TRIBUTARIO'    =>   $arrayItemRestaurante['DIRECCION_TRIBUTARIO'],
                                                      'URL_CATALOGO'            =>   $arrayItemRestaurante['URL_CATALOGO'],
+                                                     'URL_RED_SOCIAL'          =>   $arrayItemRestaurante['URL_RED_SOCIAL'],
                                                      'NUMERO_CONTACTO'         =>   $arrayItemRestaurante['NUMERO_CONTACTO'],
                                                      'ESTADO'                  =>   $arrayItemRestaurante['ESTADO'],
                                                      //'IMAGEN'                  =>   $arrayItemRestaurante['IMAGEN'],
@@ -1007,17 +976,15 @@ class ApiMovilController extends FOSRestController
                                                      'PRO_ENCUESTAS'           =>   $arrayItemRestaurante['PRO_ENCUESTAS'],
                                                      'ID_LIKE'                 =>   $arrayItemRestaurante['ID_LIKE'] ? $arrayItemRestaurante['ID_LIKE']:null,
                                                      'PRO_ENCUESTAS_CLT'       =>   $arrayItemRestaurante['PRO_ENCUESTAS_CLT'] ? $arrayItemRestaurante['PRO_ENCUESTAS_CLT']:null,
+                                                     'PRO_ENCUESTAS_PRG'       =>   $arrayResultadoProPreg ? $arrayResultadoProPreg:null,
                                                      'ES_PUBLICIDAD'           =>  'N',
                                                      'ES_AFILIADO'             =>  (!empty($arrayItemRestaurante["ES_AFILIADO"]) && $arrayItemRestaurante["ES_AFILIADO"] == "SI") ? 'S':'N');
         }
         $arrayResultado['error'] = $strMensajeError;
         $em->getConnection()->commit();
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayResultado,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayResultado,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -3560,17 +3527,43 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception("No existe Cupón válido");
             }
-            $objCupon->setESTADO("CANJEADO");
-            $em->persist($objCupon);
-            $em->flush();
-            $entityCuponHistorial = new InfoCuponHistorial();
-            $entityCuponHistorial->setESTADO("CANJEADO");
-            $entityCuponHistorial->setCUPONID($objCupon);
-            $entityCuponHistorial->setCLIENTEID($objCliente);
-            $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
-            $entityCuponHistorial->setFECREACION($strDatetimeActual);
-            $em->persist($entityCuponHistorial);
-            $em->flush();
+            /**
+             * Bloque que valida si el cupon es de tipo general o único.
+             */
+            if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "GENERAL")
+            {
+                $objCuponHist = $this->getDoctrine()
+                                     ->getRepository(InfoCuponHistorial::class)
+                                     ->findOneBy(array("CUPON_ID"   => $objCupon->getId(),
+                                                       "CLIENTE_ID" => $objCliente->getId(),
+                                                       "ESTADO"     => "CANJEADO"));
+                if(is_object($objCuponHist) && !empty($objCuponHist))
+                {
+                    throw new \Exception("Cupón no válido, ya a sido canjeado.");
+                }
+                $entityCuponHistorial = new InfoCuponHistorial();
+                $entityCuponHistorial->setESTADO("CANJEADO");
+                $entityCuponHistorial->setCUPONID($objCupon);
+                $entityCuponHistorial->setCLIENTEID($objCliente);
+                $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponHistorial->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponHistorial);
+                $em->flush();
+            }
+            else
+            {
+                $objCupon->setESTADO("CANJEADO");
+                $em->persist($objCupon);
+                $em->flush();
+                $entityCuponHistorial = new InfoCuponHistorial();
+                $entityCuponHistorial->setESTADO("CANJEADO");
+                $entityCuponHistorial->setCUPONID($objCupon);
+                $entityCuponHistorial->setCLIENTEID($objCliente);
+                $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponHistorial->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponHistorial);
+                $em->flush();
+            }
             $objParametroCupon = $this->getDoctrine()
                                       ->getRepository(AdmiParametro::class)
                                       ->findOneBy(array('DESCRIPCION' => 'CANT_PUNTOS_CLT_CUPON',
@@ -3622,7 +3615,7 @@ class ApiMovilController extends FOSRestController
         {
             $boolSucces = false;
             $strStatus  = 204;
-            $strMensaje = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            $strMensaje = ($ex->getMessage() != "") ? $ex->getMessage() : "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
             if ($em->getConnection()->isTransactionActive())
             {
                 $em->getConnection()->rollback();
@@ -3736,6 +3729,107 @@ class ApiMovilController extends FOSRestController
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $arrayRespuesta,
                                                    'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'getBanner'
+     *
+     * Método encargado de retornar todos los banner según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 28-07-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getBanner($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdBanner          = $arrayData['intIdBanner']        ? $arrayData['intIdBanner']:'';
+        $strDescripcion       = $arrayData['strDescripcion']     ? $arrayData['strDescripcion']:'';
+        $strEstado            = $arrayData['strEstado']          ? $arrayData['strEstado']:'';
+        $strUsuarioCreacion   = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $arrayRespuesta       = array();
+        $strMensajeError      = '';
+        $strStatus            = 200;
+        $objResponse          = new Response;
+        try
+        {
+            $objController = new DefaultController();
+            $objController->setContainer($this->container);
+            $arrayParametros = array('intIdBanner'    => $intIdBanner,
+                                     'strDescripcion' => $strDescripcion,
+                                     'strEstado'      => $strEstado);
+            $arrayBanner     = $this->getDoctrine()
+                                    ->getRepository(InfoBanner::class)
+                                    ->getBannerCriterioMovil($arrayParametros);
+            if(!empty($arrayBanner["error"]))
+            {
+                throw new \Exception($arrayBanner['error']);
+            }
+            foreach($arrayBanner['resultados'] as &$arrayItemBanner)
+            {
+                $arrayRespuesta ['resultados'] []= array('intIdBanner'         =>   $arrayItemBanner['ID_BANNER'],
+                                                         'strDescripcion'      =>   $arrayItemBanner['DESCRIPCION'],
+                                                         'strEstado'           =>   $arrayItemBanner['ESTADO'],
+                                                         'strImagen'           =>   $objController->getImgBase64Banner($arrayItemBanner['IMAGEN']));
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'getSucursalPorRestaurante'
+     *
+     * Método encargado de retornar todos las sucursales según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 27-07-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getSucursalPorRestaurante($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdRestaurante   = $arrayData['intIdRestaurante']   ? $arrayData['intIdRestaurante']:'';
+        $strEstado          = $arrayData['strEstado']          ? $arrayData['strEstado']:'ACTIVO';
+        $strUsuarioCreacion = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $strStatus          = 200;
+        $objResponse        = new Response;
+        try
+        {
+            $objSucursal = $this->getDoctrine()
+                                ->getRepository(InfoSucursal::class)
+                                ->findBy(array("RESTAURANTEID"     => $intIdRestaurante,
+                                               "ESTADOFACTURACION" => $strEstado),
+                                         array("DESCRIPCION" => "ASC"));
+            foreach($objSucursal as $objItem)
+            {
+                $arrayRespuesta ['resultados'] []= array('intIdSucursal'        => $objItem->getId(),
+                                                         'strDescripcion'       => $objItem->getDESCRIPCION(),
+                                                         'strEstadoFacturacion' => $objItem->getESTADOFACTURACION(),
+                                                         'strNumContacto'       => $objItem->getNUMEROCONTACTO(),
+                                                         'strDireccion'         => $objItem->getDIRECCION());
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }

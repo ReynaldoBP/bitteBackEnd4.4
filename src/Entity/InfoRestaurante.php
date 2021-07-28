@@ -83,6 +83,13 @@ class InfoRestaurante
     /**
      * @var string
      *
+     * @ORM\Column(name="URL_RED_SOCIAL", type="string", length=255, nullable=true)
+     */
+    private $URLREDSOCIAL;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="IMAGEN", type="string", length=450, nullable=true)
      */
     private $IMAGEN;
@@ -327,6 +334,30 @@ class InfoRestaurante
     public function getURLCATALOGO()
     {
         return $this->URLCATALOGO;
+    }
+
+    /**
+     * Set URLREDSOCIAL
+     *
+     * @param string $URLREDSOCIAL
+     *
+     * @return InfoRestaurante
+     */
+    public function setURLREDSOCIAL($URLREDSOCIAL)
+    {
+        $this->URLREDSOCIAL = $URLREDSOCIAL;
+
+        return $this;
+    }
+
+    /**
+     * Get URLREDSOCIAL
+     *
+     * @return string
+     */
+    public function getURLREDSOCIAL()
+    {
+        return $this->URLREDSOCIAL;
     }
 
     /**

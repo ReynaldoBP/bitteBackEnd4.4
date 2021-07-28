@@ -169,6 +169,7 @@ class ApiWebController extends FOSRestController
         $strRepresentanteLegal  = $arrayData['representanteLegal'] ? $arrayData['representanteLegal']:'';
         $strDireccionTributario = $arrayData['direcion'] ? $arrayData['direcion']:'';
         $strUrlCatalogo         = $arrayData['urlCatalogo'] ? $arrayData['urlCatalogo']:'';
+        $strUrlRedSocial        = $arrayData['urlRedSocial'] ? $arrayData['urlRedSocial']:'';
         $strNumeroContacto      = $arrayData['numeroContacto'] ? $arrayData['numeroContacto']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
         $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
@@ -233,6 +234,7 @@ class ApiWebController extends FOSRestController
             $entityRestaurante->setREPRESENTANTELEGAL($strRepresentanteLegal);
             $entityRestaurante->setDIRECCIONTRIBUTARIO($strDireccionTributario);
             $entityRestaurante->setURLCATALOGO($strUrlCatalogo);
+            $entityRestaurante->setURLREDSOCIAL($strUrlRedSocial);
             $entityRestaurante->setIMAGEN($strRutaImagen);
             $entityRestaurante->setICONO($strRutaIcono);
             $entityRestaurante->setNUMEROCONTACTO($strNumeroContacto);
@@ -280,6 +282,10 @@ class ApiWebController extends FOSRestController
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Url Catalogo",
                                            'VALOR_ANTERIOR' => "",
                                            'VALOR_ACTUAL'   => $strUrlCatalogo,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Url Red Social",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $strUrlRedSocial,
                                            'USUARIO_ID'     => $strUsuarioCreacion);
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Número Contacto",
                                            'VALOR_ANTERIOR' => "",
@@ -353,6 +359,7 @@ class ApiWebController extends FOSRestController
         $strRepresentanteLegal  = $arrayData['representanteLegal'] ? $arrayData['representanteLegal']:'';
         $strDireccionTributario = $arrayData['direcion'] ? $arrayData['direcion']:'';
         $strUrlCatalogo         = $arrayData['urlCatalogo'] ? $arrayData['urlCatalogo']:'';
+        $strUrlRedSocial        = $arrayData['urlRedSocial'] ? $arrayData['urlRedSocial']:'';
         $strNumeroContacto      = $arrayData['numeroContacto'] ? $arrayData['numeroContacto']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
         $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
@@ -473,6 +480,14 @@ class ApiWebController extends FOSRestController
                                                'USUARIO_ID'     => $strUsuarioCreacion);
                 $objRestaurante->setURLCATALOGO($strUrlCatalogo);
             }
+            if(!empty($strUrlRedSocial))
+            {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Url Red Social",
+                                               'VALOR_ANTERIOR' => $objRestaurante->getURLREDSOCIAL(),
+                                               'VALOR_ACTUAL'   => $strUrlRedSocial,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $objRestaurante->setURLREDSOCIAL($strUrlRedSocial);
+            }
             if(!empty($strNumeroContacto))
             {
                 $arrayBitacoraDetalle[]= array('CAMPO'          => "Número Contacto",
@@ -542,12 +557,9 @@ class ApiWebController extends FOSRestController
             $em->getConnection()->commit();
             $em->getConnection()->close();
         }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $strMensajeError,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -3948,14 +3960,14 @@ class ApiWebController extends FOSRestController
     public function getBanner($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strIdBanner       = $arrayData['strIdBanner']     ? $arrayData['strIdBanner']:'';
-        $strDescripcion    = $arrayData['strDescripcion']  ? $arrayData['strDescripcion']:'';
-        $strEstado         = $arrayData['strEstado']       ? $arrayData['strEstado']:'';
-        $usuarioCreacion   = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
-        $arrayRespuesta    = array();
-        $strMensajeError   = '';
-        $strStatus         = 200;
-        $objResponse       = new Response;
+        $strIdBanner        = $arrayData['strIdBanner']     ? $arrayData['strIdBanner']:'';
+        $strDescripcion     = $arrayData['strDescripcion']  ? $arrayData['strDescripcion']:'';
+        $strEstado          = $arrayData['strEstado']       ? $arrayData['strEstado']:'';
+        $strUsuarioCreacion = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $strStatus          = 200;
+        $objResponse        = new Response;
         try
         {
             $objController = new DefaultController();
@@ -4057,8 +4069,10 @@ class ApiWebController extends FOSRestController
                         $entityDetalleBitacora = new InfoDetalleBitacora();
                         $entityDetalleBitacora->setBITACORAID($entityBitacora);
                         $entityDetalleBitacora->setCAMPO($arrayItemDetalle["CAMPO"]);
-                        $entityDetalleBitacora->setVALORANTERIOR($arrayItemDetalle["VALOR_ANTERIOR"]);
-                        $entityDetalleBitacora->setVALORACTUAL($arrayItemDetalle["VALOR_ACTUAL"]);
+                        $strValorAnterior = (!empty($arrayItemDetalle["VALOR_ANTERIOR"])) ? $arrayItemDetalle["VALOR_ANTERIOR"] :"";
+                        $entityDetalleBitacora->setVALORANTERIOR($strValorAnterior);
+                        $strValorActual   = (!empty($arrayItemDetalle["VALOR_ACTUAL"]))   ? $arrayItemDetalle["VALOR_ACTUAL"]:"";
+                        $entityDetalleBitacora->setVALORACTUAL($strValorActual);
                         $entityDetalleBitacora->setFECREACION($strDatetimeActual->format('Y-m-d H:i:s'));
                         if(!empty($arrayItemDetalle["USUARIO_ID"]))
                         {

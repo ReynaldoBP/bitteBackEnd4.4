@@ -72,4 +72,64 @@ class InfoBannerRepository extends \Doctrine\ORM\EntityRepository
         $arrayResultado['error'] = $strMensajeError;
         return $arrayResultado;
     }
+
+    /**
+     * Documentación para la función 'getBannerCriterioMovil'.
+     *
+     * Método encargado de retornar todos los banner según los parámetros enviados.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 28-07-2021
+     * 
+     * @return array  $arrayResultado
+     * 
+     */
+    public function getBannerCriterioMovil($arrayParametros)
+    {
+        $strEstado       = $arrayParametros['strEstado']      ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
+        $strDescripcion  = $arrayParametros['strDescripcion'] ? $arrayParametros['strDescripcion']:'';
+        $intIdBanner     = $arrayParametros['intIdBanner']    ? $arrayParametros['intIdBanner']:'';
+        $arrayResultado  = array();
+        $objRsmBuilder   = new ResultSetMappingBuilder($this->_em);
+        $objQuery        = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $strMensajeError = '';
+        $strSelect       = '';
+        $strFrom         = '';
+        $strWhere        = '';
+        $strOrder        = 'ORDER BY FE_CREACION ASC';
+        try
+        {
+            $strSelect = " SELECT ID_BANNER,
+                                  DESCRIPCION,
+                                  ESTADO,
+                                  IMAGEN ";
+            $strFrom   = "FROM INFO_BANNER ";
+            $strWhere  = "WHERE ESTADO in (:ESTADO) ";
+            $objQuery->setParameter("ESTADO", $strEstado);
+            if(!empty($intIdBanner))
+            {
+                $strWhere .= " AND ID_BANNER = :ID_BANNER ";
+                $objQuery->setParameter("ID_BANNER", $intIdBanner);
+            }
+            if(!empty($strDescripcion))
+            {
+                $strWhere .= " AND lower(DESCRIPCION) LIKE lower(:DESCRIPCION)";
+                $objQuery->setParameter("DESCRIPCION", '%' . trim($strDescripcion) . '%');
+            }
+            $objRsmBuilder->addScalarResult('ID_BANNER', 'ID_BANNER', 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
+            $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
+            $objRsmBuilder->addScalarResult('IMAGEN', 'IMAGEN', 'string');
+
+            $strSql  = $strSelect.$strFrom.$strWhere.$strOrder;
+            $objQuery->setSQL($strSql);
+            $arrayResultado['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayResultado['error'] = $strMensajeError;
+        return $arrayResultado;
+    }
 }
