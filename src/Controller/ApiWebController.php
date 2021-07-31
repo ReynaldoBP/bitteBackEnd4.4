@@ -1833,68 +1833,74 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 27-09-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 30-07-2021 - Se agrega parámetro Restaurante, para realizar el filtro.
+     *
      * @return array  $objResponse
      */
     public function getClienteEncuesta($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $intIdUsuario      = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
-        $strEstado          = $arrayData['strEstado'] ? $arrayData['strEstado']:'';
-        $strMes             = $arrayData['strMes'] ? $arrayData['strMes']:'';
-        $strAnio            = $arrayData['strAnio'] ? $arrayData['strAnio']:'';
+        $intIdRestaurante   = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
+        $intIdUsuario       = $arrayData['intIdUsuario']     ? $arrayData['intIdUsuario']:'';
+        $strEstado          = $arrayData['strEstado']        ? $arrayData['strEstado']:'';
+        $strMes             = $arrayData['strMes']           ? $arrayData['strMes']:'';
+        $strAnio            = $arrayData['strAnio']          ? $arrayData['strAnio']:'';
         $arrayCltEncuesta   = array();
         $strMensajeError    = '';
-        $strStatus          = 400;
+        $strStatus          = 200;
+        $boolSucces         = true;
         $objResponse        = new Response;
         try
         {
-            $objUsuario = $this->getDoctrine()
-                               ->getRepository(InfoUsuario::class)
-                               ->find($intIdUsuario);
-            if(!empty($objUsuario) && is_object($objUsuario))
+            if(empty($intIdRestaurante))
             {
-                $objTipoRol = $this->getDoctrine()
-                                    ->getRepository(AdmiTipoRol::class)
-                                    ->find($objUsuario->getTIPOROLID()->getId());
-                if(!empty($objTipoRol) && is_object($objTipoRol))
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
                 {
-                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
-                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    $objTipoRol = $this->getDoctrine()
+                                       ->getRepository(AdmiTipoRol::class)
+                                       ->find($objUsuario->getTIPOROLID()->getId());
+                    if(!empty($objTipoRol) && is_object($objTipoRol))
                     {
-                        $intIdRestaurante = '';
-                    }
-                    else
-                    {
-                        $objUsuarioRes = $this->getDoctrine()
-                                              ->getRepository(InfoUsuarioRes::class)
-                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
-                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                        if(!empty($strTipoRol) && $strTipoRol == "ADMINISTRADOR")
+                        {
+                            $intIdRestaurante = '';
+                        }
+                        else
+                        {
+                            $objUsuarioRes = $this->getDoctrine()
+                                                  ->getRepository(InfoUsuarioRes::class)
+                                                  ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                            $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        }
                     }
                 }
             }
             $arrayCltEncuesta   = $this->getDoctrine()
                                        ->getRepository(InfoClienteEncuesta::class)
-                                       ->getClienteEncuesta(array('strEstado' => $strEstado,
-                                                                  'strMes'    => $strMes,
-                                                                  'intIdRestaurante'=>$intIdRestaurante,
-                                                                  'strAnio'   => $strAnio));
+                                       ->getClienteEncuesta(array('strEstado'        => $strEstado,
+                                                                  'strMes'           => $strMes,
+                                                                  'intIdRestaurante' => $intIdRestaurante,
+                                                                  'strAnio'          => $strAnio));
             if(isset($arrayCltEncuesta['error']) && !empty($arrayCltEncuesta['error']))
             {
-                $strStatus  = 404;
                 throw new \Exception($arrayCltEncuesta['error']);
             }
         }
         catch(\Exception $ex)
         {
+            $boolSucces      = false;
+            $strStatus       = 204;
             $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
         $arrayCltEncuesta['error'] = $strMensajeError;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayCltEncuesta,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayCltEncuesta,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -1905,42 +1911,50 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 16-10-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 30-07-2021 - Se agrega parámetro Restaurante, para realizar el filtro.
+     *
      * @return array  $objResponse
      */
     public function getClienteEncuestaSemestral($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strEstado          = $arrayData['strEstado'] ? $arrayData['strEstado']:'';
-        $strLimite          = $arrayData['strLimite'] ? $arrayData['strLimite']:'';
-        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
+        $strEstado          = $arrayData['strEstado']        ? $arrayData['strEstado']:'';
+        $strLimite          = $arrayData['strLimite']        ? $arrayData['strLimite']:'';
+        $intIdRestaurante   = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
+        $intIdUsuario       = $arrayData['intIdUsuario']     ? $arrayData['intIdUsuario']:'';
         $arrayCltEncuesta   = array();
         $strMensajeError    = '';
-        $strStatus          = 400;
+        $strStatus          = 200;
+        $boolSucces         = true;
         $objResponse        = new Response;
         try
         {
-            $objUsuario = $this->getDoctrine()
-                               ->getRepository(InfoUsuario::class)
-                               ->find($intIdUsuario);
-            if(!empty($objUsuario) && is_object($objUsuario))
+            if(empty($intIdRestaurante))
             {
-                $objTipoRol = $this->getDoctrine()
-                                    ->getRepository(AdmiTipoRol::class)
-                                    ->find($objUsuario->getTIPOROLID()->getId());
-                if(!empty($objTipoRol) && is_object($objTipoRol))
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
                 {
-                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
-                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    $objTipoRol = $this->getDoctrine()
+                                       ->getRepository(AdmiTipoRol::class)
+                                       ->find($objUsuario->getTIPOROLID()->getId());
+                    if(!empty($objTipoRol) && is_object($objTipoRol))
                     {
-                        $intIdRestaurante = '';
-                    }
-                    else
-                    {
-                        $objUsuarioRes = $this->getDoctrine()
-                                              ->getRepository(InfoUsuarioRes::class)
-                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
-                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                        if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                        {
+                            $intIdRestaurante = '';
+                        }
+                        else
+                        {
+                            $objUsuarioRes = $this->getDoctrine()
+                                                  ->getRepository(InfoUsuarioRes::class)
+                                                  ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                            $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        }
                     }
                 }
             }
@@ -1951,21 +1965,19 @@ class ApiWebController extends FOSRestController
                                                                            'strLimite'        => $strLimite));
             if(isset($arrayCltEncuesta['error']) && !empty($arrayCltEncuesta['error']))
             {
-                $strStatus  = 404;
                 throw new \Exception($arrayCltEncuesta['error']);
             }
         }
         catch(\Exception $ex)
         {
+            $boolSucces      = false;
+            $strStatus       = 204;
             $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
         $arrayCltEncuesta['error'] = $strMensajeError;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayCltEncuesta,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayCltEncuesta,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -1976,68 +1988,73 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 16-10-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 30-07-2021 - Se agrega parámetro Restaurante, para realizar el filtro.
+     *
      * @return array  $objResponse
      */
     public function getClienteEncuestaSemanal($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strEstado          = $arrayData['strEstado'] ? $arrayData['strEstado']:'';
-        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
-        $strLimite          = $arrayData['strLimite'] ? $arrayData['strLimite']:'';
+        $strEstado          = $arrayData['strEstado']        ? $arrayData['strEstado']:'';
+        $strLimite          = $arrayData['strLimite']        ? $arrayData['strLimite']:'';
+        $intIdUsuario       = $arrayData['intIdUsuario']     ? $arrayData['intIdUsuario']:'';
+        $intIdRestaurante   = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
         $arrayCltEncuesta   = array();
         $strMensajeError    = '';
-        $strStatus          = 400;
+        $strStatus          = 200;
+        $boolSucces         = true;
         $objResponse        = new Response;
         try
         {
-            $objUsuario = $this->getDoctrine()
-                               ->getRepository(InfoUsuario::class)
-                               ->find($intIdUsuario);
-            if(!empty($objUsuario) && is_object($objUsuario))
+            if(empty($intIdRestaurante))
             {
-                $objTipoRol = $this->getDoctrine()
-                                    ->getRepository(AdmiTipoRol::class)
-                                    ->find($objUsuario->getTIPOROLID()->getId());
-                if(!empty($objTipoRol) && is_object($objTipoRol))
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
                 {
-                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
-                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    $objTipoRol = $this->getDoctrine()
+                                       ->getRepository(AdmiTipoRol::class)
+                                       ->find($objUsuario->getTIPOROLID()->getId());
+                    if(!empty($objTipoRol) && is_object($objTipoRol))
                     {
-                        $intIdRestaurante = '';
-                    }
-                    else
-                    {
-                        $objUsuarioRes = $this->getDoctrine()
-                                              ->getRepository(InfoUsuarioRes::class)
-                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
-                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                        if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                        {
+                            $intIdRestaurante = '';
+                        }
+                        else
+                        {
+                            $objUsuarioRes = $this->getDoctrine()
+                                                  ->getRepository(InfoUsuarioRes::class)
+                                                  ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                            $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        }
                     }
                 }
             }
-
             $arrayCltEncuesta   = $this->getDoctrine()
                                        ->getRepository(InfoClienteEncuesta::class)
-                                       ->getClienteEncuestaSemanal(array('strEstado'  => $strEstado,
+                                       ->getClienteEncuestaSemanal(array('strEstado'        => $strEstado,
                                                                          'intIdRestaurante' => $intIdRestaurante,
-                                                                         'strLimite'  => $strLimite));
+                                                                         'strLimite'        => $strLimite));
             if(isset($arrayCltEncuesta['error']) && !empty($arrayCltEncuesta['error']))
             {
-                $strStatus  = 404;
                 throw new \Exception($arrayCltEncuesta['error']);
             }
         }
         catch(\Exception $ex)
         {
-            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            $boolSucces      = false;
+            $strStatus       = 204;
+            $strMensajeError = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
         $arrayCltEncuesta['error'] = $strMensajeError;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayCltEncuesta,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayCltEncuesta,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -2606,67 +2623,73 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 17-10-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 30-07-2021 - Se agrega parámetro Restaurante, para realizar el filtro.
+     *
      * @return array  $objResponse
      */
     public function getRedesSocialMensual($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strMes             = $arrayData['strMes'] ? $arrayData['strMes']:'';
-        $strAnio            = $arrayData['strAnio'] ? $arrayData['strAnio']:'';
-        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
+        $strMes             = $arrayData['strMes']           ? $arrayData['strMes']:'';
+        $strAnio            = $arrayData['strAnio']          ? $arrayData['strAnio']:'';
+        $intIdUsuario       = $arrayData['intIdUsuario']     ? $arrayData['intIdUsuario']:'';
+        $intIdRestaurante   = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
         $arrayRedSocial     = array();
         $strMensajeError    = '';
-        $strStatus          = 400;
+        $strStatus          = 200;
+        $boolSucces         = true;
         $objResponse        = new Response;
         try
         {
-            $objUsuario = $this->getDoctrine()
-                               ->getRepository(InfoUsuario::class)
-                               ->find($intIdUsuario);
-            if(!empty($objUsuario) && is_object($objUsuario))
+            if(empty($intIdRestaurante))
             {
-                $objTipoRol = $this->getDoctrine()
-                                    ->getRepository(AdmiTipoRol::class)
-                                    ->find($objUsuario->getTIPOROLID()->getId());
-                if(!empty($objTipoRol) && is_object($objTipoRol))
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
                 {
-                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
-                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    $objTipoRol = $this->getDoctrine()
+                                       ->getRepository(AdmiTipoRol::class)
+                                       ->find($objUsuario->getTIPOROLID()->getId());
+                    if(!empty($objTipoRol) && is_object($objTipoRol))
                     {
-                        $intIdRestaurante = '';
-                    }
-                    else
-                    {
-                        $objUsuarioRes = $this->getDoctrine()
-                                              ->getRepository(InfoUsuarioRes::class)
-                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
-                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                        if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                        {
+                            $intIdRestaurante = '';
+                        }
+                        else
+                        {
+                            $objUsuarioRes = $this->getDoctrine()
+                                                  ->getRepository(InfoUsuarioRes::class)
+                                                  ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                            $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        }
                     }
                 }
             }
             $arrayRedSocial   = $this->getDoctrine()
                                      ->getRepository(InfoRedesSociales::class)
-                                     ->getRedesSocialMensual(array('strMes'   => $strMes,
-                                                                   'intIdRestaurante'=>$intIdRestaurante,
-                                                                   'strAnio'  => $strAnio));
+                                     ->getRedesSocialMensual(array('strMes'           => $strMes,
+                                                                   'intIdRestaurante' => $intIdRestaurante,
+                                                                   'strAnio'          => $strAnio));
             if(isset($arrayRedSocial['error']) && !empty($arrayRedSocial['error']))
             {
-                $strStatus  = 404;
                 throw new \Exception($arrayRedSocial['error']);
             }
         }
         catch(\Exception $ex)
         {
-            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            $boolSucces      = false;
+            $strStatus       = 204;
+            $strMensajeError = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
         $arrayRedSocial['error'] = $strMensajeError;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayRedSocial,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRedSocial,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -2677,67 +2700,73 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 16-10-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 30-07-2021 - Se agrega parámetro Restaurante, para realizar el filtro.
+     *
      * @return array  $objResponse
      */
     public function getClienteGenero($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strMes             = $arrayData['strMes'] ? $arrayData['strMes']:'';
-        $strAnio            = $arrayData['strAnio'] ? $arrayData['strAnio']:'';
-        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
-        $arrayCltEncuesta     = array();
+        $strMes             = $arrayData['strMes']           ? $arrayData['strMes']:'';
+        $strAnio            = $arrayData['strAnio']          ? $arrayData['strAnio']:'';
+        $intIdUsuario       = $arrayData['intIdUsuario']     ? $arrayData['intIdUsuario']:'';
+        $intIdRestaurante   = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
+        $arrayCltEncuesta   = array();
         $strMensajeError    = '';
-        $strStatus          = 400;
+        $strStatus          = 200;
+        $boolSucces         = true;
         $objResponse        = new Response;
         try
         {
-            $objUsuario = $this->getDoctrine()
-                               ->getRepository(InfoUsuario::class)
-                               ->find($intIdUsuario);
-            if(!empty($objUsuario) && is_object($objUsuario))
+            if(empty($intIdRestaurante))
             {
-                $objTipoRol = $this->getDoctrine()
-                                    ->getRepository(AdmiTipoRol::class)
-                                    ->find($objUsuario->getTIPOROLID()->getId());
-                if(!empty($objTipoRol) && is_object($objTipoRol))
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
                 {
-                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
-                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    $objTipoRol = $this->getDoctrine()
+                                       ->getRepository(AdmiTipoRol::class)
+                                       ->find($objUsuario->getTIPOROLID()->getId());
+                    if(!empty($objTipoRol) && is_object($objTipoRol))
                     {
-                        $intIdRestaurante = '';
-                    }
-                    else
-                    {
-                        $objUsuarioRes = $this->getDoctrine()
-                                              ->getRepository(InfoUsuarioRes::class)
-                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
-                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                        if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                        {
+                            $intIdRestaurante = '';
+                        }
+                        else
+                        {
+                            $objUsuarioRes = $this->getDoctrine()
+                                                  ->getRepository(InfoUsuarioRes::class)
+                                                  ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                            $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        }
                     }
                 }
             }
             $arrayCltEncuesta   = $this->getDoctrine()
                                        ->getRepository(InfoClienteEncuesta::class)
-                                       ->getClienteGenero(array('strMes'   => $strMes,
-                                                                'intIdRestaurante'=>$intIdRestaurante,
-                                                                'strAnio'  => $strAnio));
+                                       ->getClienteGenero(array('strMes'           => $strMes,
+                                                                'intIdRestaurante' => $intIdRestaurante,
+                                                                'strAnio'          => $strAnio));
             if(isset($arrayCltEncuesta['error']) && !empty($arrayCltEncuesta['error']))
             {
-                $strStatus  = 404;
                 throw new \Exception($arrayCltEncuesta['error']);
             }
         }
         catch(\Exception $ex)
         {
-            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            $boolSucces      = false;
+            $strStatus       = 204;
+            $strMensajeError = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
         $arrayCltEncuesta['error'] = $strMensajeError;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayCltEncuesta,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayCltEncuesta,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -2748,67 +2777,73 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 16-10-2019
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.1 30-07-2021 - Se agrega parámetro Restaurante, para realizar el filtro.
+     *
      * @return array  $objResponse
      */
     public function getClienteEdad($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strMes             = $arrayData['strMes'] ? $arrayData['strMes']:'';
-        $strAnio            = $arrayData['strAnio'] ? $arrayData['strAnio']:'';
-        $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
-        $arrayCltEncuesta     = array();
+        $strMes             = $arrayData['strMes']           ? $arrayData['strMes']:'';
+        $strAnio            = $arrayData['strAnio']          ? $arrayData['strAnio']:'';
+        $intIdUsuario       = $arrayData['intIdUsuario']     ? $arrayData['intIdUsuario']:'';
+        $intIdRestaurante   = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
+        $arrayCltEncuesta   = array();
         $strMensajeError    = '';
-        $strStatus          = 400;
+        $strStatus          = 200;
+        $boolSucces         = true;
         $objResponse        = new Response;
         try
         {
-            $objUsuario = $this->getDoctrine()
-                               ->getRepository(InfoUsuario::class)
-                               ->find($intIdUsuario);
-            if(!empty($objUsuario) && is_object($objUsuario))
+            if(empty($intIdRestaurante))
             {
-                $objTipoRol = $this->getDoctrine()
-                                    ->getRepository(AdmiTipoRol::class)
-                                    ->find($objUsuario->getTIPOROLID()->getId());
-                if(!empty($objTipoRol) && is_object($objTipoRol))
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
                 {
-                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
-                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    $objTipoRol = $this->getDoctrine()
+                                       ->getRepository(AdmiTipoRol::class)
+                                       ->find($objUsuario->getTIPOROLID()->getId());
+                    if(!empty($objTipoRol) && is_object($objTipoRol))
                     {
-                        $intIdRestaurante = '';
-                    }
-                    else
-                    {
-                        $objUsuarioRes = $this->getDoctrine()
-                                              ->getRepository(InfoUsuarioRes::class)
-                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
-                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                        if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                        {
+                            $intIdRestaurante = '';
+                        }
+                        else
+                        {
+                            $objUsuarioRes = $this->getDoctrine()
+                                                  ->getRepository(InfoUsuarioRes::class)
+                                                  ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                            $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        }
                     }
                 }
             }
             $arrayCltEncuesta   = $this->getDoctrine()
                                        ->getRepository(InfoClienteEncuesta::class)
-                                       ->getClienteEdad(array('strMes'   => $strMes,
-                                                              'intIdRestaurante'=>$intIdRestaurante,
-                                                              'strAnio'  => $strAnio));
+                                       ->getClienteEdad(array('strMes'           => $strMes,
+                                                              'intIdRestaurante' => $intIdRestaurante,
+                                                              'strAnio'          => $strAnio));
             if(isset($arrayCltEncuesta['error']) && !empty($arrayCltEncuesta['error']))
             {
-                $strStatus  = 404;
                 throw new \Exception($arrayCltEncuesta['error']);
             }
         }
         catch(\Exception $ex)
         {
-            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            $boolSucces      = false;
+            $strStatus       = 204;
+            $strMensajeError = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
         $arrayCltEncuesta['error'] = $strMensajeError;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayCltEncuesta,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayCltEncuesta,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }

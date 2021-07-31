@@ -50,7 +50,8 @@ class InfoSucursalController extends Controller
         $strUsuarioCreacion   = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
         $arraySucursal        = array();
         $strMensaje           = '';
-        $strStatus            = 400;
+        $boolSucces           = true;
+        $strStatus            = 200;
         $objResponse          = new Response;
         try
         {
@@ -71,21 +72,19 @@ class InfoSucursalController extends Controller
                                   ->getSucursalCriterio($arrayParametros);
             if(isset($arraySucursal['error']) && !empty($arraySucursal['error']))
             {
-                $strStatus  = 404;
                 throw new \Exception($arraySucursal['error']);
             }
         }
         catch(\Exception $ex)
         {
+            $boolSucces = false;
+            $strStatus  = 204;
             $strMensaje ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
         }
         $arraySucursal['error'] = $strMensaje;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arraySucursal,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arraySucursal,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
