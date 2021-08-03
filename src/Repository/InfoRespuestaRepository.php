@@ -849,7 +849,9 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
-            $strSelect      = " SELECT IPG.DESCRIPCION, IFNULL(AVG(IRES.RESPUESTA),0) AS PROMEDIO ";
+            $strSelect      = " SELECT IOR.DESCRIPCION AS TIPO_RESPUESTA,
+                                       IPG.DESCRIPCION, 
+                                       IFNULL(round(AVG(IRES.RESPUESTA),4),0) AS PROMEDIO ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
                                 INNER JOIN INFO_SUCURSAL ISU 
                                     ON ISU.ID_SUCURSAL = ICE.SUCURSAL_ID
@@ -869,8 +871,9 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $objQuery->setParameter("intIdPregunta"   ,$intIdPregunta);
             $objQuery->setParameter("intIdRestaurante",$intIdRestaurante);
 
-            $objRsmBuilder->addScalarResult('DESCRIPCION' , 'DESCRIPCION' , 'string');
-            $objRsmBuilder->addScalarResult('PROMEDIO'    , 'PROMEDIO'    , 'string');
+            $objRsmBuilder->addScalarResult('TIPO_RESPUESTA' , 'TIPO_RESPUESTA' , 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION' , 'DESCRIPCION'                , 'string');
+            $objRsmBuilder->addScalarResult('PROMEDIO'    , 'PROMEDIO'                   , 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayRespuesta['resultados'] = $objQuery->getResult();

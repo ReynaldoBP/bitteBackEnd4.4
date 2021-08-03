@@ -193,7 +193,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                                       ATC.DESCRIPCION_TIPO_COMIDA, 
                                       IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO,IR.URL_RED_SOCIAL, IR.NUMERO_CONTACTO, IR.ESTADO, IR.IMAGEN, IR.ICONO
                                       ,(SELECT COUNT(*) FROM INFO_LIKE_RES ILR_RES WHERE ILR_RES.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ILR_RES.ESTADO='ACTIVO') as CANT_LIKE
-                                      ,(SELECT IFNULL(AVG(SUB_IRES.RESPUESTA),0) 
+                                      ,(SELECT IFNULL(round(AVG(SUB_IRES.RESPUESTA),4),0) 
                                             FROM INFO_CLIENTE_ENCUESTA SUB_ICE
                                                 INNER JOIN INFO_SUCURSAL SUB_ISU 
                                                     ON SUB_ISU.ID_SUCURSAL = SUB_ICE.SUCURSAL_ID
@@ -239,7 +239,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             if(!empty($intIdCliente))
             {
                 $strSelect .= " ,(SELECT ILR.ID_LIKE FROM INFO_LIKE_RES ILR WHERE ILR.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ESTADO='ACTIVO' AND CLIENTE_ID=:CLIENTE_ID LIMIT 1) as ID_LIKE 
-                                ,(SELECT IFNULL(AVG(SUB_IRES.RESPUESTA),0) 
+                                ,(SELECT IFNULL(round(AVG(SUB_IRES.RESPUESTA),4),0) 
                                 FROM INFO_CLIENTE_ENCUESTA SUB_ICE
                                     INNER JOIN INFO_SUCURSAL SUB_ISU 
                                         ON SUB_ISU.ID_SUCURSAL = SUB_ICE.SUCURSAL_ID

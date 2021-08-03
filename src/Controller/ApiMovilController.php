@@ -941,7 +941,7 @@ class ApiMovilController extends FOSRestController
             {
                 foreach($objPregunta as $objItemPregunta)
                 {
-                    if($objItemPregunta->getOPCIONRESPUESTAID()->getDESCRIPCION() == "5 Estrellas")
+                    if($objItemPregunta->getOPCIONRESPUESTAID()->getDESCRIPCION() != "Comentario")
                     {
                         $arrayPromedioPregunta = $this->getDoctrine()
                                                       ->getRepository(InfoRespuesta::class)
