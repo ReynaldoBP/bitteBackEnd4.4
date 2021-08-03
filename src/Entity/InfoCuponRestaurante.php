@@ -2,21 +2,22 @@
 
 namespace App\Entity;
 
-use App\Repository\InfoCuponHistorialRepository;
+use App\Repository\InfoCuponRestauranteRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * InfoCuponHistorial
  * 
- * @ORM\Table(name="INFO_CUPON_HISTORIAL")
- * @ORM\Entity(repositoryClass=InfoCuponHistorialRepository::class)
+ * InfoCuponRestaurante
+ * 
+ * @ORM\Table(name="INFO_CUPON_RESTAURANTE")
+ * @ORM\Entity(repositoryClass=InfoCuponRestauranteRepository::class)
  */
-class InfoCuponHistorial
+class InfoCuponRestaurante
 {
     /**
-     * @ORM\Column(name="ID_CUPON_HISTORIAL", type="integer", nullable=false)
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
+     * @ORM\Column(name="ID_RELACION", type="integer", nullable=false)
+     * @ORM\Id
+     * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
     private $id;
@@ -30,16 +31,6 @@ class InfoCuponHistorial
     * })
     */
     private $CUPON_ID;
-
-    /**
-    * @var InfoCliente
-    *
-    * @ORM\ManyToOne(targetEntity="InfoCliente")
-    * @ORM\JoinColumns({
-    * @ORM\JoinColumn(name="CLIENTE_ID", referencedColumnName="ID_CLIENTE")
-    * })
-    */
-    private $CLIENTE_ID;
 
     /**
     * @var InfoRestaurante
@@ -66,16 +57,6 @@ class InfoCuponHistorial
      */
     private $FE_CREACION;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $USR_MODIFICACION;
-
-    /**
-     * @ORM\Column(type="date", nullable=true)
-     */
-    private $FE_MODIFICACION;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -93,18 +74,6 @@ class InfoCuponHistorial
         return $this;
     }
 
-    public function getCLIENTEID(): ?InfoCliente
-    {
-        return $this->CLIENTE_ID;
-    }
-
-    public function setCLIENTEID(?InfoCliente $CLIENTE_ID): self
-    {
-        $this->CLIENTE_ID = $CLIENTE_ID;
-
-        return $this;
-    }
-
     public function getRESTAURANTEID(): ?InfoRestaurante
     {
         return $this->RESTAURANTE_ID;
@@ -116,6 +85,7 @@ class InfoCuponHistorial
 
         return $this;
     }
+
 
     public function getESTADO(): ?string
     {
@@ -149,30 +119,6 @@ class InfoCuponHistorial
     public function setFECREACION(\DateTimeInterface $FE_CREACION): self
     {
         $this->FE_CREACION = $FE_CREACION;
-
-        return $this;
-    }
-
-    public function getUSRMODIFICACION(): ?string
-    {
-        return $this->USR_MODIFICACION;
-    }
-
-    public function setUSRMODIFICACION(?string $USR_MODIFICACION): self
-    {
-        $this->USR_MODIFICACION = $USR_MODIFICACION;
-
-        return $this;
-    }
-
-    public function getFEMODIFICACION(): ?\DateTimeInterface
-    {
-        return $this->FE_MODIFICACION;
-    }
-
-    public function setFEMODIFICACION(?\DateTimeInterface $FE_MODIFICACION): self
-    {
-        $this->FE_MODIFICACION = $FE_MODIFICACION;
 
         return $this;
     }

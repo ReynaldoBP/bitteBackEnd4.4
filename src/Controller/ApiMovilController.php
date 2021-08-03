@@ -37,6 +37,7 @@ use App\Entity\AdmiCiudad;
 use App\Entity\InfoCupon;
 use App\Entity\AdmiTipoCupon;
 use App\Entity\InfoCuponHistorial;
+use App\Entity\InfoCuponRestaurante;
 use App\Entity\InfoPlantilla;
 use App\Entity\InfoUsuarioRes;
 use App\Entity\InfoBanner;
@@ -3490,6 +3491,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 19-06-2021
      *
+     * @author Kevin Baque
+     * @version 1.1 19-06-2021 - Se agrega lógica para tipo de cupon en restaurantes.
+     *
      * @return array  $objResponse
      */
     public function canjearCupon($arrayData)
@@ -3527,10 +3531,72 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception("No existe Cupón válido");
             }
+            $objRestaurante    = $this->getDoctrine()
+                                      ->getRepository(InfoRestaurante::class)
+                                      ->find($intIdRestaurante);
+            if(!is_object($objRestaurante) || empty($objRestaurante))
+            {
+                throw new \Exception('No existe Restaurante con los parámetros enviados.');
+            }
             /**
-             * Bloque que valida si el cupon es de tipo general o único.
+             * Bloque que valida si el cupon es de tipo general/restaurante o único/restaurante.
              */
-            if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "GENERAL")
+            if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "GENERAL_RESTAURANTE")
+            {
+                $objCuponRes  = $this->getDoctrine()
+                                     ->getRepository(InfoCuponRestaurante::class)
+                                     ->findOneBy(array("CUPON_ID"       => $objCupon->getId(),
+                                                       "RESTAURANTE_ID" => $objRestaurante->getId(),
+                                                       "ESTADO"         => "ACTIVO"));
+                if(!is_object($objCuponRes) && empty($objCuponRes))
+                {
+                    throw new \Exception("Cupón no válido.");
+                }
+                $objCuponHist = $this->getDoctrine()
+                                     ->getRepository(InfoCuponHistorial::class)
+                                     ->findOneBy(array("CUPON_ID"       => $objCupon->getId(),
+                                                       "CLIENTE_ID"     => $objCliente->getId(),
+                                                       "RESTAURANTE_ID" => $objRestaurante->getId(),
+                                                       "ESTADO"         => "CANJEADO"));
+                if(is_object($objCuponHist) && !empty($objCuponHist))
+                {
+                    throw new \Exception("Cupón no válido, ya a sido canjeado.");
+                }
+                $entityCuponHistorial = new InfoCuponHistorial();
+                $entityCuponHistorial->setESTADO("CANJEADO");
+                $entityCuponHistorial->setCUPONID($objCupon);
+                $entityCuponHistorial->setCLIENTEID($objCliente);
+                $entityCuponHistorial->setRESTAURANTEID($objRestaurante);
+                $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponHistorial->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponHistorial);
+                $em->flush();
+            }
+            else if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "UNICO_RESTAURANTE")
+            {
+                $objCuponRes  = $this->getDoctrine()
+                                     ->getRepository(InfoCuponRestaurante::class)
+                                     ->findOneBy(array("CUPON_ID"       => $objCupon->getId(),
+                                                       "RESTAURANTE_ID" => $objRestaurante->getId(),
+                                                       "ESTADO"         => "ACTIVO"));
+                if(!is_object($objCuponRes) && empty($objCuponRes))
+                {
+                    throw new \Exception("Cupón no válido.");
+                }
+                $objCupon->setESTADO("CANJEADO");
+                $em->persist($objCupon);
+                $em->flush();
+                $entityCuponHistorial = new InfoCuponHistorial();
+                $entityCuponHistorial->setESTADO("CANJEADO");
+                $entityCuponHistorial->setCUPONID($objCupon);
+                $entityCuponHistorial->setCLIENTEID($objCliente);
+                $entityCuponHistorial->setRESTAURANTEID($objRestaurante);
+                $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponHistorial->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponHistorial);
+                $em->flush();
+            }
+            else if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "GENERAL")
             {
                 $objCuponHist = $this->getDoctrine()
                                      ->getRepository(InfoCuponHistorial::class)
@@ -3550,7 +3616,7 @@ class ApiMovilController extends FOSRestController
                 $em->persist($entityCuponHistorial);
                 $em->flush();
             }
-            else
+            else if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "UNICO")
             {
                 $objCupon->setESTADO("CANJEADO");
                 $em->persist($objCupon);
@@ -3564,6 +3630,10 @@ class ApiMovilController extends FOSRestController
                 $em->persist($entityCuponHistorial);
                 $em->flush();
             }
+            else
+            {
+                throw new \Exception("Cupón no válido.");
+            }
             $objParametroCupon = $this->getDoctrine()
                                       ->getRepository(AdmiParametro::class)
                                       ->findOneBy(array('DESCRIPCION' => 'CANT_PUNTOS_CLT_CUPON',
@@ -3571,13 +3641,6 @@ class ApiMovilController extends FOSRestController
             if(!is_object($objParametroCupon) || empty($objParametroCupon))
             {
                 throw new \Exception('No existe el parametro CANT_PUNTOS_CLT_CUPON.');
-            }
-            $objRestaurante    = $this->getDoctrine()
-                                      ->getRepository(InfoRestaurante::class)
-                                      ->find($intIdRestaurante);
-            if(!is_object($objRestaurante) || empty($objRestaurante))
-            {
-                throw new \Exception('No existe Restaurante con los parámetros enviados.');
             }
             $intCantPuntos     = intval($objParametroCupon->getVALOR1());
             $intCantidadPuntos = 0;
