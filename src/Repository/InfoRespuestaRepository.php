@@ -656,8 +656,13 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                         AND CAST(ICE.FE_CREACION AS TIME) <= CAST(AP_HORARIO.VALOR3 AS TIME)
                                     INNER JOIN INFO_CLIENTE IC           ON IC.ID_CLIENTE           = ICE.CLIENTE_ID
                                     INNER JOIN ADMI_PARAMETRO AP_EDAD    ON AP_EDAD.DESCRIPCION     = 'EDAD'
-                                        AND EXTRACT(YEAR FROM IC.EDAD) >= AP_EDAD.VALOR2
+                                    AND CASE WHEN IC.EDAD !='SIN EDAD'
+                                    THEN
+                                        EXTRACT(YEAR FROM IC.EDAD) >= AP_EDAD.VALOR2
                                         AND EXTRACT(YEAR FROM IC.EDAD) <= AP_EDAD.VALOR3
+                                    ELSE
+                                        IC.EDAD = AP_EDAD.VALOR2
+                                    END 
                                     INNER JOIN INFO_SUCURSAL ISU         ON ISU.ID_SUCURSAL         =  ICE.SUCURSAL_ID
                                     INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID ";
             $strWhere       = "WHERE IOR.TIPO_RESPUESTA = 'CERRADA'

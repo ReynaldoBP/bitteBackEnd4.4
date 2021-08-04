@@ -878,6 +878,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.3 16-06-2021 - Se agrega filtro de ciudad y si el restaurante es afiliado.
      *
+     * @author Kevin Baque
+     * @version 1.4 17-08-2021 - Se agrega valor de ipn.
+     *
      * @return array  $objResponse
      */
     public function getRestaurante($arrayData)
@@ -903,7 +906,6 @@ class ApiMovilController extends FOSRestController
         $em                     = $this->getDoctrine()->getManager();
         try
         {
-            $em->getConnection()->beginTransaction();
             $objController    = new DefaultController();
             $objController->setContainer($this->container);
             $arrayParametros = array('strTipoComida'        => $strTipoComida,
@@ -915,8 +917,7 @@ class ApiMovilController extends FOSRestController
                                     'strEstado'             => $strEstado,
                                     'intEsRestaurante'      => '1',
                                     'intCiudad'             => $intCiudad,
-                                    'strEsAfiliado'         => $strEsAfiliado
-                                    );
+                                    'strEsAfiliado'         => $strEsAfiliado);
             $arrayRestaurante   = (array) $this->getDoctrine()
                                                ->getRepository(InfoRestaurante::class)
                                                ->getRestauranteCriterioMovil($arrayParametros);
@@ -955,6 +956,40 @@ class ApiMovilController extends FOSRestController
                     }
                 }
             }
+            //[INI] Calculo de IPN
+            $arrayRespuestaIPN = $this->getDoctrine()
+                                      ->getRepository(InfoRespuesta::class)
+                                      ->getResultadosProIPN(array("intIdRestaurante"=>$arrayItemRestaurante['ID_RESTAURANTE']));
+            if(!empty($arrayRespuestaIPN) && is_array($arrayRespuestaIPN))
+            {
+                $intValor1           = intval($arrayRespuestaIPN["resultados"][0]["CANT_1"]);
+                $intValor2           = intval($arrayRespuestaIPN["resultados"][0]["CANT_2"]);
+                $intValor3           = intval($arrayRespuestaIPN["resultados"][0]["CANT_3"]);
+                $intValor4           = intval($arrayRespuestaIPN["resultados"][0]["CANT_4"]);
+                $intValor5           = intval($arrayRespuestaIPN["resultados"][0]["CANT_5"]);
+                $intValor6           = intval($arrayRespuestaIPN["resultados"][0]["CANT_6"]);
+                $intValor7           = intval($arrayRespuestaIPN["resultados"][0]["CANT_7"]);
+                $intValor8           = intval($arrayRespuestaIPN["resultados"][0]["CANT_8"]);
+                $intValor9           = intval($arrayRespuestaIPN["resultados"][0]["CANT_9"]);
+                $intValor10          = intval($arrayRespuestaIPN["resultados"][0]["CANT_10"]);
+                $intDetractores      = $intValor1 + $intValor2 + $intValor3 + $intValor4 + $intValor5 + $intValor6;
+                $intPasivos          = $intValor7 + $intValor8;
+                $intPromotores       = $intValor9 + $intValor10;
+                $intTotal            = $intDetractores + $intPasivos + $intPromotores;
+                $intTotalPromotores  = 0;
+                $intTotalDetractores = 0;
+                $intIpn              = 0;
+                if($intDetractores >0)
+                {
+                    $intTotalDetractores = ($intDetractores / $intTotal) * 100;
+                }
+                if($intPromotores>0)
+                {
+                    $intTotalPromotores  = ($intPromotores / $intTotal) * 100;
+                }
+                $intIpn              = $intTotalPromotores - $intTotalDetractores;
+            }
+            //[FIN] Calculo de IPN
             $arraySucursal["resultados"][$intIterador]["ES_AFILIADO"] = (!empty($item["ES_AFILIADO"]) && $item["ES_AFILIADO"] == "SI") ? 'S':'N';
             $arrayResultado ['resultados'] []= array('ID_RESTAURANTE'          =>   $arrayItemRestaurante['ID_RESTAURANTE'],
                                                      'TIPO_IDENTIFICACION'     =>   $arrayItemRestaurante['TIPO_IDENTIFICACION'],
@@ -979,10 +1014,10 @@ class ApiMovilController extends FOSRestController
                                                      'PRO_ENCUESTAS_CLT'       =>   $arrayItemRestaurante['PRO_ENCUESTAS_CLT'] ? $arrayItemRestaurante['PRO_ENCUESTAS_CLT']:null,
                                                      'PRO_ENCUESTAS_PRG'       =>   $arrayResultadoProPreg ? $arrayResultadoProPreg:null,
                                                      'ES_PUBLICIDAD'           =>  'N',
-                                                     'ES_AFILIADO'             =>  (!empty($arrayItemRestaurante["ES_AFILIADO"]) && $arrayItemRestaurante["ES_AFILIADO"] == "SI") ? 'S':'N');
+                                                     'ES_AFILIADO'             =>  (!empty($arrayItemRestaurante["ES_AFILIADO"]) && $arrayItemRestaurante["ES_AFILIADO"] == "SI") ? 'S':'N',
+                                                     'IPN'                     =>  round($intIpn));
         }
         $arrayResultado['error'] = $strMensajeError;
-        $em->getConnection()->commit();
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $arrayResultado,
                                                    'succes'    => true)));

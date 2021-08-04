@@ -3180,6 +3180,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 08-11-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 17-08-2021 - Se agrega parámetro Restaurante, para realizar el filtro.
+     *
      * @return array  $objResponse
      */
     public function getResultadosProIPN($arrayData)
@@ -3195,34 +3198,37 @@ class ApiWebController extends FOSRestController
         $strProvincia       = $arrayData['strProvincia'] ? $arrayData['strProvincia']:'';
         $strParroquia       = $arrayData['strParroquia'] ? $arrayData['strParroquia']:'';
         $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
-        $intIdRestaurante   = '';
+        $intIdRestaurante   = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $strStatus          = 400;
         $objResponse        = new Response;
         try
         {
-            $objUsuario = $this->getDoctrine()
-                               ->getRepository(InfoUsuario::class)
-                               ->find($intIdUsuario);
-            if(!empty($objUsuario) && is_object($objUsuario))
+            if(empty($intIdRestaurante))
             {
-                $objTipoRol = $this->getDoctrine()
-                                    ->getRepository(AdmiTipoRol::class)
-                                    ->find($objUsuario->getTIPOROLID()->getId());
-                if(!empty($objTipoRol) && is_object($objTipoRol))
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
                 {
-                    $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
-                    if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                    $objTipoRol = $this->getDoctrine()
+                                       ->getRepository(AdmiTipoRol::class)
+                                       ->find($objUsuario->getTIPOROLID()->getId());
+                    if(!empty($objTipoRol) && is_object($objTipoRol))
                     {
-                        $intIdRestaurante = '';
-                    }
-                    else
-                    {
-                        $objUsuarioRes = $this->getDoctrine()
-                                              ->getRepository(InfoUsuarioRes::class)
-                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
-                        $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        $strTipoRol = !empty($objTipoRol->getDESCRIPCION_TIPO_ROL()) ? $objTipoRol->getDESCRIPCION_TIPO_ROL():'';
+                        if(!empty($strTipoRol) && $strTipoRol=="ADMINISTRADOR")
+                        {
+                            $intIdRestaurante = '';
+                        }
+                        else
+                        {
+                            $objUsuarioRes = $this->getDoctrine()
+                                                  ->getRepository(InfoUsuarioRes::class)
+                                                  ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                            $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        }
                     }
                 }
             }
