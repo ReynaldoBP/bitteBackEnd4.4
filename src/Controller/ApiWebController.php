@@ -1569,6 +1569,10 @@ class ApiWebController extends FOSRestController
                                               ->getRepository(InfoUsuarioRes::class)
                                               ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                         $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        if(empty($intIdRestaurante))
+                        {
+                            $intIdRestaurante = '';
+                        }
                     }
                 }
             }
@@ -1956,6 +1960,10 @@ class ApiWebController extends FOSRestController
                                                   ->getRepository(InfoUsuarioRes::class)
                                                   ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                             $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                            if(empty($intIdRestaurante))
+                            {
+                                $intIdRestaurante = '';
+                            }
                         }
                     }
                 }
@@ -2033,6 +2041,10 @@ class ApiWebController extends FOSRestController
                                                   ->getRepository(InfoUsuarioRes::class)
                                                   ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                             $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                            if(empty($intIdRestaurante))
+                            {
+                                $intIdRestaurante = '';
+                            }
                         }
                     }
                 }
@@ -2766,6 +2778,10 @@ class ApiWebController extends FOSRestController
                                                   ->getRepository(InfoUsuarioRes::class)
                                                   ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                             $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                            if(empty($intIdRestaurante))
+                            {
+                                $intIdRestaurante = '';
+                            }
                         }
                     }
                 }
@@ -2843,6 +2859,10 @@ class ApiWebController extends FOSRestController
                                                   ->getRepository(InfoUsuarioRes::class)
                                                   ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                             $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                            if(empty($intIdRestaurante))
+                            {
+                                $intIdRestaurante = '';
+                            }
                         }
                     }
                 }
@@ -2920,6 +2940,10 @@ class ApiWebController extends FOSRestController
                                                   ->getRepository(InfoUsuarioRes::class)
                                                   ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                             $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                            if(empty($intIdRestaurante))
+                            {
+                                $intIdRestaurante = '';
+                            }
                         }
                     }
                 }
@@ -2970,6 +2994,7 @@ class ApiWebController extends FOSRestController
         $strCiudad          = $arrayData['strCiudad'] ? $arrayData['strCiudad']:'';
         $strProvincia       = $arrayData['strProvincia'] ? $arrayData['strProvincia']:'';
         $strParroquia       = $arrayData['strParroquia'] ? $arrayData['strParroquia']:'';
+        $intIdSucursal      = $arrayData['intIdSucursal'] ? $arrayData['intIdSucursal']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $strStatus          = 400;
@@ -3017,7 +3042,7 @@ class ApiWebController extends FOSRestController
                         $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
                         if(empty($intIdRestaurante))
                         {
-                            $intIdRestaurante = 0;
+                            $intIdRestaurante = '';
                         }
                     }
                 }
@@ -3034,6 +3059,7 @@ class ApiWebController extends FOSRestController
                                     "strCiudad"    => $strCiudad,
                                     "strProvincia" => $strProvincia,
                                     'intIdRestaurante'=>$intIdRestaurante,
+                                    'intIdSucursal'   =>$intIdSucursal,
                                     "strParroquia" => $strParroquia);
             $arrayRespuesta   = $this->getDoctrine()
                                      ->getRepository(InfoRespuesta::class)
@@ -3081,6 +3107,7 @@ class ApiWebController extends FOSRestController
         $intIdPregunta      = $arrayData['intIdPregunta'] ? $arrayData['intIdPregunta']:'';
         $intLimite          = $arrayData['intLimite'] ? $arrayData['intLimite']:'';
         $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
+        $intIdSucursal      = $arrayData['intIdSucursal'] ? $arrayData['intIdSucursal']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $intIdRestaurante   = '';
@@ -3109,6 +3136,10 @@ class ApiWebController extends FOSRestController
                                               ->getRepository(InfoUsuarioRes::class)
                                               ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                         $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        if(empty($intIdRestaurante))
+                        {
+                            $intIdRestaurante = '';
+                        }
                     }
                 }
             }
@@ -3143,6 +3174,7 @@ class ApiWebController extends FOSRestController
                                     "intLimite"    => $intLimite,
                                     "intIdPregunta" => $intIdPregunta,
                                     "intIdRestaurante"=>$intIdRestaurante,
+                                    'intIdSucursal'   =>$intIdSucursal,
                                     "strParroquia" => $strParroquia);
             $arrayRespuesta   = $this->getDoctrine()
                                      ->getRepository(InfoRespuesta::class)
@@ -3217,6 +3249,10 @@ class ApiWebController extends FOSRestController
                                               ->getRepository(InfoUsuarioRes::class)
                                               ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                         $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        if(empty($intIdRestaurante))
+                        {
+                            $intIdRestaurante = '';
+                        }
                     }
                 }
             }
@@ -3299,6 +3335,7 @@ class ApiWebController extends FOSRestController
         $strParroquia       = $arrayData['strParroquia'] ? $arrayData['strParroquia']:'';
         $intIdUsuario       = $arrayData['id_usuario'] ? $arrayData['id_usuario']:'';
         $intIdRestaurante   = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
+        $intIdSucursal      = $arrayData['intIdSucursal'] ? $arrayData['intIdSucursal']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $strStatus          = 400;
@@ -3328,6 +3365,10 @@ class ApiWebController extends FOSRestController
                                                   ->getRepository(InfoUsuarioRes::class)
                                                   ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                             $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                            if(empty($intIdRestaurante))
+                            {
+                                $intIdRestaurante = '';
+                            }
                         }
                     }
                 }
@@ -3361,6 +3402,7 @@ class ApiWebController extends FOSRestController
                                     "strCiudad"    => $strCiudad,
                                     "strProvincia" => $strProvincia,
                                     "intIdRestaurante"=>$intIdRestaurante,
+                                    "intIdSucursal"   => $intIdSucursal,
                                     "strParroquia" => $strParroquia);
             $arrayRespuesta   = $this->getDoctrine()
                                      ->getRepository(InfoRespuesta::class)
@@ -3631,6 +3673,10 @@ class ApiWebController extends FOSRestController
                                               ->getRepository(InfoUsuarioRes::class)
                                               ->findOneBy(array('USUARIOID'=>$intIdUsuario));
                         $intIdRestaurante = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        if(empty($intIdRestaurante))
+                        {
+                            $intIdRestaurante = '';
+                        }
                     }
                 }
             }

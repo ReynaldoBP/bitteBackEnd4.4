@@ -29,6 +29,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $intIdSucursal      = $arrayParametros['intIdSucursal'] ? $arrayParametros['intIdSucursal']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -58,6 +59,11 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                 EXTRACT(YEAR FROM A.FE_CREACION ) = :strAnio 
                                 AND A.ESTADO in ('ACTIVO','PENDIENTE')
                                 AND EXTRACT(MONTH FROM A.FE_CREACION ) = :strMes ".$strSubWhere."";
+            if(!empty($intIdSucursal))
+            {
+                $strWhere   .= " AND SUB_ISU.ID_SUCURSAL = :intIdSucursal ";
+                $objQuery->setParameter("intIdSucursal", $intIdSucursal);
+            }
             $strOrderBy     = " ORDER BY A.FE_CREACION DESC ";
             $objQuery->setParameter("strMes", $strMes);
             $objQuery->setParameter("strAnio", $strAnio);
@@ -180,6 +186,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strCiudad          = $arrayParametros['strCiudad'] ? $arrayParametros['strCiudad']:'';
         $strProvincia       = $arrayParametros['strProvincia'] ? $arrayParametros['strProvincia']:'';
         $strParroquia       = $arrayParametros['strParroquia'] ? $arrayParametros['strParroquia']:'';
+        $intIdSucursal      = $arrayParametros['intIdSucursal'] ? $arrayParametros['intIdSucursal']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -229,6 +236,13 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                 AND IOR.VALOR           = '5'
                                 AND IE.ESTADO           = 'ACTIVO' AND ICE.ESTADO != 'ELIMINADO' ";
             $strGroupBy     = " GROUP BY PREGUNTA_ID ";
+            if(!empty($intIdSucursal))
+            {
+                $strWhere   .= " AND ISU.ID_SUCURSAL = :intIdSucursal ";
+                $objQuery->setParameter("intIdSucursal", $intIdSucursal);
+                $objQuery2->setParameter("intIdSucursal", $intIdSucursal);
+            }
+
             if(!empty($intIdRestaurante))
             {
                 $strWhere .= " AND IRES.ID_RESTAURANTE = :IDRESTAURANTE ";
@@ -350,6 +364,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strProvincia       = $arrayParametros['strProvincia'] ? $arrayParametros['strProvincia']:'';
         $strParroquia       = $arrayParametros['strParroquia'] ? $arrayParametros['strParroquia']:'';
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $intIdSucursal      = $arrayParametros['intIdSucursal'] ? $arrayParametros['intIdSucursal']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -391,6 +406,12 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                 $strWhere .= " AND IRES.ID_RESTAURANTE = :ID_RESTAURANTE ";
                 $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
                 $objQuery2->setParameter("ID_RESTAURANTE", $intIdRestaurante);
+            }
+            if(!empty($intIdSucursal))
+            {
+                $strWhere   .= " AND ISU.ID_SUCURSAL = :intIdSucursal ";
+                $objQuery->setParameter("intIdSucursal", $intIdSucursal);
+                $objQuery2->setParameter("intIdSucursal", $intIdSucursal);
             }
             if(!empty($strGenero))
             {
@@ -626,6 +647,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strProvincia       = $arrayParametros['strProvincia'] ? $arrayParametros['strProvincia']:'';
         $strParroquia       = $arrayParametros['strParroquia'] ? $arrayParametros['strParroquia']:'';
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $intIdSucursal      = $arrayParametros['intIdSucursal'] ? $arrayParametros['intIdSucursal']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -673,6 +695,11 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             {
                 $strWhere .= " AND IRES.ID_RESTAURANTE = :ID_RESTAURANTE";
                 $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
+            }
+            if(!empty($intIdSucursal))
+            {
+                $strWhere .= " AND ISU.ID_SUCURSAL = :intIdSucursal";
+                $objQuery->setParameter("intIdSucursal", $intIdSucursal);
             }
             if(!empty($strFechaIni) && !empty($strFechaFin))
             {

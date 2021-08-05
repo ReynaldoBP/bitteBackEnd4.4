@@ -87,6 +87,7 @@ class InfoRespuestaController extends Controller
         $conImagen              = $request->query->get("conImagen") ? $request->query->get("conImagen"):'NO';
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
         $intIdUsuario           = $request->query->get("id_usuario") ? $request->query->get("id_usuario"):'';
+        $intIdSucursal          = $request->query->get("intIdSucursal") ? $request->query->get("intIdSucursal"):'';
         $arrayRespuesta         = array();
         $strMensajeError        = '';
         $strStatus              = 400;
@@ -123,6 +124,7 @@ class InfoRespuestaController extends Controller
                                      'strMes'            => $strMes,
                                      'intIdCltEncuesta'  => $intIdCltEncuesta,
                                      'intIdRestaurante'  => $intIdRestaurante,
+                                     'intIdSucursal'     => $intIdSucursal,
                                      'strEstado'         => $strEstado);
             $arrayRespuesta = (array) $this->getDoctrine()
                                            ->getRepository(InfoRespuesta::class)
