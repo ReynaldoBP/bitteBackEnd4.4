@@ -83,6 +83,8 @@ class ApiWebController extends FOSRestController
                 break;
                 case 'editSucursalEncuestasRealizadas':$arrayRespuesta = $this->editSucursalEncuestasRealizadas($arrayData);
                 break;
+                case 'editEstadoEncuestasRealizadas':$arrayRespuesta = $this->editEstadoEncuestasRealizadas($arrayData);
+                break;
                 case 'editPromocionHistorial':$arrayRespuesta = $this->editPromocionHistorial($arrayData);
                 break;
                 case 'getPromocionHistorial':$arrayRespuesta = $this->getPromocionHistorial($arrayData);
@@ -2353,6 +2355,101 @@ class ApiWebController extends FOSRestController
         {
             $em->getConnection()->commit();
             $em->getConnection()->close();
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'editEstadoEncuestasRealizadas'
+     * Método encargado de editar el estado de eliminado a Activo, de la encuesta según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 05-08-2021
+     *
+     * @return array  $objResponse
+     */
+    public function editEstadoEncuestasRealizadas($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdClienteEncuesta   = $arrayData['intIdClienteEncuesta'] ? $arrayData['intIdClienteEncuesta']:'';
+        $strUsuarioCreacion     = $arrayData['usuarioCreacion']      ? $arrayData['usuarioCreacion']:'';
+        $strDatetimeActual      = new \DateTime('now');
+        $arrayBitacoraDetalle   = array();
+        $strMensajeError        = '';
+        $strStatus              = 200;
+        $objResponse            = new Response;
+        $em                     = $this->getDoctrine()->getManager();
+        try
+        {
+            $em->getConnection()->beginTransaction();
+            $objClienteEncuesta = $this->getDoctrine()
+                                       ->getRepository(InfoClienteEncuesta::class)
+                                       ->find($intIdClienteEncuesta);
+            if(!is_object($objClienteEncuesta) || empty($objClienteEncuesta))
+            {
+                throw new \Exception('Encuesta del cliente no existe.');
+            }
+            $objClienteEncuesta->setESTADO(strtoupper("ACTIVO"));
+            $objClienteEncuesta->setUSRMODIFICACION($strUsuarioCreacion);
+            $objClienteEncuesta->setFEMODIFICACION($strDatetimeActual);
+            $em->persist($objClienteEncuesta);
+            $em->flush();
+            $objSucursal = $this->getDoctrine()
+                                ->getRepository(InfoSucursal::class)
+                                ->find($objClienteEncuesta->getSUCURSALID()->getId());
+            if(!is_object($objSucursal) || empty($objSucursal))
+            {
+                throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
+            }
+            $objContenido    = $this->getDoctrine()
+                                    ->getRepository(InfoContenidoSubido::class)
+                                    ->find($objClienteEncuesta->getCONTENIDOID());
+            if(!is_object($objContenido) || empty($objContenido))
+            {
+                throw new \Exception('No existe el contenido con la descripción enviada por parámetro.');
+            }
+            $objContenido->setESTADO(strtoupper("ACTIVO"));
+            $objContenido->setUSRMODIFICACION($strUsuarioCreacion);
+            $objContenido->setFEMODIFICACION($strDatetimeActual);
+            $em->persist($objContenido);
+            $em->flush();
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "Eliminado",
+                                           'VALOR_ACTUAL'   => "Activo",
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $strNombreImagen  = $objContenido->getIMAGEN();
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Foto",
+                                           'VALOR_ANTERIOR' => $strNombreImagen,
+                                           'VALOR_ACTUAL'   => $strNombreImagen,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Modificación",
+                                            "strModulo"            => "Data Encuesta",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $objClienteEncuesta->getId(),
+                                            "strReferenciaValor"   => $objSucursal->getRESTAURANTEID()->getNOMBRECOMERCIAL()." / ".$objSucursal->getDESCRIPCION(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            $strMensajeError = 'Encuesta del cliente y contenido editado con exito.!';
+        }
+        catch(\Exception $ex)
+        {
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 204;
+                $em->getConnection()->rollback();
+            }
+            $strMensajeError = "Fallo al editar Encuesta del cliente y contenido, intente nuevamente.\n ". $ex->getMessage();
         }
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $strMensajeError,

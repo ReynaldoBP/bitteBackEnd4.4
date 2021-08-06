@@ -1980,52 +1980,68 @@ class ApiMovilController extends FOSRestController
             }
             else
             {
-                $objPlantilla  = $this->getDoctrine()
-                                      ->getRepository(InfoPlantilla::class)
-                                      ->findOneBy(array('DESCRIPCION'=>"CALIFICAR_COMPARTIR",
-                                                        'ESTADO'     =>"ACTIVO"));
-
-                $strTotalPuntos       = intval($objParametroRes->getVALOR1()) + intval($intPuntosPublicacion);
-                $strAsunto            = '¡GANASTE PUNTOS!';
-                $strNombre            = "";
-                $strApellido          = "";
-                if(!empty($objCliente->getNOMBRE()))
+                if($objRestaurante->getES_AFILIADO() == "NO")
                 {
-                    $strNombre = trim($objCliente->getNOMBRE());
-                }
-                if(!empty($objCliente->getAPELLIDO()))
-                {
-                    $strApellido = trim($objCliente->getAPELLIDO());
-                }
-
-                if(!empty($strNombre) && !empty($strApellido))
-                {
-                    $strNombreUsuario = $strNombre .' '.$strApellido;
-                }
-                else if(!empty($strNombre))
-                {
-                    $strNombreUsuario = $strNombre;
-                }
-                else if(!empty($strApellido))
-                {
-                    $strNombreUsuario = $strApellido;
+                    $objPlantilla     = $this->getDoctrine()
+                                             ->getRepository(InfoPlantilla::class)
+                                             ->findOneBy(array('DESCRIPCION'=>"CALIFICAR_NO_AFILIADO",
+                                                               'ESTADO'     =>"ACTIVO"));
+                    if(!empty($objPlantilla) && is_object($objPlantilla))
+                    {
+                        $strMensajeCorreo = stream_get_contents ($objPlantilla->getPLANTILLA());
+                        $strCuerpoCorreo1 = "Acabas de ganar un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+                        $strMensajeCorreo = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+                    }
                 }
                 else
                 {
-                    $strNombreUsuario = $objCliente->getCORREO();
+                    $objPlantilla  = $this->getDoctrine()
+                                          ->getRepository(InfoPlantilla::class)
+                                          ->findOneBy(array('DESCRIPCION'=>"CALIFICAR_COMPARTIR",
+                                                            'ESTADO'     =>"ACTIVO"));
+                    $strTotalPuntos       = intval($objParametroRes->getVALOR1()) + intval($intPuntosPublicacion);
+                    $strNombre            = "";
+                    $strApellido          = "";
+                    if(!empty($objCliente->getNOMBRE()))
+                    {
+                        $strNombre = trim($objCliente->getNOMBRE());
+                    }
+                    if(!empty($objCliente->getAPELLIDO()))
+                    {
+                        $strApellido = trim($objCliente->getAPELLIDO());
+                    }
+                    if(!empty($strNombre) && !empty($strApellido))
+                    {
+                        $strNombreUsuario = $strNombre .' '.$strApellido;
+                    }
+                    else if(!empty($strNombre))
+                    {
+                        $strNombreUsuario = $strNombre;
+                    }
+                    else if(!empty($strApellido))
+                    {
+                        $strNombreUsuario = $strApellido;
+                    }
+                    else
+                    {
+                        $strNombreUsuario = $objCliente->getCORREO();
+                    }
+                    if(!empty($objPlantilla) && is_object($objPlantilla))
+                    {
+                        $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
+                        $strCuerpoCorreo1   = "¡Hola! ".$strNombreUsuario.". Acabas de calificar el restaurante ".$objRestaurante->getNOMBRECOMERCIAL()." y compartir tu foto en redes sociales";
+                        $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
+
+                        $strCuerpoCorreo2   = "¡Has ganado ".$strTotalPuntos." puntos en este establecimiento!";
+                        $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
+
+                        $strCuerpoCorreo3   = "Además, has ganado un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+                        $strMensajeCorreo   = str_replace('strCuerpoCorreo3',$strCuerpoCorreo3,$strMensajeCorreo);
+                    }
                 }
-                if(!empty($objPlantilla) && is_object($objPlantilla))
+                if(!empty($strMensajeCorreo))
                 {
-                    $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
-                    $strCuerpoCorreo1   = "¡Hola! ".$strNombreUsuario.". Acabas de calificar el restaurante ".$objRestaurante->getNOMBRECOMERCIAL()." y compartir tu foto en redes sociales";
-                    $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
-
-                    $strCuerpoCorreo2   = "¡Has ganado ".$strTotalPuntos." puntos en este establecimiento!";
-                    $strMensajeCorreo   = str_replace('strCuerpoCorreo2',$strCuerpoCorreo2,$strMensajeCorreo);
-
-                    $strCuerpoCorreo3   = "Además, has ganado un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
-                    $strMensajeCorreo   = str_replace('strCuerpoCorreo3',$strCuerpoCorreo3,$strMensajeCorreo);
-
+                    $strAsunto        = '¡GANASTE PUNTOS!';
                     $strRemitente     = 'notificaciones@bitte.app';
                     $arrayParametros  = array('strAsunto'        => $strAsunto,
                                             'strMensajeCorreo' => $strMensajeCorreo,
@@ -2035,7 +2051,6 @@ class ApiMovilController extends FOSRestController
                     $objController->setContainer($this->container);
                     $objController->enviaCorreo($arrayParametros);
                 }
-
                 $objContenido->setREDESSOCIALESID($objRedSocial);
                 $objContenido->setCANTIDADPUNTOS($intPuntosPublicacion);
                 $objContenido->setUSRMODIFICACION($strUsuarioCreacion);
@@ -2067,12 +2082,9 @@ class ApiMovilController extends FOSRestController
                                   'feCreacion'      => $objContenido->getFECREACION());
         }
         $arrayContenido['strMensajeError'] = $strMensajeError;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayContenido,
-                                            'succes'    => $boolSucces
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayContenido,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
