@@ -34,7 +34,7 @@ class InfoUsuarioResRepository extends \Doctrine\ORM\EntityRepository
         $objQueryCount      = $this->_em->createNativeQuery(null, $objRsmBuilderCount);
         try
         {
-            $strSelect      = "SELECT IUR.ID_USUARIO_RES,IUR.ESTADO,IUR.USR_CREACION,IUR.FE_CREACION,IUR.USR_MODIFICACION,IUR.FE_MODIFICACION,
+            $strSelect      = "SELECT IUR.ID_USUARIO_RES,IUR.SUCURSAL_ID,IUR.ESTADO,IUR.USR_CREACION,IUR.FE_CREACION,IUR.USR_MODIFICACION,IUR.FE_MODIFICACION,
                                 IRE.ID_RESTAURANTE,IRE.IDENTIFICACION,IRE.RAZON_SOCIAL,IRE.NOMBRE_COMERCIAL,
                                 IUS.ID_USUARIO,IUS.NOMBRES,IUS.APELLIDOS,IUS.CORREO,IUS.IDENTIFICACION AS IDENTIFICACION_US ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
@@ -70,6 +70,7 @@ class InfoUsuarioResRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('USR_MODIFICACION', 'USR_MODIFICACION', 'string');
             $objRsmBuilder->addScalarResult('FE_MODIFICACION', 'FE_MODIFICACION', 'date');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'ID_RESTAURANTE', 'string');
+            $objRsmBuilder->addScalarResult('SUCURSAL_ID', 'SUCURSAL_ID', 'string');
             $objRsmBuilder->addScalarResult('IDENTIFICACION', 'IDENTIFICACION', 'string');
             $objRsmBuilder->addScalarResult('RAZON_SOCIAL', 'RAZON_SOCIAL', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');

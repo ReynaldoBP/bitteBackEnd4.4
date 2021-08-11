@@ -139,7 +139,7 @@ class UsuarioController extends Controller
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
-        $strStatus              = 400;
+        $strStatus              = 200;
         $objResponse            = new Response;
         $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
@@ -247,12 +247,12 @@ class UsuarioController extends Controller
         }
         catch(\Exception $ex)
         {
-            $strStatus = 404;
+            $strStatus = 204;
             if ($em->getConnection()->isTransactionActive())
             {
                 $em->getConnection()->rollback();
             }
-            $arrayUsuario = "Fallo al crear un Usuario, intente nuevamente.\n ". $ex->getMessage();
+            $arrayUsuario["mensaje"] = $ex->getMessage();
         }
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $arrayUsuario,

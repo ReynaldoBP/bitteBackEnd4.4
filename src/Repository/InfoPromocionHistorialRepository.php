@@ -150,9 +150,11 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
      */
     public function getPromocionCriterioWeb($arrayParametros)
     {
-        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('PENDIENTE');
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:"";
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
+        $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
         $arrayPromocion     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -161,13 +163,20 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
         {
             $strSelect      = "SELECT ICH.ID_CLIENTE_PUNTO_HISTORIAL,ICH.ESTADO AS ESTADO_PROMOCION_HISTORIAL,ICH.CLIENTE_ID,
                                 IPROMO.ID_PROMOCION,IPROMO.DESCRIPCION_TIPO_PROMOCION,IPROMO.ESTADO AS ESTADO_PROMOCION,
-                                IRE.ID_RESTAURANTE,IRE.NOMBRE_COMERCIAL,IRE.ESTADO AS ESTADO_RESTAURANTE ";
+                                IRE.ID_RESTAURANTE,IRE.NOMBRE_COMERCIAL,IRE.ESTADO AS ESTADO_RESTAURANTE,
+                                CONCAT(IC.NOMBRE, CONCAT(' ', IC.APELLIDO)) AS CLIENTE,IPROMO.CANTIDAD_PUNTOS,ICH.FE_CREACION
+                                ,(SELECT ISU_SUB.DESCRIPCION
+                                    FROM INFO_USUARIO_RES IRE_SUB
+                                    JOIN INFO_SUCURSAL ISU_SUB ON ISU_SUB.ID_SUCURSAL=IRE_SUB.SUCURSAL_ID
+                                    WHERE IRE_SUB.RESTAURANTE_ID=IRE.ID_RESTAURANTE AND IRE_SUB.USUARIO_ID=ICH.USR_MODIFICACION) AS SUCURSAL ";
             $strFrom        = "FROM INFO_CLIENTE_PROMOCION_HISTORIAL ICH
                                 JOIN INFO_PROMOCION IPROMO 
                                     ON IPROMO.ID_PROMOCION = ICH.PROMOCION_ID
                                 JOIN INFO_RESTAURANTE IRE
-                                    ON IRE.ID_RESTAURANTE=IPROMO.RESTAURANTE_ID ";
-            $strWhere       = "WHERE ICH.ESTADO in (:ESTADO) ";
+                                    ON IRE.ID_RESTAURANTE=IPROMO.RESTAURANTE_ID
+                                JOIN INFO_CLIENTE    IC ON IC.ID_CLIENTE = ICH.CLIENTE_ID ";
+            $strWhere       = "WHERE ICH.ESTADO =:ESTADO ";
+            $strOrderBy     = " ORDER BY FE_CREACION DESC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             if(!empty($intIdRestaurante))
             {
@@ -179,6 +188,13 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
                 $strWhere .= " AND ICH.CLIENTE_ID =:CLIENTE_ID ";
                 $objQuery->setParameter("CLIENTE_ID", $intIdCliente);
             }
+            if(!empty($strMes) && !empty($strAnio))
+            {
+                $strWhere .= " AND EXTRACT( MONTH FROM ICH.FE_CREACION) = :MES 
+                               AND EXTRACT( YEAR FROM  ICH.FE_CREACION) = :ANIO ";
+                $objQuery->setParameter("MES",$strMes);
+                $objQuery->setParameter("ANIO",$strAnio);
+            }
             $objRsmBuilder->addScalarResult('ID_CLIENTE_PUNTO_HISTORIAL', 'ID_CLIENTE_PUNTO_HISTORIAL', 'string');
             $objRsmBuilder->addScalarResult('ESTADO_PROMOCION_HISTORIAL', 'ESTADO_PROMOCION_HISTORIAL', 'string');
             $objRsmBuilder->addScalarResult('CLIENTE_ID', 'CLIENTE_ID', 'string');
@@ -188,7 +204,11 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'ID_RESTAURANTE', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
             $objRsmBuilder->addScalarResult('ESTADO_RESTAURANTE', 'ESTADO_RESTAURANTE', 'string');
-            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objRsmBuilder->addScalarResult('CLIENTE', 'CLIENTE', 'string');
+            $objRsmBuilder->addScalarResult('SUCURSAL', 'SUCURSAL', 'string');
+            $objRsmBuilder->addScalarResult('CANTIDAD_PUNTOS', 'CANTIDAD_PUNTOS', 'string');
+            $objRsmBuilder->addScalarResult('FE_CREACION', 'FE_CREACION', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayPromocion['resultados'] = $objQuery->getResult();
         }

@@ -42,6 +42,16 @@ class InfoUsuarioRes
     private $RESTAURANTEID;
 
     /**
+    * @var InfoSucursal
+    *
+    * @ORM\ManyToOne(targetEntity="InfoSucursal")
+    * @ORM\JoinColumns({
+    * @ORM\JoinColumn(name="SUCURSAL_ID", referencedColumnName="ID_SUCURSAL")
+    * })
+    */
+    private $SUCURSALID;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="ESTADO", type="string", length=100)
@@ -252,5 +262,29 @@ class InfoUsuarioRes
     public function getRESTAURANTEID()
     {
         return $this->RESTAURANTEID;
+    }
+
+    /**
+     * Set SUCURSALID
+     *
+     * @param \App\Entity\InfoSucursal $SUCURSALID
+     *
+     * @return InfoUsuarioRes
+     */
+    public function setSUCURSALID(\App\Entity\InfoSucursal $SUCURSALID = null)
+    {
+        $this->SUCURSALID = $SUCURSALID;
+
+        return $this;
+    }
+
+    /**
+     * Get SUCURSALID
+     *
+     * @return \App\Entity\InfoSucursal
+     */
+    public function getSUCURSALID()
+    {
+        return $this->SUCURSALID;
     }
 }

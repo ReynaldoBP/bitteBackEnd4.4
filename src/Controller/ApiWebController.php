@@ -2617,6 +2617,8 @@ class ApiWebController extends FOSRestController
         $intIdRestaurante       = $arrayData['idRestaurante'] ? $arrayData['idRestaurante']:'';
         $intIdCliente           = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
+        $strMes                 = $arrayData['strMes'] ? $arrayData['strMes']:'';
+        $strAnio                = $arrayData['strAnio'] ? $arrayData['strAnio']:'';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
@@ -2630,7 +2632,9 @@ class ApiWebController extends FOSRestController
                                        ->getRepository(InfoPromocionHistorial::class)
                                        ->getPromocionCriterioWeb(array('intIdRestaurante' => $intIdRestaurante,
                                                                        'intIdCliente'     => $intIdCliente,
-                                                                       'ESTADO'           => $strEstado));
+                                                                       'strEstado'        => $strEstado,
+                                                                       'strMes'           => $strMes,
+                                                                       'strAnio'          => $strAnio));
             if(!is_array($arrayPromocionHist) || empty($arrayPromocionHist))
             {
                 throw new \Exception('Promoción no existe o ha sido completada.');

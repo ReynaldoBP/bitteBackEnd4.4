@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManager;
 use App\Entity\InfoUsuario;
 use App\Entity\InfoRestaurante;
+use App\Entity\InfoSucursal;
 use App\Entity\InfoUsuarioRes;
 use App\Controller\DefaultController;
 
@@ -33,6 +34,7 @@ class InfoUsuarioResController extends Controller
     {
         error_reporting( error_reporting() & ~E_NOTICE );
         $intIdRestaurante       = $request->query->get("idRestaurante") ? $request->query->get("idRestaurante"):'';
+        $intIdSucursal          = $request->query->get("idSucursal") ? $request->query->get("idSucursal"):'';
         $intIdUsuario           = $request->query->get("idUsuario") ? $request->query->get("idUsuario"):'';
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
@@ -55,6 +57,13 @@ class InfoUsuarioResController extends Controller
             if(!is_object($objRestaurante) || empty($objRestaurante))
             {
                 throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
+            }
+            $objSucursal = $this->getDoctrine()
+                                ->getRepository(InfoSucursal::class)
+                                ->findOneBy(array('id'=> $intIdSucursal));
+            if(!is_object($objSucursal) || empty($objSucursal))
+            {
+                throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
             }
             $arrayParametrosUs = array('ESTADO' => 'ACTIVO',
                                        'id'     => $intIdUsuario);
@@ -108,6 +117,7 @@ class InfoUsuarioResController extends Controller
 
             $entityUsuarioRes = new InfoUsuarioRes();
             $entityUsuarioRes->setRESTAURANTEID($objRestaurante);
+            $entityUsuarioRes->setSUCURSALID($objSucursal);
             $entityUsuarioRes->setUSUARIOID($objUsuario);
             $entityUsuarioRes->setESTADO(strtoupper($strEstado));
             $entityUsuarioRes->setUSRCREACION($strUsuarioCreacion);
@@ -156,6 +166,7 @@ class InfoUsuarioResController extends Controller
         error_reporting( error_reporting() & ~E_NOTICE );
         $intIdUsuarioRes        = $request->query->get("idUsuarioRes") ? $request->query->get("idUsuarioRes"):'';
         $intIdRestaurante       = $request->query->get("idRestaurante") ? $request->query->get("idRestaurante"):'';
+        $intIdSucursal          = $request->query->get("idSucursal") ? $request->query->get("idSucursal"):'';
         $intIdUsuario           = $request->query->get("idUsuario") ? $request->query->get("idUsuario"):'';
         $strEstado              = $request->query->get("estado") ? $request->query->get("estado"):'ACTIVO';
         $strUsuarioCreacion     = $request->query->get("usuarioCreacion") ? $request->query->get("usuarioCreacion"):'';
@@ -187,6 +198,17 @@ class InfoUsuarioResController extends Controller
                     throw new \Exception('No existe el Restaurante con la descripción enviada por parámetro.');
                 }
                 $objUsuarioRes->setRESTAURANTEID($objRestaurante);
+            }
+            if(!empty($intIdSucursal))
+            {
+                $objSucursal = $this->getDoctrine()
+                                    ->getRepository(InfoSucursal::class)
+                                    ->findOneBy(array('id'     => $intIdSucursal));
+                if(!is_object($objSucursal) || empty($objSucursal))
+                {
+                    throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
+                }
+                $objUsuarioRes->setSUCURSALID($objSucursal);
             }
             if(!empty($intIdUsuario))
             {
