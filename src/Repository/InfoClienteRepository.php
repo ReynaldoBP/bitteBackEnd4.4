@@ -269,4 +269,58 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
         $arrayCliente['error'] = $strMensajeError;
         return $arrayCliente;
     }
+
+    /**
+     * Documentación para la función 'getRegistrosClientes'
+     *
+     * Método encargado de retornar reporte de registros de clientes
+     * según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 12-08-2021
+     * 
+     * @return array  $arrayRespuesta
+     * 
+     */
+    public function getRegistrosClientes($arrayParametros)
+    {
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
+        $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
+        $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = " SELECT IC.ID_CLIENTE, CONCAT (IC.NOMBRE, CONCAT(' ',IC.APELLIDO)) AS CLIENTE, 
+                                IC.GENERO, IC.EDAD AS FECHA_NACIMIENTO,IC.CORREO,IC.ESTADO, IC.FE_CREACION AS FECHA_REGISTRO ";
+            $strFrom        = " FROM INFO_CLIENTE IC ";
+            $strWhere       = " WHERE EXTRACT(MONTH FROM IC.FE_CREACION) = :strMes
+                                AND EXTRACT(YEAR  FROM IC.FE_CREACION) = :strAnio
+                                AND IC.ESTADO=:strEstado ";
+            $strOrderBy     = " ORDER BY NOMBRE ASC ";
+            $objQuery->setParameter("strEstado",$strEstado);
+            $objQuery->setParameter("strMes", $strMes);
+            $objQuery->setParameter("strAnio", $strAnio);
+            $objRsmBuilder->addScalarResult('ID_CLIENTE',       'ID_CLIENTE',       'string');
+            $objRsmBuilder->addScalarResult('CLIENTE',          'CLIENTE',          'string');
+            $objRsmBuilder->addScalarResult('GENERO',           'GENERO',           'string');
+            $objRsmBuilder->addScalarResult('FECHA_NACIMIENTO', 'FECHA_NACIMIENTO', 'string');
+            $objRsmBuilder->addScalarResult('CORREO',           'CORREO',           'string');
+            $objRsmBuilder->addScalarResult('ESTADO',           'ESTADO',           'string');
+            $objRsmBuilder->addScalarResult('FECHA_REGISTRO',   'FECHA_REGISTRO',   'string');
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
+            $objQuery->setSQL($strSql);
+            $arrayRespuesta['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        return $arrayRespuesta;
+    }
+
+
 }

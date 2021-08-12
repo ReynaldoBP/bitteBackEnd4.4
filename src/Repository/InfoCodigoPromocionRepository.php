@@ -24,7 +24,7 @@ class InfoCodigoPromocionRepository extends \Doctrine\ORM\EntityRepository
     {
         $intIdPromocion     = $arrayParametros['intIdPromocion'] ? $arrayParametros['intIdPromocion']:'';
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
-        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','CANJEADO','ELIMINADO');
         $arrayCodigo   = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);

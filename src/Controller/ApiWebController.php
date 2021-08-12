@@ -105,6 +105,10 @@ class ApiWebController extends FOSRestController
                 break;
                 case 'getResultadosProIPN':$arrayRespuesta = $this->getResultadosProIPN($arrayData);
                 break;
+                case 'getPromedioRegistrosClt':$arrayRespuesta = $this->getPromedioRegistrosClt($arrayData);
+                break;
+                case 'getRegistrosClientes':$arrayRespuesta = $this->getRegistrosClientes($arrayData);
+                break;
                 case 'getComparativosRestaurantes':$arrayRespuesta = $this->getComparativosRestaurantes($arrayData);
                 break;
                 case 'getParametro':$arrayRespuesta = $this->getParametro($arrayData);
@@ -3545,6 +3549,105 @@ class ApiWebController extends FOSRestController
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
+
+    /**
+     * Documentación para la función 'getPromedioRegistrosClt'
+     * Método encargado de retornar el promedio de los registros
+     * según los parámetros recibidos.
+     *
+     * @author Kevin Baque
+     * @version 1.0 12-08-2021
+     *
+     * @return array  $objResponse
+     */
+    public function getPromedioRegistrosClt($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strEstado          = $arrayData['strEstado']    ? $arrayData['strEstado']:array('ACTIVO');
+        $strMes             = $arrayData['strMes']       ? $arrayData['strMes']:'';
+        $strAnio            = $arrayData['strAnio']      ? $arrayData['strAnio']:'';
+        $intIdusuario       = $arrayData['intIdusuario'] ? $arrayData['intIdusuario']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $strStatus          = 200;
+        $boolSucces         = true;
+        $objResponse        = new Response;
+        try
+        {
+            $arrayParametros  = array("strMes"     => $strMes,
+                                      "strAnio"    => $strAnio,
+                                      "strEstado"  => $strEstado);
+            $arrayRespuesta   = $this->getDoctrine()
+                                     ->getRepository(InfoRespuesta::class)
+                                     ->getPromedioRegistrosClt($arrayParametros);
+            if(isset($arrayRespuesta['error']) && !empty($arrayRespuesta['error']))
+            {
+                $strStatus  = 204;
+                throw new \Exception($arrayRespuesta['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'getRegistrosClientes'
+     * Método encargado de retornar reporte de registros de clientes
+     * según los parámetros recibidos.
+     *
+     * @author Kevin Baque
+     * @version 1.0 12-08-2021
+     *
+     * @return array  $objResponse
+     */
+    public function getRegistrosClientes($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strEstado          = $arrayData['strEstado']    ? $arrayData['strEstado']:array('ACTIVO');
+        $strMes             = $arrayData['strMes']       ? $arrayData['strMes']:'';
+        $strAnio            = $arrayData['strAnio']      ? $arrayData['strAnio']:'';
+        $intIdusuario       = $arrayData['intIdusuario'] ? $arrayData['intIdusuario']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $strStatus          = 200;
+        $boolSucces         = true;
+        $objResponse        = new Response;
+        try
+        {
+            $arrayParametros  = array("strMes"     => $strMes,
+                                      "strAnio"    => $strAnio,
+                                      "strEstado"  => $strEstado);
+            $arrayRespuesta   = $this->getDoctrine()
+                                     ->getRepository(InfoCliente::class)
+                                     ->getRegistrosClientes($arrayParametros);
+            if(isset($arrayRespuesta['error']) && !empty($arrayRespuesta['error']))
+            {
+                $strStatus  = 204;
+                throw new \Exception($arrayRespuesta['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
     /**
      * Documentación para la función 'getParametro'
      * Método encargado de retornar todos los parametro según los parámetros recibidos.

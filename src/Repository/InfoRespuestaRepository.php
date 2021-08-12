@@ -917,4 +917,54 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $arrayRespuesta['error'] = $strMensajeError;
         return $arrayRespuesta;
     }
+
+    /**
+     * Documentación para la función 'getPromedioRegistrosClt'
+     *
+     * Método encargado de retornar el promedio de los registros
+     * según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 12-08-2021
+     * 
+     * @return array  $arrayRespuesta
+     * 
+     */
+    public function getPromedioRegistrosClt($arrayParametros)
+    {
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
+        $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
+        $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = " SELECT EXTRACT(DAY FROM IC.FE_CREACION) AS DIA,
+                                       COUNT(IC.FE_CREACION) AS CANTIDAD ";
+            $strFrom        = " FROM INFO_CLIENTE IC ";
+            $strWhere       = " WHERE EXTRACT(MONTH FROM IC.FE_CREACION) = :strMes
+                                AND EXTRACT(YEAR  FROM IC.FE_CREACION) = :strAnio
+                                AND IC.ESTADO=:strEstado ";
+            $strGroupBy     = " GROUP BY EXTRACT(DAY FROM IC.FE_CREACION) ";
+            $strOrderBy     = " ORDER BY 1 ASC ";
+            $objQuery->setParameter("strEstado",$strEstado);
+            $objQuery->setParameter("strMes", $strMes);
+            $objQuery->setParameter("strAnio", $strAnio);
+
+            $objRsmBuilder->addScalarResult('DIA'     , 'DIA'     , 'string');
+            $objRsmBuilder->addScalarResult('CANTIDAD', 'CANTIDAD', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere.$strGroupBy.$strOrderBy;
+            $objQuery->setSQL($strSql);
+            $arrayRespuesta['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        return $arrayRespuesta;
+    }
+
 }
