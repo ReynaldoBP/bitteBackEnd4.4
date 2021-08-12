@@ -76,7 +76,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                 $strGroupBy     = " GROUP BY IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
                                     IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,ATC.DESCRIPCION_TIPO_COMIDA, 
                                     IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.URL_RED_SOCIAL, IR.NUMERO_CONTACTO, IR.ESTADO, IR.CODIGO,IR.ES_AFILIADO, IR.IMAGEN, IR.ICONO ";
-                $strOrder       = " order by IR.RAZON_SOCIAL ASC, IR.ESTADO ASC ";
+                $strOrder       = " order by IR.NOMBRE_COMERCIAL ASC, IR.ESTADO ASC ";
                 $objQuery->setParameter("ESTADO", $strEstado);
                 if(!empty($intCiudad) && $intCiudad!="TODAS")
                 {
@@ -213,6 +213,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             $strGroupBy     = " GROUP BY ID_RESTAURANTE,TIPO_IDENTIFICACION,IDENTIFICACION,RAZON_SOCIAL,NOMBRE_COMERCIAL,REPRESENTANTE_LEGAL,
                                 TIPO_COMIDA_ID,ES_AFILIADO,DESCRIPCION_TIPO_COMIDA,DIRECCION_TRIBUTARIO,URL_CATALOGO,URL_RED_SOCIAL,NUMERO_CONTACTO,ESTADO,IMAGEN,ICONO,
                                 CANT_LIKE,PRO_ENCUESTAS ";
+            $strOrderBy     = " ORDER BY IR.NOMBRE_COMERCIAL ";
             if(!empty($intEsRestaurante))
             {
                 $strWhere = $strWhere." AND IR.ID_RESTAURANTE != 28 ";
@@ -308,7 +309,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CANT_LIKE', 'CANT_LIKE', 'string');
             $objRsmBuilder->addScalarResult('PRO_ENCUESTAS', 'PRO_ENCUESTAS', 'string');
             $objRsmBuilderCount->addScalarResult('CANTIDAD', 'Cantidad', 'integer');
-            $strSql       = $strSelect.$strFrom.$strWhere.$strGroupBy;
+            $strSql       = $strSelect.$strFrom.$strWhere.$strGroupBy.$strOrderBy;
             $objQuery->setSQL($strSql);
             $strSqlCount  = $strSelectCount.$strFrom.$strWhere;
             $objQueryCount->setSQL($strSqlCount);

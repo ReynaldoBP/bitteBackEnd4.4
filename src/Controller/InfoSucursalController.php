@@ -20,6 +20,8 @@ use App\Entity\AdmiPais;
 use App\Entity\AdmiProvincia;
 use App\Entity\AdmiCiudad;
 use App\Entity\AdmiParroquia;
+use App\Entity\InfoUsuario;
+use App\Entity\InfoUsuarioRes;
 class InfoSucursalController extends Controller
 {
     /**
@@ -55,6 +57,26 @@ class InfoSucursalController extends Controller
         $objResponse          = new Response;
         try
         {
+            if(!empty($intIdUsuario))
+            {
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
+                {
+                    $strTipoRol = !empty($objUsuario->getTIPOROLID()->getDESCRIPCION_TIPO_ROL()) ? $objUsuario->getTIPOROLID()->getDESCRIPCION_TIPO_ROL():'';
+                    if(!empty($strTipoRol) && $strTipoRol=="RESTAURANTE")
+                    {
+                        $objUsuarioRes = $this->getDoctrine()
+                                              ->getRepository(InfoUsuarioRes::class)
+                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                        if(!empty($objUsuarioRes) && is_object($objUsuarioRes))
+                        {
+                            $intIdSucursal = $objUsuarioRes->getSUCURSALID()->getId();
+                        }
+                    }
+                }
+            }
             $arrayParametros = array('strIdRestaurante'     => $strIdRestaurante,
                                     'intIdSucursal'         => $intIdSucursal,
                                     'intIdUsuario'          => $intIdUsuario,

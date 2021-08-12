@@ -62,6 +62,7 @@ class InfoUsuarioRepository extends \Doctrine\ORM\EntityRepository
                                LEFT JOIN INFO_USUARIO_RES IURES ON IURES.USUARIO_ID   = IU.ID_USUARIO
                                LEFT JOIN INFO_RESTAURANTE IRE   ON IRE.ID_RESTAURANTE = IURES.RESTAURANTE_ID ";
             $strWhere       = "WHERE IU.ESTADO in (:ESTADO) ";
+            $strOrderBy     = " Order by IU.NOMBRES ASC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
             if(!empty($intIdRestaurante))
@@ -119,7 +120,7 @@ class InfoUsuarioRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('ID_TIPO_ROL', 'ID_TIPO_ROL', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_RESTAURANTE', 'NOMBRE_RESTAURANTE', 'string');
             $objRsmBuilderCount->addScalarResult('CANTIDAD', 'Cantidad', 'integer');
-            $strSql       = $strSelect.$strFrom.$strWhere;
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $strSqlCount  = $strSelectCount.$strFrom.$strWhere;
             $objQueryCount->setSQL($strSqlCount);

@@ -39,6 +39,7 @@ class AdmiModuloRepository extends \Doctrine\ORM\EntityRepository
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM ADMI_MODULO  AM ";
             $strWhere       = "WHERE AM.ESTADO in (:ESTADO) ";
+            $strOrderBy     = " Order by AM.DESCRIPCION ASC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
 
@@ -64,7 +65,7 @@ class AdmiModuloRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('FE_MODIFICACION', 'FE_MODIFICACION', 'date');
 
             $objRsmBuilderCount->addScalarResult('CANTIDAD', 'Cantidad', 'integer');
-            $strSql       = $strSelect.$strFrom.$strWhere;
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $strSqlCount  = $strSelectCount.$strFrom.$strWhere;
             $objQueryCount->setSQL($strSqlCount);

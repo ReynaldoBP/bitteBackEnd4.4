@@ -46,7 +46,7 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             $strFrom        = "FROM INFO_PROMOCION PR 
                                 JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE=PR.RESTAURANTE_ID ";
             $strWhere       = "WHERE PR.ESTADO in (:ESTADO) ";
-            $strOrder       = " order by PR.ESTADO ASC ";
+            $strOrder       = " order by PR.DESCRIPCION_TIPO_PROMOCION ASC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
             if(!empty($intIdPromocion))

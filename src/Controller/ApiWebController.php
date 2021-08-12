@@ -222,13 +222,13 @@ class ApiWebController extends FOSRestController
                     throw new \Exception('Tipo de comida no existe.');
                 }
             }
-            $objRestaurante = $this->getDoctrine()
+            /*$objRestaurante = $this->getDoctrine()
                                    ->getRepository(InfoRestaurante::class)
                                    ->findOneBy(array('IDENTIFICACION'=>$strIdentificacion));
             if(is_object($objRestaurante) && !empty($objRestaurante))
             {
                 throw new \Exception('Restaurante ya existente.');
-            }
+            }*/
             $entityRestaurante = new InfoRestaurante();
             $entityRestaurante->setTIPOCOMIDAID($objTipoComida);
             $entityRestaurante->setTIPOIDENTIFICACION(strtoupper($strTipoIdentificacion));
@@ -2615,6 +2615,8 @@ class ApiWebController extends FOSRestController
     {
         error_reporting( error_reporting() & ~E_NOTICE );
         $intIdRestaurante       = $arrayData['idRestaurante'] ? $arrayData['idRestaurante']:'';
+        $intIdSucursal          = $arrayData['intIdSucursal'] ? $arrayData['intIdSucursal']:'';
+        $intIdUsuario           = $arrayData['intIdUsuario']  ? $arrayData['intIdUsuario']:'';
         $intIdCliente           = $arrayData['idCliente'] ? $arrayData['idCliente']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
         $strMes                 = $arrayData['strMes'] ? $arrayData['strMes']:'';
@@ -2627,14 +2629,36 @@ class ApiWebController extends FOSRestController
         $em                     = $this->getDoctrine()->getManager();
         try
         {
-            $em->getConnection()->beginTransaction();
+            $arrayParametros = array('intIdRestaurante' => $intIdRestaurante,
+                                     'intIdCliente'     => $intIdCliente,
+                                     'strEstado'        => $strEstado,
+                                     'strMes'           => $strMes,
+                                     'strAnio'          => $strAnio,
+                                     'intIdSucursal'    => $intIdSucursal);
+            if(!empty($intIdUsuario))
+            {
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($intIdUsuario);
+                if(!empty($objUsuario) && is_object($objUsuario))
+                {
+                    $strTipoRol = !empty($objUsuario->getTIPOROLID()->getDESCRIPCION_TIPO_ROL()) ? $objUsuario->getTIPOROLID()->getDESCRIPCION_TIPO_ROL():'';
+                    error_log($strTipoRol);
+                    if(!empty($strTipoRol) && ($strTipoRol=="RESTAURANTE" || $strTipoRol=="RESTAURANTE GERENCIA"))
+                    {
+                        $objUsuarioRes = $this->getDoctrine()
+                                              ->getRepository(InfoUsuarioRes::class)
+                                              ->findOneBy(array('USUARIOID'=>$intIdUsuario));
+                        if(!empty($objUsuarioRes) && is_object($objUsuarioRes))
+                        {
+                            $arrayParametros["intIdRestauranteUs"] = $objUsuarioRes->getRESTAURANTEID()->getId();
+                        }
+                    }
+                }
+            }
             $arrayPromocionHist = $this->getDoctrine()
                                        ->getRepository(InfoPromocionHistorial::class)
-                                       ->getPromocionCriterioWeb(array('intIdRestaurante' => $intIdRestaurante,
-                                                                       'intIdCliente'     => $intIdCliente,
-                                                                       'strEstado'        => $strEstado,
-                                                                       'strMes'           => $strMes,
-                                                                       'strAnio'          => $strAnio));
+                                       ->getPromocionCriterioWeb($arrayParametros);
             if(!is_array($arrayPromocionHist) || empty($arrayPromocionHist))
             {
                 throw new \Exception('Promoción no existe o ha sido completada.');
@@ -2642,19 +2666,12 @@ class ApiWebController extends FOSRestController
         }
         catch(\Exception $ex)
         {
-            if ($em->getConnection()->isTransactionActive())
-            {
-                $strStatus = 404;
-                $em->getConnection()->rollback();
-            }
+            $strStatus = 404;
             $strMensajeError = "Fallo al listar Historial de la promoción, intente nuevamente.\n ". $ex->getMessage();
         }
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayPromocionHist,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayPromocionHist,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }

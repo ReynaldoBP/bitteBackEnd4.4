@@ -58,13 +58,6 @@ class InfoUsuarioResController extends Controller
             {
                 throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
             }
-            $objSucursal = $this->getDoctrine()
-                                ->getRepository(InfoSucursal::class)
-                                ->findOneBy(array('id'=> $intIdSucursal));
-            if(!is_object($objSucursal) || empty($objSucursal))
-            {
-                throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
-            }
             $arrayParametrosUs = array('ESTADO' => 'ACTIVO',
                                        'id'     => $intIdUsuario);
             $objUsuario        = $this->getDoctrine()
@@ -117,7 +110,17 @@ class InfoUsuarioResController extends Controller
 
             $entityUsuarioRes = new InfoUsuarioRes();
             $entityUsuarioRes->setRESTAURANTEID($objRestaurante);
-            $entityUsuarioRes->setSUCURSALID($objSucursal);
+            if(!empty($intIdSucursal))
+            {
+                $objSucursal = $this->getDoctrine()
+                                    ->getRepository(InfoSucursal::class)
+                                    ->findOneBy(array('id'=> $intIdSucursal));
+                if(!is_object($objSucursal) || empty($objSucursal))
+                {
+                    throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
+                }
+                $entityUsuarioRes->setSUCURSALID($objSucursal);
+            }
             $entityUsuarioRes->setUSUARIOID($objUsuario);
             $entityUsuarioRes->setESTADO(strtoupper($strEstado));
             $entityUsuarioRes->setUSRCREACION($strUsuarioCreacion);

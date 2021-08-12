@@ -152,6 +152,8 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
     {
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:"";
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $intIdSucursal      = $arrayParametros['intIdSucursal'] ? $arrayParametros['intIdSucursal']:'';
+        $intIdRestauranteUs = $arrayParametros['intIdRestauranteUs'] ? $arrayParametros['intIdRestauranteUs']:'';
         $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
         $strMes             = $arrayParametros['strMes'] ? $arrayParametros['strMes']:'';
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
@@ -168,7 +170,11 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
                                 ,(SELECT ISU_SUB.DESCRIPCION
                                     FROM INFO_USUARIO_RES IRE_SUB
                                     JOIN INFO_SUCURSAL ISU_SUB ON ISU_SUB.ID_SUCURSAL=IRE_SUB.SUCURSAL_ID
-                                    WHERE IRE_SUB.RESTAURANTE_ID=IRE.ID_RESTAURANTE AND IRE_SUB.USUARIO_ID=ICH.USR_MODIFICACION) AS SUCURSAL ";
+                                    WHERE IRE_SUB.RESTAURANTE_ID=IRE.ID_RESTAURANTE AND IRE_SUB.USUARIO_ID=ICH.USR_MODIFICACION) AS SUCURSAL
+                                ,(SELECT ISU_SUB.ID_SUCURSAL
+                                    FROM INFO_USUARIO_RES IRE_SUB
+                                    JOIN INFO_SUCURSAL ISU_SUB ON ISU_SUB.ID_SUCURSAL=IRE_SUB.SUCURSAL_ID
+                                    WHERE IRE_SUB.RESTAURANTE_ID=IRE.ID_RESTAURANTE AND IRE_SUB.USUARIO_ID=ICH.USR_MODIFICACION) AS ID_SUCURSAL ";
             $strFrom        = "FROM INFO_CLIENTE_PROMOCION_HISTORIAL ICH
                                 JOIN INFO_PROMOCION IPROMO 
                                     ON IPROMO.ID_PROMOCION = ICH.PROMOCION_ID
@@ -195,6 +201,24 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
                 $objQuery->setParameter("MES",$strMes);
                 $objQuery->setParameter("ANIO",$strAnio);
             }
+            $strSqlTemp = $strSelect.$strFrom.$strWhere.$strOrderBy;
+            $strSqlT1   = "";
+            if(!empty($intIdSucursal))
+            {
+                $strSqlT1 = " SELECT T1.*
+                            FROM (".$strSqlTemp.") AS T1
+                            WHERE T1.ID_SUCURSAL= ".$intIdSucursal;
+            }
+            else
+            {
+                if(!empty($intIdRestauranteUs))
+                {
+                    $strSqlT1 = " SELECT T1.*
+                                FROM (".$strSqlTemp.") AS T1
+                                WHERE T1.ID_RESTAURANTE= ".$intIdRestauranteUs;
+                }
+            }
+            $strSql = ($strSqlT1 == "") ? $strSelect.$strFrom.$strWhere.$strOrderBy:$strSqlT1;
             $objRsmBuilder->addScalarResult('ID_CLIENTE_PUNTO_HISTORIAL', 'ID_CLIENTE_PUNTO_HISTORIAL', 'string');
             $objRsmBuilder->addScalarResult('ESTADO_PROMOCION_HISTORIAL', 'ESTADO_PROMOCION_HISTORIAL', 'string');
             $objRsmBuilder->addScalarResult('CLIENTE_ID', 'CLIENTE_ID', 'string');
@@ -206,9 +230,9 @@ class InfoPromocionHistorialRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('ESTADO_RESTAURANTE', 'ESTADO_RESTAURANTE', 'string');
             $objRsmBuilder->addScalarResult('CLIENTE', 'CLIENTE', 'string');
             $objRsmBuilder->addScalarResult('SUCURSAL', 'SUCURSAL', 'string');
+            $objRsmBuilder->addScalarResult('ID_SUCURSAL', 'ID_SUCURSAL', 'string');
             $objRsmBuilder->addScalarResult('CANTIDAD_PUNTOS', 'CANTIDAD_PUNTOS', 'string');
             $objRsmBuilder->addScalarResult('FE_CREACION', 'FE_CREACION', 'string');
-            $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayPromocion['resultados'] = $objQuery->getResult();
         }

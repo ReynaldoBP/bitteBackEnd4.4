@@ -93,7 +93,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
                 $objQuery->setParameter("ID_RESTAURANTE", $strIdRestaurante);
                 $objQueryCount->setParameter("ID_RESTAURANTE", $strIdRestaurante);
             }
-            $strOrderBy = " Order by IR.NOMBRE_COMERCIAL ASC, ISUR.ESTADO_FACTURACION ASC ";
+            $strOrderBy = " Order by ISUR.DESCRIPCION ASC, ISUR.ESTADO_FACTURACION ASC ";
             $objRsmBuilder->addScalarResult('ID_SUCURSAL', 'ID_SUCURSAL', 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
             $objRsmBuilder->addScalarResult('ES_MATRIZ', 'ES_MATRIZ', 'string');

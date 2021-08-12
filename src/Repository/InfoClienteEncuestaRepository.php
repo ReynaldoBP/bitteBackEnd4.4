@@ -499,8 +499,9 @@ AND IC.EDAD!='SIN EDAD'
                                                                              ".$strFromAdicional."
                                         LEFT JOIN INFO_CLIENTE_ENCUESTA ICE ON ISUR.ID_SUCURSAL      = ICE.SUCURSAL_ID ";
             $strWhere       = " WHERE ISUR.ESTADO = :ESTADO
-                                    AND IRE.ESTADO  = :ESTADO ";
-            $strGroupBy     = " GROUP BY IRE.ID_RESTAURANTE order by IRE.ID_RESTAURANTE  limit ".$intLimiteInicial.",".$intLimiteFinal;
+                                    AND IRE.ESTADO  = :ESTADO 
+                                    AND IRE.ES_AFILIADO = 'SI' ";
+            $strGroupBy     = " GROUP BY IRE.ID_RESTAURANTE order by IRE.NOMBRE_COMERCIAL  limit ".$intLimiteInicial.",".$intLimiteFinal;
             $objQuery->setParameter("ESTADO",$strEstado);
             if(!empty($intIdCliente))
             {
