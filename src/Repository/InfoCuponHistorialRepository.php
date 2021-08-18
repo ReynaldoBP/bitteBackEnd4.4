@@ -10,4 +10,46 @@ use Doctrine\ORM\Query\ResultSetMappingBuilder;
  */
 class InfoCuponHistorialRepository extends \Doctrine\ORM\EntityRepository
 {
+    /**
+     * Documentación para la función 'getVigenciaCuponHist'
+     * Método encargado de validar si el cliente ya canjeo un cupón, 
+     * según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 18-08-2021
+     * 
+     * @return array  $arrayRespuesta
+     * 
+     */
+    public function getVigenciaCuponHist($arrayParametros)
+    {
+        $intIdCliente       = $arrayParametros['intIdCliente']     ? $arrayParametros['intIdCliente']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        try
+        {
+            $strSelect      = " SELECT COUNT(*) AS CANTIDAD ";
+            $strFrom        = " FROM INFO_CUPON_HISTORIAL ICH ";
+            $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICH.FE_CREACION,CONVERT_TZ(now(),'+00:00','-05:00')) >= 84 ".
+                                  " AND ICH.CLIENTE_ID     = :CLIENTE_ID ".
+                                  " AND ICH.RESTAURANTE_ID = :RESTAURANTE_ID ";
+            $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
+            $objQuery->setParameter("RESTAURANTE_ID",$intIdRestaurante);
+
+            $objRsmBuilder->addScalarResult('CANTIDAD', 'CANTIDAD', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayRespuesta['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        return $arrayRespuesta;
+    }
+
 }

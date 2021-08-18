@@ -790,4 +790,57 @@ AND IC.EDAD!='SIN EDAD'
         $arrayContenido['error'] = $strMensajeError;
         return $arrayContenido;
     }
+
+    /**
+     * Documentación para la función 'getCantEncuesta'
+     * Método encargado de retornar la cantidad de encuestas, 
+     * según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 18-08-2021
+     * 
+     * @return array  $arrayRespuesta
+     * 
+     */
+    public function getCantEncuesta($arrayParametros)
+    {
+        $intIdCliente       = $arrayParametros['intIdCliente']     ? $arrayParametros['intIdCliente']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $arrayRespuesta     = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $strEstadoEliminado = 'ELIMINADO';
+        try
+        {
+            $strSelect      = " SELECT COUNT(*) AS CANTIDAD ";
+            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE ";
+            $strWhere       = " WHERE ICE.ESTADO != :ESTADO ";
+            $objQuery->setParameter("ESTADO",$strEstadoEliminado);
+
+            if(!empty($intIdRestaurante))
+            {
+                $strFrom .= " JOIN INFO_SUCURSAL ISUR ON ISUR.ID_SUCURSAL= ICE.SUCURSAL_ID
+                              JOIN INFO_RESTAURANTE IRES ON IRES.ID_RESTAURANTE = ISUR.RESTAURANTE_ID
+                              AND IRES.ID_RESTAURANTE= :ID_RESTAURANTE ";
+                $objQuery->setParameter("ID_RESTAURANTE",$intIdRestaurante);
+            }
+            if(!empty($intIdCliente))
+            {
+                $strWhere .= " AND ICE.CLIENTE_ID = :CLIENTE_ID ";
+                $objQuery->setParameter("CLIENTE_ID",$intIdCliente);
+            }
+            $objRsmBuilder->addScalarResult('CANTIDAD', 'CANTIDAD', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere;
+            $objQuery->setSQL($strSql);
+            $arrayRespuesta['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        return $arrayRespuesta;
+    }
+
 }

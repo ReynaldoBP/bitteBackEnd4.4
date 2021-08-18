@@ -62,7 +62,7 @@ class InfoCuponHistorial
     private $USR_CREACION;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="datetime")
      */
     private $FE_CREACION;
 
@@ -72,7 +72,7 @@ class InfoCuponHistorial
     private $USR_MODIFICACION;
 
     /**
-     * @ORM\Column(type="date", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private $FE_MODIFICACION;
 

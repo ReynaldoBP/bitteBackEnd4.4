@@ -654,7 +654,7 @@ class ApiMovilController extends FOSRestController
             if(isset($arrayCltEncuesta['error']) && !empty($arrayCltEncuesta['error']))
             {
                 $strStatus  = 404;
-                throw new \Exception($arraySucursal['error']);
+                throw new \Exception($arrayCltEncuesta['error']);
             }
             if(isset($arrayCltEncuesta['resultados']) && intval($arrayCltEncuesta['resultados'][0]['CANTIDAD']) >0 )
             {
@@ -990,6 +990,14 @@ class ApiMovilController extends FOSRestController
                 $intIpn              = $intTotalPromotores - $intTotalDetractores;
             }
             //[FIN] Calculo de IPN
+            //[INI] Calculo de cant. de encuesta
+            $intCantEncuesta   = 0;
+            $arrayCantEncuesta = $this->getDoctrine()
+                                      ->getRepository(InfoClienteEncuesta::class)
+                                      ->getCantEncuesta(array('intIdCliente'     => $intIdCliente,
+                                                              'intIdRestaurante' => $intIdRestaurante));
+            $intCantEncuesta = (!empty($arrayCantEncuesta['resultados'])) ? intval($arrayCantEncuesta['resultados'][0]['CANTIDAD']):0;
+            //[FIN] Calculo de cant. de encuesta
             $arraySucursal["resultados"][$intIterador]["ES_AFILIADO"] = (!empty($item["ES_AFILIADO"]) && $item["ES_AFILIADO"] == "SI") ? 'S':'N';
             $arrayResultado ['resultados'] []= array('ID_RESTAURANTE'          =>   $arrayItemRestaurante['ID_RESTAURANTE'],
                                                      'TIPO_IDENTIFICACION'     =>   $arrayItemRestaurante['TIPO_IDENTIFICACION'],
@@ -1015,7 +1023,8 @@ class ApiMovilController extends FOSRestController
                                                      'PRO_ENCUESTAS_PRG'       =>   $arrayResultadoProPreg ? $arrayResultadoProPreg:null,
                                                      'ES_PUBLICIDAD'           =>  'N',
                                                      'ES_AFILIADO'             =>  (!empty($arrayItemRestaurante["ES_AFILIADO"]) && $arrayItemRestaurante["ES_AFILIADO"] == "SI") ? 'S':'N',
-                                                     'IPN'                     =>  round($intIpn));
+                                                     'IPN'                     =>  round($intIpn),
+                                                     'CANT_ENCUESTA'           =>  $intCantEncuesta);
         }
         $arrayResultado['error'] = $strMensajeError;
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
@@ -3557,6 +3566,8 @@ class ApiMovilController extends FOSRestController
         $em                    = $this->getDoctrine()->getManager();
         $boolSucces            = true;
         $strMensaje            = "Cupón canjeado con éxito";
+        $intCantPuntos         = 0;
+        $intCantidadPuntos     = 0;
         try
         {
             if(empty($intIdCliente) || empty($strCupon) || empty($strUsuarioCreacion) || empty($intIdRestaurante))
@@ -3599,6 +3610,20 @@ class ApiMovilController extends FOSRestController
                 {
                     throw new \Exception("Cupón no válido.");
                 }
+                //[INI] Regla: No se permite ingresar más de un cupón en el mismo restaurante.
+                $arrayVigenciaCupon = $this->getDoctrine()
+                                           ->getRepository(InfoCuponHistorial::class)
+                                           ->getVigenciaCuponHist(array('intIdCliente'     => $intIdCliente,
+                                                                        'intIdRestaurante' => $intIdRestaurante));
+                if(isset($arrayVigenciaCupon['error']) && !empty($arrayVigenciaCupon['error']))
+                {
+                    throw new \Exception($arrayVigenciaCupon['error']);
+                }
+                if(isset($arrayVigenciaCupon['resultados']) && intval($arrayVigenciaCupon['resultados'][0]['CANTIDAD']) >0 )
+                {
+                    throw new \Exception("Estimado, Usted ya ingreso un cupón, debe esperar 7 días para ingresar un nuevo cupón!");
+                }
+                //[FIN] Regla: No se permite ingresar más de un cupón en el mismo restaurante.
                 $objCuponHist = $this->getDoctrine()
                                      ->getRepository(InfoCuponHistorial::class)
                                      ->findOneBy(array("CUPON_ID"       => $objCupon->getId(),
@@ -3630,6 +3655,20 @@ class ApiMovilController extends FOSRestController
                 {
                     throw new \Exception("Cupón no válido.");
                 }
+                //[INI] Regla: No se permite ingresar más de un cupón en el mismo restaurante.
+                $arrayVigenciaCupon = $this->getDoctrine()
+                                           ->getRepository(InfoCuponHistorial::class)
+                                           ->getVigenciaCuponHist(array('intIdCliente'     => $intIdCliente,
+                                                                        'intIdRestaurante' => $intIdRestaurante));
+                if(isset($arrayVigenciaCupon['error']) && !empty($arrayVigenciaCupon['error']))
+                {
+                    throw new \Exception($arrayVigenciaCupon['error']);
+                }
+                if(isset($arrayVigenciaCupon['resultados']) && intval($arrayVigenciaCupon['resultados'][0]['CANTIDAD']) >0 )
+                {
+                    throw new \Exception("Estimado, Usted ya ingreso un cupón, debe esperar 7 días para ingresar un nuevo cupón!");
+                }
+                //[FIN] Regla: No se permite ingresar más de un cupón en el mismo restaurante.
                 $objCupon->setESTADO("CANJEADO");
                 $em->persist($objCupon);
                 $em->flush();
@@ -3705,6 +3744,7 @@ class ApiMovilController extends FOSRestController
             }
             else
             {
+                $intCantidadPuntos = $intCantPuntos;
                 $entityCltPunto = new InfoClientePunto();
                 $entityCltPunto->setCLIENTEID($objCliente);
                 $entityCltPunto->setRESTAURANTEID($objRestaurante);
@@ -3731,9 +3771,11 @@ class ApiMovilController extends FOSRestController
                 $em->getConnection()->rollback();
             }
         }
-        $objResponse->setContent(json_encode(array('status'    => $strStatus,
-                                                   'resultado' => $strMensaje,
-                                                   'succes'    => $boolSucces)));
+        $objResponse->setContent(json_encode(array('status'             => $strStatus,
+                                                   'resultado'          => $strMensaje,
+                                                   'intCantCltPuntos'   => $intCantidadPuntos,
+                                                   'intCantCuponPuntos' => $intCantPuntos,
+                                                   'succes'             => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
