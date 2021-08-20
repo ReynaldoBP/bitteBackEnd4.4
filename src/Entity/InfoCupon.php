@@ -37,6 +37,11 @@ class InfoCupon
     private $CUPON;
 
     /**
+     * @ORM\Column(type="integer", length=11)
+     */
+    private $VALOR;
+
+    /**
      * @ORM\Column(type="string", length=100)
      */
     private $ESTADO;
@@ -100,6 +105,18 @@ class InfoCupon
         $this->CUPON = $CUPON;
 
         return $this;
+    }
+
+    public function setVALOR(int $VALOR): self
+    {
+        $this->VALOR = $VALOR;
+
+        return $this;
+    }
+
+    public function getVALOR(): ?int
+    {
+        return $this->VALOR;
     }
 
     public function getESTADO(): ?string

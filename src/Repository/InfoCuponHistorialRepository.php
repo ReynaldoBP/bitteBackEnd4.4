@@ -33,7 +33,7 @@ class InfoCuponHistorialRepository extends \Doctrine\ORM\EntityRepository
         {
             $strSelect      = " SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = " FROM INFO_CUPON_HISTORIAL ICH ";
-            $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICH.FE_CREACION,CONVERT_TZ(now(),'+00:00','-05:00')) >= 84 ".
+            $strWhere       = " WHERE TIMESTAMPDIFF(HOUR,ICH.FE_CREACION,CONVERT_TZ(now(),'+00:00','-05:00')) <= 168 ".
                                   " AND ICH.CLIENTE_ID     = :CLIENTE_ID ".
                                   " AND ICH.RESTAURANTE_ID = :RESTAURANTE_ID ";
             $objQuery->setParameter("CLIENTE_ID",$intIdCliente);

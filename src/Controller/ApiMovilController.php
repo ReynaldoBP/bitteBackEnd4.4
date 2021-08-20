@@ -3583,7 +3583,7 @@ class ApiMovilController extends FOSRestController
             }
             $objCupon = $this->getDoctrine()
                              ->getRepository(InfoCupon::class)
-                             ->findOneBy(array("CUPON"  => $strCupon,
+                             ->findOneBy(array("CUPON"  => strtolower($strCupon),
                                                "ESTADO" => "ACTIVO"));
             if(!is_object($objCupon) || empty($objCupon))
             {
@@ -3720,15 +3720,7 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception("Cupón no válido.");
             }
-            $objParametroCupon = $this->getDoctrine()
-                                      ->getRepository(AdmiParametro::class)
-                                      ->findOneBy(array('DESCRIPCION' => 'CANT_PUNTOS_CLT_CUPON',
-                                                        'ESTADO'      => 'ACTIVO'));
-            if(!is_object($objParametroCupon) || empty($objParametroCupon))
-            {
-                throw new \Exception('No existe el parametro CANT_PUNTOS_CLT_CUPON.');
-            }
-            $intCantPuntos     = intval($objParametroCupon->getVALOR1());
+            $intCantPuntos     = intval($objCupon->getVALOR());
             $intCantidadPuntos = 0;
             $objInfoCltPunto   = $this->getDoctrine()
                                       ->getRepository(InfoClientePunto::class)
