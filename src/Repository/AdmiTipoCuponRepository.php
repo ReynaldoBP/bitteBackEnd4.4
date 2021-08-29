@@ -13,32 +13,46 @@ use Doctrine\ORM\Query\ResultSetMappingBuilder;
  */
 class AdmiTipoCuponRepository extends \Doctrine\ORM\EntityRepository
 {
-    // /**
-    //  * @return AdmiTipoCupon[] Returns an array of AdmiTipoCupon objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * Documentación para la función 'getTipoCupon'.
+     *
+     * Método encargado de retornar todos los tipos de cupones según los parámetros enviados.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 27-08-2021
+     * 
+     * @return array  $arrayResultado
+     * 
+     */
+    public function getTipoCupon($arrayParametros)
     {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('a.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
+        $arrayResultado  = array();
+        $objRsmBuilder   = new ResultSetMappingBuilder($this->_em);
+        $objQuery        = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $strEstadoActivo = 'ACTIVO';
+        $strMensajeError = '';
+        $strSelect       = '';
+        $strFrom         = '';
+        $strWhere        = '';
+        $strOrderBy      = '';
+        try
+        {
+            $strSelect  = " SELECT ATC.ID_TIPO_CUPON, CONCAT(UPPER(LEFT(REPLACE(ATC.DESCRIPCION,'_',' '), 1)), LOWER(SUBSTRING(REPLACE(ATC.DESCRIPCION,'_',' '), 2))) AS DESCRIPCION ";
+            $strFrom    = " FROM ADMI_TIPO_CUPON ATC ";
+            $strWhere   = " WHERE ATC.ESTADO = :strEstadoActivo ";
+            $strOrderBy = " ORDER BY ATC.DESCRIPCION ASC ";
+            $objQuery->setParameter("strEstadoActivo", $strEstadoActivo);
+            $objRsmBuilder->addScalarResult('ID_TIPO_CUPON' , 'ID_TIPO_CUPON' , 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION'   , 'DESCRIPCION'   , 'string');
+            $strSql  = $strSelect.$strFrom.$strWhere.$strOrderBy;
+            $objQuery->setSQL($strSql);
+            $arrayResultado['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayResultado['error'] = $strMensajeError;
+        return $arrayResultado;
     }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?AdmiTipoCupon
-    {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }

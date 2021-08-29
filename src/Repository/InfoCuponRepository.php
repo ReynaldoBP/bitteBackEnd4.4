@@ -10,5 +10,79 @@ use Doctrine\ORM\Query\ResultSetMappingBuilder;
  */
 class InfoCuponRepository extends \Doctrine\ORM\EntityRepository
 {
-
+    /**
+     * Documentación para la función 'getCupon'.
+     *
+     * Método encargado de retornar todos los detalles de los cupones según los parámetros enviados.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 27-08-2021
+     * 
+     * @return array  $arrayResultado
+     * 
+     */
+    public function getCupon($arrayParametros)
+    {
+        $strIdCupon      = $arrayParametros['strIdCupon']  ? $arrayParametros['strIdCupon']:'';
+        $arrayResultado  = array();
+        $objRsmBuilder   = new ResultSetMappingBuilder($this->_em);
+        $objQuery        = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $strEstadoActivo = 'ACTIVO';
+        $strMensajeError = '';
+        $strSelect       = '';
+        $strFrom         = '';
+        $strWhere        = '';
+        $strOrderBy      = '';
+        try
+        {
+            $strSelect  = " SELECT 
+                            IC.ID_CUPON,
+                            IC.CUPON AS DESCRIPCION,
+                            ATC.ID_TIPO_CUPON,
+                            CONCAT(UPPER(LEFT(REPLACE(ATC.DESCRIPCION,'_',' '), 1)), LOWER(SUBSTRING(REPLACE(ATC.DESCRIPCION,'_',' '), 2))) AS TIPO_CUPON,
+                            IC.VALOR,
+                            IC.ESTADO,
+                            IFNULL(
+                                    (SELECT IRES.NOMBRE_COMERCIAL
+                                    FROM INFO_CUPON_RESTAURANTE ICR
+                                    JOIN INFO_RESTAURANTE IRES ON IRES.ID_RESTAURANTE = ICR.RESTAURANTE_ID
+                                    WHERE ICR.CUPON_ID=IC.ID_CUPON
+                                    ),'') AS RESTAURANTE,
+                            IFNULL(
+                                    (SELECT IRES.ID_RESTAURANTE
+                                    FROM INFO_CUPON_RESTAURANTE ICR
+                                    JOIN INFO_RESTAURANTE IRES ON IRES.ID_RESTAURANTE = ICR.RESTAURANTE_ID
+                                    WHERE ICR.CUPON_ID=IC.ID_CUPON
+                                    ),'') AS ID_RESTAURANTE,
+                            IC.FE_CREACION ";
+            $strFrom    = " FROM INFO_CUPON IC
+                            JOIN ADMI_TIPO_CUPON ATC ON ATC.ID_TIPO_CUPON = IC.TIPO_CUPON_ID ";
+            $strWhere   = " WHERE ATC.ESTADO = :strEstadoActivo ";
+            $strOrderBy = " ORDER BY IC.FE_CREACION DESC ";
+            $objQuery->setParameter("strEstadoActivo", $strEstadoActivo);
+            if(!empty($strIdCupon))
+            {
+                $strWhere .= " AND IC.ID_CUPON = :strIdCupon";
+                $objQuery->setParameter("strIdCupon", $strIdCupon);
+            }
+            $objRsmBuilder->addScalarResult('ID_CUPON'       , 'strIdCupon'       , 'string');
+            $objRsmBuilder->addScalarResult('DESCRIPCION'    , 'strDescripcion'   , 'string');
+            $objRsmBuilder->addScalarResult('ID_TIPO_CUPON'  , 'strIdTipoCupon'   , 'string');
+            $objRsmBuilder->addScalarResult('TIPO_CUPON'     , 'strTipoCupon'     , 'string');
+            $objRsmBuilder->addScalarResult('VALOR'          , 'strValor'         , 'string');
+            $objRsmBuilder->addScalarResult('ESTADO'         , 'strEstado'        , 'string');
+            $objRsmBuilder->addScalarResult('ID_RESTAURANTE' , 'strIdRestaurante' , 'string');
+            $objRsmBuilder->addScalarResult('RESTAURANTE'    , 'strRestaurante'   , 'string');
+            $objRsmBuilder->addScalarResult('FE_CREACION'    , 'strFeCreacion'    , 'string');
+            $strSql  = $strSelect.$strFrom.$strWhere.$strOrderBy;
+            $objQuery->setSQL($strSql);
+            $arrayResultado['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayResultado['error'] = $strMensajeError;
+        return $arrayResultado;
+    }
 }

@@ -34,6 +34,10 @@ use App\Entity\AdmiProvincia;
 use App\Entity\AdmiCiudad;
 use App\Entity\AdmiParroquia;
 use App\Entity\InfoPlantilla;
+use App\Entity\InfoCupon;
+use App\Entity\AdmiTipoCupon;
+use App\Entity\InfoCuponHistorial;
+use App\Entity\InfoCuponRestaurante;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -135,12 +139,17 @@ class ApiWebController extends FOSRestController
                 break;
                 case 'getBitacoraDetalle':$arrayRespuesta = $this->getBitacoraDetalle($arrayData);
                 break;
-                 $objResponse->setContent(json_encode(array(
-                                                     'status'    => 400,
-                                                     'resultado' => "No existe método con la descripción enviado por parámetro",
-                                                     'succes'    => true
-                                                     )
-                                                 ));
+                case 'createCupon':$arrayRespuesta = $this->createCupon($arrayData);
+                break;
+                case 'editCupon':$arrayRespuesta = $this->editCupon($arrayData);
+                break;
+                case 'getCupon':$arrayRespuesta = $this->getCupon($arrayData);
+                break;
+                case 'getTipoCupon':$arrayRespuesta = $this->getTipoCupon($arrayData);
+                break;
+                 $objResponse->setContent(json_encode(array('status'    => 204,
+                                                            'resultado' => "No existe método con la descripción enviado por parámetro",
+                                                            'succes'    => true)));
                  $objResponse->headers->set('Access-Control-Allow-Origin', '*');
                  $arrayRespuesta = $objResponse;
              }
@@ -189,7 +198,6 @@ class ApiWebController extends FOSRestController
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
-        $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
         $objController          = new DefaultController();
         $arrayBitacoraDetalle   = array();
@@ -4609,6 +4617,344 @@ class ApiWebController extends FOSRestController
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $arrayRespuesta,
                                                    'succes'    => true)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'createCupon'
+     *
+     * Método encargado de crear los cupones según los parámetros recibidos.
+     *
+     * @author Kevin Baque
+     * @version 1.0 21-06-2021
+     *
+     * @return array  $objResponse
+     */
+    public function createCupon($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strDescripcion         = $arrayData['strDescripcion']     ? $arrayData['strDescripcion']:'';
+        $strEstado              = $arrayData['strEstado']          ? $arrayData['strEstado']:'ACTIVO';
+        $strRestaurante         = $arrayData['strRestaurante']     ? $arrayData['strRestaurante']:'';
+        $strTipoCupon           = $arrayData['strTipoCupon']       ? $arrayData['strTipoCupon']:'';
+        $strValor               = $arrayData['strValor']           ? $arrayData['strValor']:'';
+        $strUsuarioCreacion     = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $strDatetimeActual      = new \DateTime('now');
+        $strMensajeError        = '';
+        $strStatus              = 200;
+        $boolSucces             = true;
+        $objResponse            = new Response;
+        $em                     = $this->getDoctrine()->getManager();
+        $objController          = new DefaultController();
+        $arrayBitacoraDetalle   = array();
+        $objController->setContainer($this->container);
+        try
+        {
+            $objCupon = $this->getDoctrine()
+                             ->getRepository(InfoCupon::class)
+                             ->findOneBy(array("CUPON" => strtolower(str_replace(" ","_",$strDescripcion))));
+            if(!empty($objCupon) && is_object($objCupon))
+            {
+                throw new \Exception('Cupón existente, por favor ingresar con otra descripción.');
+            }
+            $objTipoCupon = $this->getDoctrine()
+                                 ->getRepository(AdmiTipoCupon::class)
+                                 ->findOneBy(array("id"     =>$strTipoCupon,
+                                                   "ESTADO" =>'ACTIVO'));
+            if(!is_object($objTipoCupon) || empty($objTipoCupon))
+            {
+                throw new \Exception('No existe el tipo de cupón enviado por parámetro.');
+            }
+            $em->getConnection()->beginTransaction();
+            $entityCupon = new InfoCupon();
+            $entityCupon->setCUPON(strtolower(str_replace(" ","_",$strDescripcion)));
+            $entityCupon->setESTADO(strtoupper($strEstado));
+            $entityCupon->setVALOR(intval($strValor));
+            $entityCupon->setTIPOCUPONID($objTipoCupon);
+            $entityCupon->setUSRCREACION($strUsuarioCreacion);
+            $entityCupon->setFECREACION($strDatetimeActual);
+            $em->persist($entityCupon);
+            $em->flush();
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => strtolower(str_replace(" ","_",$strDescripcion)),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => strtoupper($strEstado),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo de cupón",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => str_replace("_"," ",ucwords($objTipoCupon->getDESCRIPCION())),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            if($objTipoCupon->getDESCRIPCION() == "GENERAL_RESTAURANTE" || $objTipoCupon->getDESCRIPCION() == "UNICO_RESTAURANTE")
+            {
+                $objRestaurante = $this->getDoctrine()
+                                       ->getRepository(InfoRestaurante::class)
+                                       ->findOneBy(array('id'     => $strRestaurante,
+                                                         'ESTADO' => 'ACTIVO'));
+                if(!is_object($objRestaurante) || empty($objRestaurante))
+                {
+                    throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
+                }
+                $entityCuponRes = new InfoCuponRestaurante();
+                $entityCuponRes->setCUPONID($entityCupon);
+                $entityCuponRes->setESTADO(strtoupper($strEstado));
+                $entityCuponRes->setRESTAURANTEID($objRestaurante);
+                $entityCuponRes->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponRes->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponRes);
+                $em->flush();
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Restaurante",
+                                               'VALOR_ANTERIOR' => "",
+                                               'VALOR_ACTUAL'   => $objRestaurante->getNOMBRECOMERCIAL(),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+            }
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Creación",
+                                            "strModulo"            => "Cupón",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $entityCupon->getId(),
+                                            "strReferenciaValor"   => $entityCupon->getCUPON(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
+            $strMensajeError = 'Cupón creado con éxito.!';
+        }
+        catch(\Exception $ex)
+        {
+            $strStatus = 204;
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->rollback();
+            }
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'editCupon'
+     *
+     * Método encargado de crear los cupones según los parámetros recibidos.
+     *
+     * @author Kevin Baque
+     * @version 1.0 21-06-2021
+     *
+     * @return array  $objResponse
+     */
+    public function editCupon($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strIdcupon             = $arrayData['strIdcupon']         ? $arrayData['strIdcupon']:'';
+        $strDescripcion         = $arrayData['strDescripcion']     ? $arrayData['strDescripcion']:'';
+        $strEstado              = $arrayData['strEstado']          ? $arrayData['strEstado']:'ACTIVO';
+        $strRestaurante         = $arrayData['strRestaurante']     ? $arrayData['strRestaurante']:'';
+        $strTipoCupon           = $arrayData['strTipoCupon']       ? $arrayData['strTipoCupon']:'';
+        $strValor               = $arrayData['strValor']           ? $arrayData['strValor']:'';
+        $strUsuarioCreacion     = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $strDatetimeActual      = new \DateTime('now');
+        $strMensajeError        = '';
+        $strBitacoraRestaurante = '';
+        $strStatus              = 200;
+        $boolSucces             = true;
+        $objResponse            = new Response;
+        $em                     = $this->getDoctrine()->getManager();
+        try
+        {
+            $objCupon = $this->getDoctrine()
+                             ->getRepository(InfoCupon::class)
+                             ->find($strIdcupon);
+            if(empty($objCupon) || !is_object($objCupon))
+            {
+                throw new \Exception('No existe el cupón enviado por parámetro.');
+            }
+            $objTipoCupon = $this->getDoctrine()
+                                 ->getRepository(AdmiTipoCupon::class)
+                                 ->findOneBy(array("id"     =>$strTipoCupon,
+                                                   "ESTADO" =>'ACTIVO'));
+            if(!is_object($objTipoCupon) || empty($objTipoCupon))
+            {
+                throw new \Exception('No existe el tipo de cupón enviado por parámetro.');
+            }
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
+                                           'VALOR_ANTERIOR' => $objCupon->getCUPON(),
+                                           'VALOR_ACTUAL'   => strtolower(str_replace(" ","_",$strDescripcion)),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
+                                           'VALOR_ANTERIOR' => $objCupon->getESTADO(),
+                                           'VALOR_ACTUAL'   => strtoupper($strEstado),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo de cupón",
+                                           'VALOR_ANTERIOR' => str_replace("_"," ",ucwords($objCupon->getTIPOCUPONID()->getDESCRIPCION())),
+                                           'VALOR_ACTUAL'   => str_replace("_"," ",ucwords($objTipoCupon->getDESCRIPCION())),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $em->getConnection()->beginTransaction();
+            $objCupon->setCUPON(strtolower(str_replace(" ","_",$strDescripcion)));
+            $objCupon->setESTADO(strtoupper($strEstado));
+            $objCupon->setVALOR(intval($strValor));
+            $objCupon->setTIPOCUPONID($objTipoCupon);
+            $objCupon->setUSRMODIFICACION($strUsuarioCreacion);
+            $objCupon->setFEMODIFICACION($strDatetimeActual);
+            $em->persist($objCupon);
+            $em->flush();
+            $objRelacionCupon = $this->getDoctrine()
+                                     ->getRepository(InfoCuponRestaurante::class)
+                                     ->findBy(array("CUPON_ID" =>$objCupon->getId()));
+            if(!empty($objRelacionCupon) && is_array($objRelacionCupon))
+            {
+                foreach($objRelacionCupon as $item)
+                {
+                    $strBitacoraRestaurante = $item->getRESTAURANTEID()->getNOMBRECOMERCIAL();
+                    $em->remove($item);
+                }
+                $em->flush();
+            }
+            if($objTipoCupon->getDESCRIPCION() == "GENERAL_RESTAURANTE" || $objTipoCupon->getDESCRIPCION() == "UNICO_RESTAURANTE")
+            {
+                $objRestaurante = $this->getDoctrine()
+                                       ->getRepository(InfoRestaurante::class)
+                                       ->findOneBy(array('id'     => $strRestaurante));
+                if(!is_object($objRestaurante) || empty($objRestaurante))
+                {
+                    throw new \Exception('No existe el restaurante con la descripción enviada por parámetro.');
+                }
+                $entityCuponRes = new InfoCuponRestaurante();
+                $entityCuponRes->setCUPONID($objCupon);
+                $entityCuponRes->setESTADO(strtoupper($strEstado));
+                $entityCuponRes->setRESTAURANTEID($objRestaurante);
+                $entityCuponRes->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponRes->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponRes);
+                $em->flush();
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Restaurante",
+                                               'VALOR_ANTERIOR' => $strBitacoraRestaurante,
+                                               'VALOR_ACTUAL'   => $objRestaurante->getNOMBRECOMERCIAL(),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+            }
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->commit();
+                $em->getConnection()->close();
+            }
+            if(!empty($arrayBitacoraDetalle))
+            {
+                $this->createBitacora(array("strAccion"            => "Modificación",
+                                            "strModulo"            => "Cupón",
+                                            "strUsuarioCreacion"   => $strUsuarioCreacion,
+                                            "intReferenciaId"      => $objCupon->getId(),
+                                            "strReferenciaValor"   => $objCupon->getCupon(),
+                                            "arrayBitacoraDetalle" => $arrayBitacoraDetalle));
+            }
+            $strMensajeError = 'Cupón editado con éxito.!';
+        }
+        catch(\Exception $ex)
+        {
+            $strStatus = 204;
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->rollback();
+            }
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    /**
+     * Documentación para la función 'getCupon'
+     *
+     * Método encargado de retornar todos los cupones según los parámetros enviados.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 27-08-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getCupon($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $strIdCupon           = $arrayData['strIdCupon'] ? $arrayData['strIdCupon']:'';
+        $strUsuarioCreacion   = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $arrayRespuesta       = array();
+        $strMensajeError      = '';
+        $strStatus            = 200;
+        $objResponse          = new Response;
+        $boolSucces           = true;
+        try
+        {
+            $arrayRespuesta  = $this->getDoctrine()
+                                    ->getRepository(InfoCupon::class)
+                                    ->getCupon(array('strIdCupon' => $strIdCupon));
+            if(!empty($arrayRespuesta["error"]))
+            {
+                throw new \Exception($arrayRespuesta['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error']      = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'getTipoCupon'
+     *
+     * Método encargado de retornar todos los tipos de cupones según los parámetros enviados.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 27-08-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getTipoCupon($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $arrayRespuesta       = array();
+        $strMensajeError      = '';
+        $strStatus            = 200;
+        $objResponse          = new Response;
+        $boolSucces           = true;
+        try
+        {
+            $arrayRespuesta  = $this->getDoctrine()
+                                    ->getRepository(AdmiTipoCupon::class)
+                                    ->getTipoCupon(array());
+            if(!empty($arrayRespuesta["error"]))
+            {
+                throw new \Exception($arrayRespuesta['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error']      = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
