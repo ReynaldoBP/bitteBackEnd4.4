@@ -86,6 +86,10 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
 
         try
         {
+/*
+            Se comenta, por el motivo de que la cantidad de tenedor de oro es que uno acumula cupones de tenedor de oro y cada nuevo mes, 
+            es decir el 1ro de cada mes se pone en 0 ese marcador
+
             $strSelect      = "SELECT (COUNT(IE.ID_CLT_ENCUESTA) + 
                                (SELECT COUNT(ics.ID_CONTENIDO_SUBIDO ) FROM INFO_CONTENIDO_SUBIDO ics 
                                WHERE ics.CLIENTE_ID = IE.CLIENTE_ID AND ics.ESTADO in (ESTADO)
@@ -98,9 +102,13 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQuery->setParameter("IDCLIENTE", $intclienteId);
             $objQuery->setParameter("FECHA", $strFechaInicial);
-
+*/
+            $strSelect = " SELECT COUNT(ID_CLT_ENCUESTA) AS CANTIDAD ";
+            $strFrom   = " FROM INFO_CLIENTE_ENCUESTA ";
+            $strWhere  = " WHERE CLIENTE_ID=:intclienteId AND EXTRACT(MONTH FROM FE_CREACION) =EXTRACT(MONTH FROM CURRENT_DATE()) AND ESTADO IN('ACTIVO','PENDIENTE') ";
+            $strSql    = $strSelect.$strFrom.$strWhere;
+            $objQuery->setParameter("intclienteId", $intclienteId);
             $objRsmBuilder->addScalarResult('CANTIDAD', 'CANTIDAD', 'string');
-            $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $intCantidadEncuesta = $objQuery->getOneOrNullResult();
         }
