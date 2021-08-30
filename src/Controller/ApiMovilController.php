@@ -135,6 +135,10 @@ class ApiMovilController extends FOSRestController
               break;
               case 'getSucursalPorRestaurante':$arrayRespuesta = $this->getSucursalPorRestaurante($arrayData);
               break;
+              case 'getClienteEncuesta':$arrayRespuesta = $this->getClienteEncuesta($arrayData);
+              break;
+              case 'editRespuesta':$arrayRespuesta = $this->editRespuesta($arrayData);
+              break;
               default:
                $objResponse->setContent(json_encode(array(
                                                    'status'    => 400,
@@ -3819,7 +3823,7 @@ class ApiMovilController extends FOSRestController
         catch(\Exception $ex)
         {
             $boolSucces      = false;
-            $strMensajeError = "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            $strMensajeError = $ex->getMessage();
         }
         $arrayRespuesta['error'] = $strMensajeError;
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
@@ -3977,4 +3981,118 @@ class ApiMovilController extends FOSRestController
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
+
+    /**
+     * Documentación para la función 'getClienteEncuesta'.
+     * 
+     * Función encargada de retornar las respuesta de la encuesta.
+     *
+     * @author Kevin Baque
+     * @version 1.0 30-08-2021
+     *
+     * @return array  $objResponse
+     */
+    public function getClienteEncuesta($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdCltEncuesta      = $arrayData['intIdCltEncuesta'] ? $arrayData['intIdCltEncuesta']:'';
+        $arrayRespuesta        = array();
+        $strMensajeError       = '';
+        $strStatus             = 200;
+        $objResponse           = new Response;
+        $em                    = $this->getDoctrine()->getManager();
+        $boolSucces            = true;
+        try
+        {
+            $objCltEncuesta = $this->getDoctrine()
+                                   ->getRepository(InfoClienteEncuesta::class)
+                                   ->find($intIdCltEncuesta);
+            if(!is_object($objCltEncuesta) || empty($objCltEncuesta))
+            {
+                throw new \Exception("No existe encuesta con los parámetros enviados.");
+            }
+            $arrayInfoRespuesta = $this->getDoctrine()
+                                       ->getRepository(InfoRespuesta::class)
+                                       ->findBy(array("CLT_ENCUESTA_ID" => $intIdCltEncuesta));
+            if(!is_array($arrayInfoRespuesta) || empty($arrayInfoRespuesta))
+            {
+                throw new \Exception("No existe respuestas con los parámetros enviados.");
+            }
+            foreach($arrayInfoRespuesta as $arrayItem)
+            {
+                $arrayRespuesta['resultados'][] = array($arrayItem->getPREGUNTAID()->getId() => $arrayItem->getPREGUNTAID()->getDESCRIPCION(),
+                                                        $arrayItem->getId()                  => $arrayItem->getRESPUESTA());
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'editRespuesta'.
+     * 
+     * Función encargada de retornar las respuesta de la encuesta.
+     *
+     * @author Kevin Baque
+     * @version 1.0 30-08-2021
+     *
+     * @return array  $objResponse
+     */
+    public function editRespuesta($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $arrayInfoRespuesta    = $arrayData['arrayRespuesta'] ? $arrayData['arrayRespuesta']:'';
+        $arrayRespuesta        = array();
+        $strMensajeError       = "Respuesta editada con éxito.";
+        $strStatus             = 200;
+        $objResponse           = new Response;
+        $em                    = $this->getDoctrine()->getManager();
+        $boolSucces            = true;
+        try
+        {
+            foreach ($arrayInfoRespuesta as $intIdRespuesta => $strRespuesta) 
+            {
+                $objRespuesta = $this->getDoctrine()
+                                     ->getRepository(InfoRespuesta::class)
+                                     ->find($intIdRespuesta);
+                if(!is_object($objRespuesta) || empty($objRespuesta))
+                {
+                    throw new \Exception('No existe la respuesta con la descripción enviada por parámetro.');
+                }
+                $objRespuesta->setRESPUESTA($strRespuesta);
+                $em->persist($objRespuesta);
+                $em->flush();
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+            $strStatus       = 204;
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->rollback();
+            }
+        }
+        if ($em->getConnection()->isTransactionActive())
+        {
+            $em->getConnection()->commit();
+            $em->getConnection()->close();
+        }
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
 }
