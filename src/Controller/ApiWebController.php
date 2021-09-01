@@ -38,6 +38,7 @@ use App\Entity\InfoCupon;
 use App\Entity\AdmiTipoCupon;
 use App\Entity\InfoCuponHistorial;
 use App\Entity\InfoCuponRestaurante;
+use App\Entity\InfoTipoComidaRestaurante;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -60,6 +61,8 @@ class ApiWebController extends FOSRestController
                 case 'createRestaurante':$arrayRespuesta = $this->createRestaurante($arrayData);
                 break;
                 case 'editRestaurante':$arrayRespuesta = $this->editRestaurante($arrayData);
+                break;
+                case 'getComidaRestaurante':$arrayRespuesta = $this->getComidaRestaurante($arrayData);
                 break;
                 case 'createPublicidad':$arrayRespuesta = $this->createPublicidad($arrayData);
                 break;
@@ -172,13 +175,15 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.3 15-07-2021 - Se agrega lógica para ingresar historial de creación.
      *
+     * @author Kevin Baque
+     * @version 1.4 01-09-2021 - Se agrega relación con los tipos de comida.
+     *
      * @return array  $objResponse
      */
     public function createRestaurante($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strTipoComida          = $arrayData['tipoComida'] ? $arrayData['tipoComida']:'';
-        $strIdTipoComida        = $arrayData['idTipoComida'] ? $arrayData['idTipoComida']:'';
+        $arrayTipoComida        = $arrayData['arrayTipoComida'] ? $arrayData['arrayTipoComida']:'';
         $strTipoIdentificacion  = $arrayData['tipoIdentificacion'] ? $arrayData['tipoIdentificacion']:'';
         $strIdentificacion      = $arrayData['identificacion'] ? $arrayData['identificacion']:'';
         $strRazonSocial         = $arrayData['razonSocial'] ? $arrayData['razonSocial']:'';
@@ -196,7 +201,7 @@ class ApiWebController extends FOSRestController
         $icoBase64              = $arrayData['rutaIcono'] ? $arrayData['rutaIcono']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
-        $strStatus              = 400;
+        $strStatus              = 200;
         $objResponse            = new Response;
         $em                     = $this->getDoctrine()->getManager();
         $objController          = new DefaultController();
@@ -221,19 +226,6 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception('cantidad de dígitos incorrecto');
             }
-            $objTipoComida = $this->getDoctrine()
-                                  ->getRepository(AdmiTipoComida::class)
-                                  ->find($strIdTipoComida);
-            if(!is_object($objTipoComida) || empty($objTipoComida))
-            {
-                $objTipoComida = $this->getDoctrine()
-                                      ->getRepository(AdmiTipoComida::class)
-                                      ->findOneBy(array('DESCRIPCION'=>$strTipoComida));
-                if(!is_object($objTipoComida) || empty($objTipoComida))
-                {
-                    throw new \Exception('Tipo de comida no existe.');
-                }
-            }
             /*$objRestaurante = $this->getDoctrine()
                                    ->getRepository(InfoRestaurante::class)
                                    ->findOneBy(array('IDENTIFICACION'=>$strIdentificacion));
@@ -242,7 +234,7 @@ class ApiWebController extends FOSRestController
                 throw new \Exception('Restaurante ya existente.');
             }*/
             $entityRestaurante = new InfoRestaurante();
-            $entityRestaurante->setTIPOCOMIDAID($objTipoComida);
+            //$entityRestaurante->setTIPOCOMIDAID($objTipoComida);
             $entityRestaurante->setTIPOIDENTIFICACION(strtoupper($strTipoIdentificacion));
             $entityRestaurante->setIDENTIFICACION($strIdentificacion);
             $entityRestaurante->setRAZONSOCIAL($strRazonSocial);
@@ -261,15 +253,31 @@ class ApiWebController extends FOSRestController
             $entityRestaurante->setFECREACION($strDatetimeActual);
             $em->persist($entityRestaurante);
             $em->flush();
+            if(!empty($arrayTipoComida) && is_array($arrayTipoComida))
+            {
+                foreach($arrayTipoComida as $arrayItem)
+                {
+                    $objTipoComida = $this->getDoctrine()
+                                          ->getRepository(AdmiTipoComida::class)
+                                          ->find($arrayItem);
+                    if(!empty($objTipoComida) && is_object($objTipoComida))
+                    {
+                        $entityComidaRes = new InfoTipoComidaRestaurante();
+                        $entityComidaRes->setRESTAURANTEID($entityRestaurante);
+                        $entityComidaRes->setTIPOCOMIDAID($objTipoComida);
+                        $entityComidaRes->setESTADO(strtoupper($strEstado));
+                        $entityComidaRes->setUSRCREACION($strUsuarioCreacion);
+                        $entityComidaRes->setFECREACION($strDatetimeActual);
+                        $em->persist($entityComidaRes);
+                        $em->flush();
+                    }
+                }
+            }
             if ($em->getConnection()->isTransactionActive())
             {
                 $em->getConnection()->commit();
                 $em->getConnection()->close();
             }
-            $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo Comida",
-                                           'VALOR_ANTERIOR' => "",
-                                           'VALOR_ACTUAL'   => $objTipoComida->getDESCRIPCION(),
-                                           'USUARIO_ID'     => $strUsuarioCreacion);
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo Identificación",
                                            'VALOR_ANTERIOR' => "",
                                            'VALOR_ACTUAL'   => $strTipoIdentificacion,
@@ -334,10 +342,10 @@ class ApiWebController extends FOSRestController
         {
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
+                $strStatus = 204;
                 $em->getConnection()->rollback();
             }
-            $strMensajeError = "Fallo al crear un restaurante, intente nuevamente.\n ". $ex->getMessage();
+            $strMensajeError = $ex->getMessage();
         }
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $strMensajeError,
@@ -361,12 +369,15 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.4 15-07-2021 - Se agrega lógica para ingresar historial de modificación.
      *
+     * @author Kevin Baque
+     * @version 1.5 01-09-2021 - Se agrega relación con los tipos de comida.
+     *
      * @return array  $objResponse
      */
     public function editRestaurante($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strIdTipoComida        = $arrayData['idTipoComida'] ? $arrayData['idTipoComida']:'';
+        $arrayTipoComida        = $arrayData['arrayTipoComida'] ? $arrayData['arrayTipoComida']:'';
         $strTipoIdentificacion  = $arrayData['tipoIdentificacion'] ? $arrayData['tipoIdentificacion']:'';
         $strIdentificacion      = $arrayData['identificacion'] ? $arrayData['identificacion']:'';
         $strIdRestaurante       = $arrayData['idRestaurante'] ? $arrayData['idRestaurante']:'';
@@ -385,9 +396,8 @@ class ApiWebController extends FOSRestController
         $icoBase64              = $arrayData['rutaIcono'] ? $arrayData['rutaIcono']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
-        $strStatus              = 400;
+        $strStatus              = 200;
         $objResponse            = new Response;
-        $strDatetimeActual      = new \DateTime('now');
         $em                     = $this->getDoctrine()->getManager();
         $objController          = new DefaultController();
         $objController->setContainer($this->container);
@@ -425,20 +435,36 @@ class ApiWebController extends FOSRestController
                     throw new \Exception('Restaurante no existe.');
                 }
             }
-            if(!empty($strIdTipoComida))
+            if(!empty($arrayTipoComida) && is_array($arrayTipoComida))
             {
-                $objTipoComida = $this->getDoctrine()
-                                      ->getRepository(AdmiTipoComida::class)
-                                      ->find($strIdTipoComida);
-                if(!is_object($objTipoComida) || empty($objTipoComida))
+                $arrayRelacionComidaRes = $this->getDoctrine()
+                                               ->getRepository(InfoTipoComidaRestaurante::class)
+                                               ->findBy(array("RESTAURANTE_ID" =>$objRestaurante->getId()));
+                if(!empty($arrayRelacionComidaRes) && is_array($arrayRelacionComidaRes))
                 {
-                    throw new \Exception('Tipo de comida no existe.');
+                    foreach($arrayRelacionComidaRes as $objitem)
+                    {
+                        $em->remove($objitem);
+                    }
+                    $em->flush();
                 }
-                $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo Comida",
-                                               'VALOR_ANTERIOR' => $objRestaurante->getTIPOCOMIDAID()->getDESCRIPCION(),
-                                               'VALOR_ACTUAL'   => $objTipoComida->getDESCRIPCION(),
-                                               'USUARIO_ID'     => $strUsuarioCreacion);
-                $objRestaurante->setTIPOCOMIDAID($objTipoComida);
+                foreach($arrayTipoComida as $arrayItem)
+                {
+                    $objTipoComida = $this->getDoctrine()
+                                          ->getRepository(AdmiTipoComida::class)
+                                          ->find($arrayItem);
+                    if(!empty($objTipoComida) && is_object($objTipoComida))
+                    {
+                        $entityComidaRes = new InfoTipoComidaRestaurante();
+                        $entityComidaRes->setRESTAURANTEID($objRestaurante);
+                        $entityComidaRes->setTIPOCOMIDAID($objTipoComida);
+                        $entityComidaRes->setESTADO(strtoupper($strEstado));
+                        $entityComidaRes->setUSRCREACION($strUsuarioCreacion);
+                        $entityComidaRes->setFECREACION($strDatetimeActual);
+                        $em->persist($entityComidaRes);
+                        $em->flush();
+                    }
+                }
             }
             if(!empty($strTipoIdentificacion))
             {
@@ -563,10 +589,10 @@ class ApiWebController extends FOSRestController
         {
             if ($em->getConnection()->isTransactionActive())
             {
-                $strStatus = 404;
+                $strStatus = 204;
                 $em->getConnection()->rollback();
             }
-            $strMensajeError = "Fallo al crear un restaurante, intente nuevamente.\n ". $ex->getMessage();
+            $strMensajeError = $ex->getMessage();
         }
         if ($em->getConnection()->isTransactionActive())
         {
@@ -579,6 +605,51 @@ class ApiWebController extends FOSRestController
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
+
+    /**
+     * Documentación para la función 'getComidaRestaurante'
+     * Función encargado de retornar las relaciones entre tipo de comida y restaurante, según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 31-08-2021
+     *
+     * @return array  $objResponse
+     */
+    public function getComidaRestaurante($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdRestaurante       = $arrayData['intIdRestaurante'] ? $arrayData['intIdRestaurante']:'';
+        $intIdTipoComida        = $arrayData['intIdTipoComida'] ? $arrayData['intIdTipoComida']:'';
+        $arrayResultado         = array();
+        $strMensajeError        = '';
+        $boolSucces             = true;
+        $strStatus              = 200;
+        $objResponse            = new Response;
+        try
+        {
+            $arrayResultado = $this->getDoctrine()
+                                   ->getRepository(InfoTipoComidaRestaurante::class)
+                                   ->getRelacionComidaResCriterio(array("intIdRestaurante" => $intIdRestaurante,
+                                                                        "intIdTipoComida"  => $intIdTipoComida));
+            if(isset($arrayResultado['error']) && !empty($arrayResultado['error']))
+            {
+                $strStatus  = 204;
+                throw new \Exception($arrayResultado['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayResultado['error'] = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayResultado,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
     /**
      * Documentación para la función 'createPublicidad'
      * Método encargado de crear las publicidades según los parámetros recibidos.

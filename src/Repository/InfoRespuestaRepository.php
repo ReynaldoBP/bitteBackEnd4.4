@@ -801,7 +801,8 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                     INNER JOIN INFO_CLIENTE_ENCUESTA ICE ON ICE.ID_CLT_ENCUESTA     = IR.CLT_ENCUESTA_ID
                                     INNER JOIN INFO_ENCUESTA IE          ON IE.ID_ENCUESTA          = ICE.ENCUESTA_ID
                                     INNER JOIN INFO_SUCURSAL ISU         ON ISU.ID_SUCURSAL         =  ICE.SUCURSAL_ID
-                                    INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID ";
+                                    INNER JOIN INFO_RESTAURANTE IRES     ON IRES.ID_RESTAURANTE     = ISU.RESTAURANTE_ID 
+                                    LEFT  JOIN INFO_TIPO_COMIDA_RESTAURANTE ITCR ON IRES.ID_RESTAURANTE = ITCR.RESTAURANTE_ID ";
             $strWhere       = "WHERE IOR.TIPO_RESPUESTA = 'CERRADA'
                                     AND IOR.VALOR           = '5'
                                     AND IE.ESTADO           = 'ACTIVO'
@@ -816,7 +817,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             }
             if(!empty($intIdTipoComida))
             {
-                $strSubSelect .= " AND IRES.TIPO_COMIDA_ID = :TIPO_COMIDA_ID ";
+                $strSubSelect .= " AND ITCR.TIPO_COMIDA_ID = :TIPO_COMIDA_ID ";
                 $objQuery->setParameter("TIPO_COMIDA_ID", $intIdTipoComida);
             }
             if(!empty($intIdPais))

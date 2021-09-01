@@ -67,14 +67,12 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
             else
             {
                 $strSelect      = "SELECT IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
-                                IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,ATC.DESCRIPCION_TIPO_COMIDA, 
+                                IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL,
                                 IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.URL_RED_SOCIAL, IR.NUMERO_CONTACTO, IR.ESTADO, IR.CODIGO,IR.ES_AFILIADO, IR.IMAGEN, IR.ICONO ";
-                $strFrom        = "FROM INFO_RESTAURANTE IR
-                                    JOIN ADMI_TIPO_COMIDA ATC
-                                    ON IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
+                $strFrom        = "FROM INFO_RESTAURANTE IR ";
                 $strWhere       = "WHERE IR.ESTADO in (:ESTADO) ";
                 $strGroupBy     = " GROUP BY IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
-                                    IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,ATC.DESCRIPCION_TIPO_COMIDA, 
+                                    IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL,
                                     IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO, IR.URL_RED_SOCIAL, IR.NUMERO_CONTACTO, IR.ESTADO, IR.CODIGO,IR.ES_AFILIADO, IR.IMAGEN, IR.ICONO ";
                 $strOrder       = " order by IR.NOMBRE_COMERCIAL ASC, IR.ESTADO ASC ";
                 $objQuery->setParameter("ESTADO", $strEstado);
@@ -120,19 +118,12 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                 $strWhere .= " AND IUR.USUARIO_ID =:USUARIO_ID";
                 $objQuery->setParameter("USUARIO_ID", $intIdUsuario);
                 }
-                if(!empty($strTipoComida))
-                {
-                $strWhere  .= " AND ATC.ID_TIPO_COMIDA = :ID_TIPO_COMIDA";
-                $objQuery->setParameter("ID_TIPO_COMIDA", $strTipoComida);
-                }
                 $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'ID_RESTAURANTE', 'string');
                 $objRsmBuilder->addScalarResult('TIPO_IDENTIFICACION', 'TIPO_IDENTIFICACION', 'string');
                 $objRsmBuilder->addScalarResult('IDENTIFICACION', 'IDENTIFICACION', 'string');
                 $objRsmBuilder->addScalarResult('RAZON_SOCIAL', 'RAZON_SOCIAL', 'string');
                 $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
                 $objRsmBuilder->addScalarResult('REPRESENTANTE_LEGAL', 'REPRESENTANTE_LEGAL', 'string');
-                $objRsmBuilder->addScalarResult('TIPO_COMIDA_ID', 'TIPO_COMIDA_ID', 'string');
-                $objRsmBuilder->addScalarResult('DESCRIPCION_TIPO_COMIDA', 'DESCRIPCION_TIPO_COMIDA', 'string');
                 $objRsmBuilder->addScalarResult('DIRECCION_TRIBUTARIO', 'DIRECCION_TRIBUTARIO', 'string');
                 $objRsmBuilder->addScalarResult('URL_CATALOGO', 'URL_CATALOGO', 'string');
                 $objRsmBuilder->addScalarResult('URL_RED_SOCIAL', 'URL_RED_SOCIAL', 'string');
