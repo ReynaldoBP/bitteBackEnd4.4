@@ -180,8 +180,7 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSelect      = "SELECT IR.ID_RESTAURANTE,IR.TIPO_IDENTIFICACION, IR.IDENTIFICACION, IR.RAZON_SOCIAL, 
-                                      IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.TIPO_COMIDA_ID,IR.ES_AFILIADO,
-                                      ATC.DESCRIPCION_TIPO_COMIDA, 
+                                      IR.NOMBRE_COMERCIAL, IR.REPRESENTANTE_LEGAL, IR.ES_AFILIADO,
                                       IR.DIRECCION_TRIBUTARIO, IR.URL_CATALOGO,IR.URL_RED_SOCIAL, IR.NUMERO_CONTACTO, IR.ESTADO, IR.IMAGEN, IR.ICONO
                                       ,(SELECT COUNT(*) FROM INFO_LIKE_RES ILR_RES WHERE ILR_RES.RESTAURANTE_ID=IR.ID_RESTAURANTE AND ILR_RES.ESTADO='ACTIVO') as CANT_LIKE
                                       ,(SELECT IFNULL(round(AVG(SUB_IRES.RESPUESTA),4),0) 
@@ -198,11 +197,10 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                                                     AND SUB_ICE.ESTADO = 'ACTIVO' 
                                                     AND SUB_ISU.RESTAURANTE_ID = IR.ID_RESTAURANTE) AS PRO_ENCUESTAS ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
-            $strFrom        = "FROM INFO_RESTAURANTE IR
-                               JOIN ADMI_TIPO_COMIDA ATC ON IR.TIPO_COMIDA_ID = ATC.ID_TIPO_COMIDA ";
+            $strFrom        = "FROM INFO_RESTAURANTE IR ";
             $strWhere       = "WHERE IR.ESTADO in (:ESTADO) ";
             $strGroupBy     = " GROUP BY ID_RESTAURANTE,TIPO_IDENTIFICACION,IDENTIFICACION,RAZON_SOCIAL,NOMBRE_COMERCIAL,REPRESENTANTE_LEGAL,
-                                TIPO_COMIDA_ID,ES_AFILIADO,DESCRIPCION_TIPO_COMIDA,DIRECCION_TRIBUTARIO,URL_CATALOGO,URL_RED_SOCIAL,NUMERO_CONTACTO,ESTADO,IMAGEN,ICONO,
+                                ES_AFILIADO,DIRECCION_TRIBUTARIO,URL_CATALOGO,URL_RED_SOCIAL,NUMERO_CONTACTO,ESTADO,IMAGEN,ICONO,
                                 CANT_LIKE,PRO_ENCUESTAS ";
             $strOrderBy     = " ORDER BY IR.NOMBRE_COMERCIAL ";
             if(!empty($intEsRestaurante))
@@ -275,21 +273,13 @@ class InfoRestauranteRepository extends \Doctrine\ORM\EntityRepository
                 $objQuery->setParameter("ID_RESTAURANTE", $intIdRestaurante);
                 $objQueryCount->setParameter("ID_RESTAURANTE", $intIdRestaurante);
             }
-            if(!empty($strTipoComida))
-            {
-                $strWhere .= " AND lower(ATC.DESCRIPCION_TIPO_COMIDA) like lower(:ID_TIPO_COMIDA) ";
-                $objQuery->setParameter("ID_TIPO_COMIDA", '%' . trim($strTipoComida) . '%');
-                $objQueryCount->setParameter("ID_TIPO_COMIDA", '%' . trim($strTipoComida) . '%');
-            }
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE', 'ID_RESTAURANTE', 'string');
             $objRsmBuilder->addScalarResult('TIPO_IDENTIFICACION', 'TIPO_IDENTIFICACION', 'string');
             $objRsmBuilder->addScalarResult('IDENTIFICACION', 'IDENTIFICACION', 'string');
             $objRsmBuilder->addScalarResult('RAZON_SOCIAL', 'RAZON_SOCIAL', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
             $objRsmBuilder->addScalarResult('REPRESENTANTE_LEGAL', 'REPRESENTANTE_LEGAL', 'string');
-            $objRsmBuilder->addScalarResult('TIPO_COMIDA_ID', 'TIPO_COMIDA_ID', 'string');
             $objRsmBuilder->addScalarResult('ES_AFILIADO', 'ES_AFILIADO', 'string');
-            $objRsmBuilder->addScalarResult('DESCRIPCION_TIPO_COMIDA', 'DESCRIPCION_TIPO_COMIDA', 'string');
             $objRsmBuilder->addScalarResult('DIRECCION_TRIBUTARIO', 'DIRECCION_TRIBUTARIO', 'string');
             $objRsmBuilder->addScalarResult('URL_CATALOGO', 'URL_CATALOGO', 'string');
             $objRsmBuilder->addScalarResult('URL_RED_SOCIAL', 'URL_RED_SOCIAL', 'string');

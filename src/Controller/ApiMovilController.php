@@ -41,6 +41,7 @@ use App\Entity\InfoCuponRestaurante;
 use App\Entity\InfoPlantilla;
 use App\Entity\InfoUsuarioRes;
 use App\Entity\InfoBanner;
+use App\Entity\InfoTipoComidaRestaurante;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -1002,6 +1003,26 @@ class ApiMovilController extends FOSRestController
                                                               'intIdRestaurante' => $intIdRestaurante));
             $intCantEncuesta = (!empty($arrayCantEncuesta['resultados'])) ? intval($arrayCantEncuesta['resultados'][0]['CANTIDAD']):0;
             //[FIN] Calculo de cant. de encuesta
+            //[INI] Tipos de comida
+            $strDescripcionComida = "";
+            $arrayTipoComida      = $this->getDoctrine()
+                                         ->getRepository(InfoTipoComidaRestaurante::class)
+                                         ->getRelacionComidaResCriterio(array("intIdRestaurante" => $arrayItemRestaurante['ID_RESTAURANTE']));
+            if(isset($arrayTipoComida["resultados"]) && !empty($arrayTipoComida["resultados"]))
+            {
+                foreach($arrayTipoComida["resultados"] as $arrayItem)
+                {
+                    if($strDescripcionComida == "")
+                    {
+                        $strDescripcionComida = $arrayItem["DESCRIPCION_TIPO_COMIDA"];
+                    }
+                    else
+                    {
+                        $strDescripcionComida = $strDescripcionComida.",  ".$arrayItem["DESCRIPCION_TIPO_COMIDA"];
+                    }
+                }
+            }
+            //[FIN] Tipos de comida
             $arraySucursal["resultados"][$intIterador]["ES_AFILIADO"] = (!empty($item["ES_AFILIADO"]) && $item["ES_AFILIADO"] == "SI") ? 'S':'N';
             $arrayResultado ['resultados'] []= array('ID_RESTAURANTE'          =>   $arrayItemRestaurante['ID_RESTAURANTE'],
                                                      'TIPO_IDENTIFICACION'     =>   $arrayItemRestaurante['TIPO_IDENTIFICACION'],
@@ -1009,8 +1030,7 @@ class ApiMovilController extends FOSRestController
                                                      'RAZON_SOCIAL'            =>   $arrayItemRestaurante['RAZON_SOCIAL'],
                                                      'NOMBRE_COMERCIAL'        =>   $arrayItemRestaurante['NOMBRE_COMERCIAL'],
                                                      'REPRESENTANTE_LEGAL'     =>   $arrayItemRestaurante['REPRESENTANTE_LEGAL'],
-                                                     'TIPO_COMIDA_ID'          =>   $arrayItemRestaurante['TIPO_COMIDA_ID'],
-                                                     'DESCRIPCION_TIPO_COMIDA' =>   $arrayItemRestaurante['DESCRIPCION_TIPO_COMIDA'],
+                                                     'DESCRIPCION_TIPO_COMIDA' =>   $strDescripcionComida,
                                                      'DIRECCION_TRIBUTARIO'    =>   $arrayItemRestaurante['DIRECCION_TRIBUTARIO'],
                                                      'URL_CATALOGO'            =>   $arrayItemRestaurante['URL_CATALOGO'],
                                                      'URL_RED_SOCIAL'          =>   $arrayItemRestaurante['URL_RED_SOCIAL'],
