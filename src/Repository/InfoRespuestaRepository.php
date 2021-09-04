@@ -45,7 +45,23 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $strSelect      = "SELECT C.DESCRIPCION AS RED_SOCIAL, A.FE_CREACION, A.CLIENTE_ID, 
                                 D.TITULO, B.IMAGEN, A.ESTADO, A.ID_CLT_ENCUESTA, SUB_ISU.DESCRIPCION,
                                 (SELECT CONCAT(ICLT.NOMBRE,CONCAT(' ',ICLT.APELLIDO)) AS NOMBRE_CLIENTE 
-                                FROM INFO_CLIENTE ICLT WHERE ICLT.ID_CLIENTE=A.CLIENTE_ID) AS NOMBRE_CLIENTE ";
+                                FROM INFO_CLIENTE ICLT WHERE ICLT.ID_CLIENTE=A.CLIENTE_ID) AS NOMBRE_CLIENTE,
+                                (SELECT ROUND(AVG(IR.RESPUESTA),2) AS PROMEDIO
+                                    FROM INFO_RESPUESTA IR
+                                    INNER JOIN INFO_PREGUNTA IP          ON IR.PREGUNTA_ID          = IP.ID_PREGUNTA
+                                    INNER JOIN INFO_OPCION_RESPUESTA IOR ON IOR.ID_OPCION_RESPUESTA = IP.OPCION_RESPUESTA_ID
+                                    WHERE IR.CLT_ENCUESTA_ID=A.ID_CLT_ENCUESTA
+                                    AND IOR.TIPO_RESPUESTA = 'CERRADA'
+                                    AND IOR.VALOR           = '5'
+                                ) AS PROMEDIO,
+                                (SELECT IR.RESPUESTA  AS COMENTARIO
+                                    FROM INFO_RESPUESTA IR
+                                    INNER JOIN INFO_PREGUNTA IP          ON IR.PREGUNTA_ID          = IP.ID_PREGUNTA
+                                    INNER JOIN INFO_OPCION_RESPUESTA IOR ON IOR.ID_OPCION_RESPUESTA = IP.OPCION_RESPUESTA_ID
+                                    WHERE IR.CLT_ENCUESTA_ID=A.ID_CLT_ENCUESTA
+                                    AND IOR.TIPO_RESPUESTA = 'ABIERTA'
+                                    AND IOR.DESCRIPCION = 'Comentario'
+                                ) AS COMENTARIO ";
             $strFrom        = "FROM INFO_CLIENTE_ENCUESTA A 
                                     JOIN INFO_SUCURSAL SUB_ISU 
                                     ON SUB_ISU.ID_SUCURSAL = A.SUCURSAL_ID
@@ -81,6 +97,8 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('DESCRIPCION', 'DESCRIPCION', 'string');
             $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_CLT_ENCUESTA', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_CLIENTE', 'NOMBRE_CLIENTE', 'string');
+            $objRsmBuilder->addScalarResult('PROMEDIO', 'PROMEDIO', 'string');
+            $objRsmBuilder->addScalarResult('COMENTARIO', 'COMENTARIO', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayRespuesta['resultados'] = $objQuery->getResult();
