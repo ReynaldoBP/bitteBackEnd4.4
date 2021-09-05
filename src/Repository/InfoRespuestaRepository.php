@@ -19,6 +19,9 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
      * @author Kevin Baque
      * @version 1.0 02-10-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 05-09-2021 - Se agrega lógica para saber si el usuario ya vio esa respuesta.
+     *
      * @return array  $arrayRespuesta
      * 
      */    
@@ -30,6 +33,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
         $strAnio            = $arrayParametros['strAnio'] ? $arrayParametros['strAnio']:'';
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
         $intIdSucursal      = $arrayParametros['intIdSucursal'] ? $arrayParametros['intIdSucursal']:'';
+        $intIdUsuario       = $arrayParametros['intIdUsuario'] ? $arrayParametros['intIdUsuario']:'';
         $arrayRespuesta     = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -61,7 +65,12 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                     WHERE IR.CLT_ENCUESTA_ID=A.ID_CLT_ENCUESTA
                                     AND IOR.TIPO_RESPUESTA = 'ABIERTA'
                                     AND IOR.DESCRIPCION = 'Comentario'
-                                ) AS COMENTARIO ";
+                                ) AS COMENTARIO,
+                                (SELECT IFNULL(COUNT(*),0) AS VISTO
+                                    FROM INFO_VISTA_RESPUESTA IVR
+                                        WHERE IVR.CLT_ENCUESTA_ID=A.ID_CLT_ENCUESTA
+                                        AND IVR.USUARIO_ID = :intIdUsuario
+                                ) AS VISTO ";
             $strFrom        = "FROM INFO_CLIENTE_ENCUESTA A 
                                     JOIN INFO_SUCURSAL SUB_ISU 
                                     ON SUB_ISU.ID_SUCURSAL = A.SUCURSAL_ID
@@ -83,6 +92,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $strOrderBy     = " ORDER BY A.FE_CREACION DESC ";
             $objQuery->setParameter("strMes", $strMes);
             $objQuery->setParameter("strAnio", $strAnio);
+            $objQuery->setParameter("intIdUsuario", $intIdUsuario);
             if(!empty($intIdCltEncuesta))
             {
                 $strWhere .= " AND A.ID_CLT_ENCUESTA = :ID_CLT_ENCUESTA ";
@@ -99,6 +109,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('NOMBRE_CLIENTE', 'NOMBRE_CLIENTE', 'string');
             $objRsmBuilder->addScalarResult('PROMEDIO', 'PROMEDIO', 'string');
             $objRsmBuilder->addScalarResult('COMENTARIO', 'COMENTARIO', 'string');
+            $objRsmBuilder->addScalarResult('VISTO', 'VISTO', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayRespuesta['resultados'] = $objQuery->getResult();

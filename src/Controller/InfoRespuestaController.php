@@ -11,6 +11,8 @@ use App\Entity\InfoRespuesta;
 use App\Entity\InfoUsuario;
 use App\Entity\AdmiTipoRol;
 use App\Entity\InfoUsuarioRes;
+use App\Entity\InfoVistaRespuesta;
+use App\Entity\InfoClienteEncuesta;
 use App\Controller\DefaultController;
 
 class InfoRespuestaController extends Controller
@@ -25,6 +27,9 @@ class InfoRespuestaController extends Controller
      * @author Kevin Baque
      * @version 1.0 15-09-2019
      * 
+     * @author Kevin Baque
+     * @version 1.1 05-09-2021 - Se agrega lógica para saber si el usuario ya vio esa respuesta.
+     * 
      * @return array  $objResponse
      */
     public function getRespuestaAction(Request $request)
@@ -38,6 +43,8 @@ class InfoRespuestaController extends Controller
         $strMensajeError        = '';
         $strStatus              = 400;
         $objResponse            = new Response;
+        $strDatetimeActual      = new \DateTime('now');
+        $em                     = $this->getDoctrine()->getManager();
         try
         {
             $arrayParametros = array('intIdPregunta' => $intIdPregunta,
@@ -51,18 +58,48 @@ class InfoRespuestaController extends Controller
                 $strStatus  = 404;
                 throw new \Exception($arrayRespuesta['error']);
             }
+            $objUsuario     = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->find($strUsuarioCreacion);
+            $objCltEncuesta = $this->getDoctrine()
+                                   ->getRepository(InfoClienteEncuesta::class)
+                                   ->find($intIdCltEncuesta);
+
+            $arrayVistaRespuesta = $this->getDoctrine()
+                                        ->getRepository(InfoVistaRespuesta::class)
+                                        ->findBy(array("USUARIO_ID"      => $objUsuario,
+                                                       "CLT_ENCUESTA_ID" => $objCltEncuesta));
+            if(empty($arrayVistaRespuesta))
+            {
+                $em->getConnection()->beginTransaction();
+                $entityVistaRespuesta = new InfoVistaRespuesta();
+                $entityVistaRespuesta->setUSUARIOID($objUsuario);
+                $entityVistaRespuesta->setCLTENCUESTAID($objCltEncuesta);
+                $entityVistaRespuesta->setESTADO(strtoupper('ACTIVO'));
+                $entityVistaRespuesta->setUSRCREACION($strUsuarioCreacion);
+                $entityVistaRespuesta->setFECREACION($strDatetimeActual);
+                $em->persist($entityVistaRespuesta);
+                $em->flush();
+                $em->getConnection()->commit();
+                if ($em->getConnection()->isTransactionActive())
+                {
+                    $em->getConnection()->commit();
+                    $em->getConnection()->close();
+                }
+            }
         }
         catch(\Exception $ex)
         {
-            $strMensajeError ="Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            $strMensajeError = $ex->getMessage();
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $em->getConnection()->rollback();
+            }
         }
         $arrayRespuesta['error'] = $strMensajeError;
-        $objResponse->setContent(json_encode(array(
-                                            'status'    => $strStatus,
-                                            'resultado' => $arrayRespuesta,
-                                            'succes'    => true
-                                            )
-                                        ));
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => true)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
@@ -125,7 +162,8 @@ class InfoRespuestaController extends Controller
                                      'intIdCltEncuesta'  => $intIdCltEncuesta,
                                      'intIdRestaurante'  => $intIdRestaurante,
                                      'intIdSucursal'     => $intIdSucursal,
-                                     'strEstado'         => $strEstado);
+                                     'strEstado'         => $strEstado,
+                                     'intIdUsuario'      => $intIdUsuario);
             $arrayRespuesta = (array) $this->getDoctrine()
                                            ->getRepository(InfoRespuesta::class)
                                            ->getRespuestaDashboard($arrayParametros);
