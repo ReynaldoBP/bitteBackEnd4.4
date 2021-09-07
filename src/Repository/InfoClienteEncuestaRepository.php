@@ -73,16 +73,17 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
      */    
     public function getCantidadEncuestaCliente($arrayParametros)
     {
-        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
-        $intclienteId       = $arrayParametros['clienteId'] ? $arrayParametros['clienteId']:'';
-        $intCantidadEncuesta  = 0;
-        $strMensajeError    = '';
-        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
-        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
-        $objDate            = new \DateTime();
-        $strFecha           = $objDate->format('m');
-        $strAnio            = $objDate->format('Y');
-        $strFechaInicial    = $strAnio."-".$strFecha."-01";
+        $strEstado           = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO');
+        $intclienteId        = $arrayParametros['clienteId'] ? $arrayParametros['clienteId']:'';
+        $strBanderaFecha     = $arrayParametros['strBanderaFecha'] ? $arrayParametros['strBanderaFecha']:"SI";
+        $intCantidadEncuesta = 0;
+        $strMensajeError     = '';
+        $objRsmBuilder       = new ResultSetMappingBuilder($this->_em);
+        $objQuery            = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $objDate             = new \DateTime();
+        $strFecha            = $objDate->format('m');
+        $strAnio             = $objDate->format('Y');
+        $strFechaInicial     = $strAnio."-".$strFecha."-01";
 
         try
         {
@@ -105,7 +106,12 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
 */
             $strSelect = " SELECT COUNT(ID_CLT_ENCUESTA) AS CANTIDAD ";
             $strFrom   = " FROM INFO_CLIENTE_ENCUESTA ";
-            $strWhere  = " WHERE CLIENTE_ID=:intclienteId AND EXTRACT(MONTH FROM FE_CREACION) =EXTRACT(MONTH FROM CURRENT_DATE()) AND ESTADO IN('ACTIVO','PENDIENTE') ";
+            $strWhere  = " WHERE CLIENTE_ID=:intclienteId 
+                           AND ESTADO IN('ACTIVO','PENDIENTE') ";
+            if($strBanderaFecha == "SI")
+            {
+                $strWhere .= " AND EXTRACT(MONTH FROM FE_CREACION) =EXTRACT(MONTH FROM CURRENT_DATE()) ";
+            }
             $strSql    = $strSelect.$strFrom.$strWhere;
             $objQuery->setParameter("intclienteId", $intclienteId);
             $objRsmBuilder->addScalarResult('CANTIDAD', 'CANTIDAD', 'string');
@@ -850,5 +856,60 @@ AND IC.EDAD!='SIN EDAD'
         $arrayRespuesta['error'] = $strMensajeError;
         return $arrayRespuesta;
     }
+    /**
+     * Documentación para la función 'getResumenCliente'
+     *
+     * Método encargado de retornar los datos del cliente.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 07-09-2021
+     * 
+     * @return array  $arrayCltEncuesta
+     * 
+     */
+    public function getResumenCliente($arrayParametros)
+    {
+        error_log("asdasd");
+        $intIdCliente    = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $arrayResultado  = array();
+        $objRsmBuilder   = new ResultSetMappingBuilder($this->_em);
+        $objQuery        = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $strMensajeError = '';
+        $strSelect       = '';
+        $strFrom         = '';
+        $strWhere        = '';
+        $strOrder        = '';
+        try
+        {
+            $strSelect      = " SELECT ISU.DESCRIPCION AS SUCURSAL,ICE.FE_CREACION,ICE.ESTADO,
+                                    (SELECT ROUND(AVG(IR.RESPUESTA),2) AS PROMEDIO
+                                        FROM INFO_RESPUESTA IR
+                                        INNER JOIN INFO_PREGUNTA IP          ON IR.PREGUNTA_ID          = IP.ID_PREGUNTA
+                                        INNER JOIN INFO_OPCION_RESPUESTA IOR ON IOR.ID_OPCION_RESPUESTA = IP.OPCION_RESPUESTA_ID
+                                        WHERE IR.CLT_ENCUESTA_ID=ICE.ID_CLT_ENCUESTA
+                                        AND IOR.TIPO_RESPUESTA = 'CERRADA'
+                                        AND IOR.VALOR           = '5'
+                                    ) AS PROMEDIO ";
+            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
+                                JOIN INFO_SUCURSAL ISU ON ISU.ID_SUCURSAL=ICE.SUCURSAL_ID ";
+            $strWhere       = " WHERE ICE.CLIENTE_ID = :intIdCliente ";
+            $strOrderBy     = " ORDER BY ICE.FE_CREACION DESC ";
+            $objQuery->setParameter("intIdCliente", $intIdCliente);
+            $objRsmBuilder->addScalarResult('SUCURSAL'    , 'SUCURSAL'   , 'string');
+            $objRsmBuilder->addScalarResult('FE_CREACION' , 'FE_CREACION', 'string');
+            $objRsmBuilder->addScalarResult('ESTADO'      , 'ESTADO'     , 'string');
+            $objRsmBuilder->addScalarResult('PROMEDIO'    , 'PROMEDIO'   , 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
+            $objQuery->setSQL($strSql);
+            $arrayResultado['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayResultado['error'] = $strMensajeError;
+        return $arrayResultado;
+    }
+
 
 }

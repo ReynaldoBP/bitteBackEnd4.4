@@ -150,6 +150,8 @@ class ApiWebController extends FOSRestController
                 break;
                 case 'getTipoCupon':$arrayRespuesta = $this->getTipoCupon($arrayData);
                 break;
+                case 'getResumenCliente':$arrayRespuesta = $this->getResumenCliente($arrayData);
+                break;
                  $objResponse->setContent(json_encode(array('status'    => 204,
                                                             'resultado' => "No existe método con la descripción enviado por parámetro",
                                                             'succes'    => true)));
@@ -5016,6 +5018,73 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception($arrayRespuesta['error']);
             }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error']      = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+    
+    /**
+     * Documentación para la función 'getResumenCliente'
+     *
+     * Método encargado de retornar los datos del cliente.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 07-09-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getResumenCliente($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $intIdCltEncuesta     = $arrayData['intIdCltEncuesta'] ? $arrayData['intIdCltEncuesta']:'';
+        $strUsuarioCreacion   = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $arrayRespuesta       = array();
+        $strMensajeError      = '';
+        $strStatus            = 200;
+        $objResponse          = new Response;
+        $boolSucces           = true;
+        $intNumeroEncuesta    = 0;
+        try
+        {
+            $objCltEncuesta  = $this->getDoctrine()
+                                    ->getRepository(InfoClienteEncuesta::class)
+                                    ->find($intIdCltEncuesta);
+            if(empty($objCltEncuesta) || !is_object($objCltEncuesta))
+            {
+                throw new \Exception("No existe información con los parámetros recibidos.");
+            }
+            $objCliente = $this->getDoctrine()
+                               ->getRepository(InfoCliente::class)
+                               ->find($objCltEncuesta->getCLIENTEID()->getId());
+            if(empty($objCliente) || !is_object($objCliente))
+            {
+                throw new \Exception("No existe cliente con los parámetros recibidos.");
+            }
+            $arrayNumeroEncuesta = $this->getDoctrine()
+                                        ->getRepository(InfoClienteEncuesta::class)
+                                        ->getCantidadEncuestaCliente(array('clienteId'       => $objCliente->getId(),
+                                                                           'strEstado'       => array('ACTIVO','PENDIENTE'),
+                                                                           'strBanderaFecha' => "NO"));
+            $arrayEncuestas = $this->getDoctrine()
+                                   ->getRepository(InfoClienteEncuesta::class)
+                                   ->getResumenCliente(array('intIdCliente' => $objCliente->getId()));
+            $arrayRespuesta["ID_CLIENTE"]     = $objCliente->getId();
+            $arrayRespuesta["CLIENTE"]        = $objCliente->getNOMBRE()." ".$objCliente->getAPELLIDO();
+            $arrayRespuesta["CORREO"]         = $objCliente->getCORREO();
+            $arrayRespuesta["EDAD"]           = $objCliente->getEDAD();
+            $arrayRespuesta["GENERO"]         = $objCliente->getGENERO();
+            $arrayRespuesta["FE_REGISTRO"]    = $objCliente->getFECREACION()->format('Y-m-d');
+            $arrayRespuesta["NUM_ENCUESTA"]   = $arrayNumeroEncuesta["CANTIDAD"];
+            $arrayRespuesta["arrayEncuestas"] = (!empty($arrayEncuestas["resultados"])) ? $arrayEncuestas["resultados"]:array();
         }
         catch(\Exception $ex)
         {
