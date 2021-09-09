@@ -294,7 +294,11 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
         try
         {
             $strSelect      = " SELECT IC.ID_CLIENTE, CONCAT (IC.NOMBRE, CONCAT(' ',IC.APELLIDO)) AS CLIENTE, 
-                                IC.GENERO, IC.EDAD AS FECHA_NACIMIENTO,IC.CORREO,IC.ESTADO, IC.FE_CREACION AS FECHA_REGISTRO ";
+                                IC.GENERO, IC.EDAD AS FECHA_NACIMIENTO,IC.CORREO,IC.ESTADO, IC.FE_CREACION AS FECHA_REGISTRO,
+                                IC.AUTENTICACION_RS AS RED_SOCIAL,
+                                (CASE WHEN IC.AUTENTICACION_RS != \"S\" && IC.ESTADO != \"ACTIVO\"
+                                    THEN CONCAT(\"https://bitte.app:8080/editCliente?jklasdqweuiorenm=e5fe01a83387019b\",IC.ID_CLIENTE)
+                                    ELSE \"\" END) AS LINK_ACTIVACION ";
             $strFrom        = " FROM INFO_CLIENTE IC ";
             $strWhere       = " WHERE EXTRACT(MONTH FROM IC.FE_CREACION) = :strMes
                                 AND EXTRACT(YEAR  FROM IC.FE_CREACION) = :strAnio
@@ -310,6 +314,8 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CORREO',           'CORREO',           'string');
             $objRsmBuilder->addScalarResult('ESTADO',           'ESTADO',           'string');
             $objRsmBuilder->addScalarResult('FECHA_REGISTRO',   'FECHA_REGISTRO',   'string');
+            $objRsmBuilder->addScalarResult('RED_SOCIAL',       'RED_SOCIAL',       'string');
+            $objRsmBuilder->addScalarResult('LINK_ACTIVACION',  'LINK_ACTIVACION',  'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayRespuesta['resultados'] = $objQuery->getResult();
