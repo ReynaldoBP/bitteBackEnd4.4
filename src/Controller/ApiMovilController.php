@@ -4040,8 +4040,15 @@ class ApiMovilController extends FOSRestController
             }
             foreach($arrayInfoRespuesta as $arrayItem)
             {
-                $arrayRespuesta['resultados'][] = array($arrayItem->getPREGUNTAID()->getId() => $arrayItem->getPREGUNTAID()->getDESCRIPCION(),
-                                                        $arrayItem->getId()                  => $arrayItem->getRESPUESTA());
+                $arrayRespuesta['resultados'][] = array("idPregunta"      => $arrayItem->getPREGUNTAID()->getId(),
+                                                        "descripcion"     => $arrayItem->getPREGUNTAID()->getDESCRIPCION(),
+                                                        "obligatoria"     => $arrayItem->getPREGUNTAID()->getOBLIGATORIA(),
+                                                        "idTipoRespuesta" => $arrayItem->getPREGUNTAID()->getOPCIONRESPUESTAID()->getId(),
+                                                        "tipoRespuesta"   => $arrayItem->getPREGUNTAID()->getOPCIONRESPUESTAID()->getTIPORESPUESTA(),
+                                                        "cantOpcion"      => $arrayItem->getPREGUNTAID()->getOPCIONRESPUESTAID()->getValor(),
+                                                        "estado"          => $arrayItem->getPREGUNTAID()->getESTADO(),
+                                                        "idRespuesta"     => $arrayItem->getId(),
+                                                        "respuesta"       => $arrayItem->getRespuesta());
             }
         }
         catch(\Exception $ex)
