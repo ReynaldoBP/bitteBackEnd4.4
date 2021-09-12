@@ -42,6 +42,16 @@ class InfoCupon
     private $VALOR;
 
     /**
+     * @ORM\Column(type="integer", length=11)
+     */
+    private $PRECIO;
+
+    /**
+     * @ORM\Column(type="string", length=450)
+     */
+    private $IMAGEN;
+
+    /**
      * @ORM\Column(type="string", length=100)
      */
     private $ESTADO;
@@ -117,6 +127,30 @@ class InfoCupon
     public function getVALOR(): ?int
     {
         return $this->VALOR;
+    }
+
+    public function setPRECIO(int $PRECIO): self
+    {
+        $this->PRECIO = $PRECIO;
+
+        return $this;
+    }
+
+    public function getPRECIO(): ?int
+    {
+        return $this->PRECIO;
+    }
+
+    public function getIMAGEN(): ?string
+    {
+        return $this->IMAGEN;
+    }
+
+    public function setIMAGEN(string $IMAGEN): self
+    {
+        $this->IMAGEN = $IMAGEN;
+
+        return $this;
     }
 
     public function getESTADO(): ?string

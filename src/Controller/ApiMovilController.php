@@ -2311,6 +2311,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.3 14-09-2020 - Se agrega validaciones por promocion especial.
      *
+     * @author Kevin Baque
+     * @version 1.4 12-09-2021 - Se agrega validaciones por promocion especial canjeando cupón.
+     *
      * @return array  $objResponse
      */
     public function getPromocion($arrayData)
@@ -2344,7 +2347,8 @@ class ApiMovilController extends FOSRestController
                                      ->getRepository(InfoPromocion::class)
                                      ->findBy(array('ESTADO'         => $strEstado,
                                                     'PREMIO'         => 'NO',
-                                                    'RESTAURANTE_ID' => $intIdRestaurante));
+                                                    'RESTAURANTE_ID' => $intIdRestaurante),
+                                              array('DESCRIPCIONTIPOPROMOCION' => 'ASC'));
             if(empty($objPromocion) && !is_array($objPromocion))
             {
                 throw new \Exception('La promoción a buscar no existe.');
@@ -2368,7 +2372,8 @@ class ApiMovilController extends FOSRestController
                                     ->getRepository(AdmiParametro::class)
                                     ->findBy(array('ESTADO'      => 'ACTIVO',
                                                    'DESCRIPCION' => $strDescripcionPromoEsp,
-                                                   'VALOR2'      => $intIdRestaurante));
+                                                   'VALOR2'      => $intIdRestaurante,
+                                                   'VALOR3'      => 'Cerveza de Cortesía'));
             if(!empty($arrayParametro) && is_array($arrayParametro))
             {
                 foreach($arrayParametro as $arrayItem)
@@ -2376,7 +2381,8 @@ class ApiMovilController extends FOSRestController
                     $arrayEncuesta = $this->getDoctrine()
                                           ->getRepository(InfoClienteEncuesta::class)
                                           ->getCantEncRes(array('intIdCliente'     =>$intIdCliente,
-                                                                'intIdRestaurante' =>$intIdRestaurante));
+                                                                'intIdRestaurante' =>$intIdRestaurante,
+                                                                'strDescPromocion' => 'Cerveza de Cortesía'));
                 }
                 if( (!empty($arrayParametro) && is_array($arrayParametro)) && 
                     (!empty($arrayEncuesta["resultados"]) && empty($arrayEncuesta["error"])))
@@ -2386,16 +2392,54 @@ class ApiMovilController extends FOSRestController
                     $strEsCanjeado  = !empty($arrayTemp["ES_CANJEADO"]) ? $arrayTemp["ES_CANJEADO"]:"NO";
                 }
             }
-
+            /*
+            Bloque que valida una promocion especial, con las sgte. condiciones:
+            -Que aparezca solamente cuando no haya consumido esa promocion y lo canjió desde un cupón.
+             */
+            $arrayParametroPromoCupon  = $this->getDoctrine()
+                                              ->getRepository(AdmiParametro::class)
+                                              ->findBy(array('ESTADO'      => 'ACTIVO',
+                                                             'DESCRIPCION' => $strDescripcionPromoEsp,
+                                                             'VALOR2'      => $intIdRestaurante,
+                                                             'VALOR3'      => '*Consumo por empleado del mes*'));
+            if(!empty($arrayParametroPromoCupon) && is_array($arrayParametroPromoCupon))
+            {
+                $arrayEncuestaCupon = $this->getDoctrine()
+                                           ->getRepository(InfoClienteEncuesta::class)
+                                           ->getCantEncRes(array('intIdCliente'     => $intIdCliente,
+                                                                 'intIdRestaurante' => $intIdRestaurante,
+                                                                 'strDescPromocion' => '*Consumo por empleado del mes*'));
+                if( (!empty($arrayParametroPromoCupon) && is_array($arrayParametroPromoCupon)) && 
+                    (!empty($arrayEncuestaCupon["resultados"]) && empty($arrayEncuestaCupon["error"])))
+                {
+                    //error_log( print_r($arrayEncuestaCupon["resultados"], TRUE) );
+                    $arrayEncuestaCuponTemp  = $arrayEncuestaCupon["resultados"][0];
+                    $intCantCuponCanjeado    = !empty($arrayEncuestaCuponTemp["CANT_CUPON_CANJEADO"] >0) ? intval($arrayEncuestaCuponTemp["CANT_CUPON_CANJEADO"]):0;
+                    $strEsCanjeadoPromoCupon = !empty($arrayEncuestaCuponTemp["ES_CANJEADO"]) ? $arrayEncuestaCuponTemp["ES_CANJEADO"]:"NO";
+                }
+            }
+            //Recorremos todas las promociones
             foreach($objPromocion as $arrayItem)
             {
                 $boolContinuar = true;
+                //Validamos las promociones especiales
                 if(!empty($arrayParametro) && is_array($arrayParametro))
                 {
                     foreach($arrayParametro as $arrayItemPromoEsp)
                     {
                         if($arrayItemPromoEsp->getVALOR1() == $arrayItem->getId() && 
                         (($strEsPermitido == "NO" && $strEsCanjeado == "NO")||($strEsPermitido == "SI" && $strEsCanjeado == "SI")))
+                        {
+                            $boolContinuar = false;
+                        }
+                    }
+                }
+                //Validamos las promociones especiales por cupón
+                if(!empty($arrayParametroPromoCupon) && is_array($arrayParametroPromoCupon))
+                {
+                    foreach($arrayParametroPromoCupon as $arrayItemPromoEspCupon)
+                    {
+                        if($arrayItemPromoEspCupon->getVALOR1() == $arrayItem->getId() && $intCantCuponCanjeado == 0)
                         {
                             $boolContinuar = false;
                         }
@@ -2419,7 +2463,12 @@ class ApiMovilController extends FOSRestController
                     {
                          $strPromocionActiva = "Procesando";
                     }
-    
+                    //Presentar Bander si se trata de una promoción especial cupón.
+                    $strPromoEspecial = "N";
+                    if($arrayItem->getDESCRIPCIONTIPOPROMOCION() == "*Consumo por empleado del mes*")
+                    {
+                        $strPromoEspecial = "S";
+                    }
                     $arrayPromocion []= array( 'idPromocion'   => $arrayItem->getId(),
                                             'textoProceso'     => $strPromocionActiva,
                                             'descripcion'      => $arrayItem->getDESCRIPCIONTIPOPROMOCION(),
@@ -2427,7 +2476,9 @@ class ApiMovilController extends FOSRestController
                                             'cantPuntos'       => $arrayItem->getCANTIDADPUNTOS(),
                                             'aceptaGlobal'     => $arrayItem->getACEPTAGLOBAL(),
                                             'habilitar'        => (!empty($arraySucursal["resultados"])&& isset($arraySucursal["resultados"])) ? 'SI':'NO',
-                                            'estado'           => $arrayItem->getESTADO());
+                                            'estado'           => $arrayItem->getESTADO(),
+                                            'promoEspecial'    => $strPromoEspecial
+                                        );
                 }
             }
             $arrayPuntos     = $this->getDoctrine()
@@ -2587,19 +2638,19 @@ class ApiMovilController extends FOSRestController
             {
                 $strMensajePromocion = "Revise su correo electrónico para obtener\n su código el cual debe presentar al momento\n de realizar su pedido y obtener su promoción";
             }
-            //consultar el estado a buscar
+            //Consultar la cant. de puntos que tiene el cliente.
             $arrayCltPunto = $this->getDoctrine()
                                   ->getRepository(InfoClientePunto::class)
                                   ->findBy(array('CLIENTE_ID'     => $intIdCliente,
                                                  'RESTAURANTE_ID' => $intIdRestaurante));
-            if(!is_array($arrayCltPunto) || empty($arrayCltPunto))
+            if(is_array($arrayCltPunto) && !empty($arrayCltPunto))
             {
-                throw new \Exception('No tiene puntaje sufuciente.');
+                foreach($arrayCltPunto as $arrayItem)
+                {
+                    $intCantidadPuntos = $intCantidadPuntos + $arrayItem->getCANTIDADPUNTOS();
+                }
             }
-            foreach($arrayCltPunto as $arrayItem)//1REGISTRO
-            {
-                $intCantidadPuntos = $intCantidadPuntos + $arrayItem->getCANTIDADPUNTOS();
-            }
+            //Consultar la cant. de puntos que vale la promoción.
             $objPromocion = $this->getDoctrine()
                                  ->getRepository(InfoPromocion::class)
                                  ->find($intIdPromocion);
@@ -2607,7 +2658,24 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe la Promoción.');
             }
+            //Lógica en caso de que la promoción sea '*Consumo por empleado del mes*'
+            if($objPromocion->getDESCRIPCIONTIPOPROMOCION() == "*Consumo por empleado del mes*")
+            {
+                $arrayParametrosCodigo = array("PROMOCION_ID" => $objPromocion->getId(),
+                                               "ESTADO"       => "ACTIVO");
+                $objCuponHist = $this->getDoctrine()
+                                     ->getRepository(InfoCuponHistorial::class)
+                                     ->findOneBy(array("CLIENTE_ID"     => $objCliente->getId(),
+                                                       "ESTADO"         => "PEND-PROMOCION",
+                                                       "RESTAURANTE_ID" => $intIdRestaurante));
+                if(is_object($objCuponHist) && !empty($objCuponHist))
+                {
+                    error_log("objCuponHist: ".$objCuponHist->getId());
+                    $objCuponHist->setESTADO("CANJEADO");
+                }
+            }
             $intCantPuntospromo = $objPromocion->getCANTIDADPUNTOS();
+            //Lógica para canjear promoción normal y con código
             if($intCantPuntospromo<=$intCantidadPuntos)
             {
                 if($objPromocion->getCODIGO() == "SI")
@@ -2623,13 +2691,13 @@ class ApiMovilController extends FOSRestController
                     }
                     $strNombreUsuario = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
                     $strDestinatario  = $objCliente->getCORREO();
-                    $strAsunto        = 'CANJEAR PROMOCION';
+                    $strAsunto        = '¡PROMOCIÓN CANJEADA!';
                     $strMensajeCorreo = '
                     <div class=""><b>¡Hola! '.$strNombreUsuario.'.</b>&nbsp;</div>
                     <div class="">&nbsp;</div>
                     <div class="">FELICITACIONES!!!!&nbsp;</div>
                     <div class="">&nbsp;</div>
-                    <div class="">Acabas de canjear '.$intCantPuntospromo.' puntos en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>.&nbsp;</div>
+                    <div class="">Acabas de canjear la promoción: <strong>'.$objPromocion->getDESCRIPCIONTIPOPROMOCION().'</strong> en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong>.&nbsp;</div>
                     <div class="">&nbsp;</div>
                     <div>Presenta este <strong>c&oacute;digo '.$objCodigoPromocion->getCODIGO().'</strong> al momento de realizar tu pedido al cajero. Esperamos que tu premio est&eacute; delicioso.&nbsp;</div>
                     <div class="">&nbsp;</div>
@@ -2656,7 +2724,7 @@ class ApiMovilController extends FOSRestController
                     $entityCodigoPromocionHist->setFECREACION($strDatetimeActual);
                     $em->persist($entityCodigoPromocionHist);
                     $em->flush();
-		    $boolBanderaCodigo = true;
+                    $boolBanderaCodigo = true;
                 }
                 $arrayPromociones   = $this->getDoctrine()
                                            ->getRepository(InfoPromocionHistorial::class)
@@ -3621,7 +3689,7 @@ class ApiMovilController extends FOSRestController
                 throw new \Exception('No existe Restaurante con los parámetros enviados.');
             }
             /**
-             * Bloque que valida si el cupon es de tipo general/restaurante o único/restaurante.
+             * Bloque que valida si el cupon es de tipo general/restaurante o único/restaurante o general/promoción.
              */
             if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "GENERAL_RESTAURANTE")
             {
@@ -3740,6 +3808,95 @@ class ApiMovilController extends FOSRestController
                 $em->persist($entityCuponHistorial);
                 $em->flush();
             }
+            else if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "EMPRESARIAL")
+            {
+                /**
+                 * Empleado del mes: me dan un cupón en cualquier restaurante, 
+                 * voy a puntos ingreso cupón, me debe aparecer en promociones, 
+                 * "*Consumo por empleado del mes*"
+                 */
+                $strDescrPromocion = "*Consumo por empleado del mes*";
+                $objCupon->setESTADO("CANJEADO");
+                $em->persist($objCupon);
+                $em->flush();
+                $arrayPromocion = $this->getDoctrine()
+                                       ->getRepository(InfoPromocion::class)
+                                       ->findBy(array("ESTADO"                   => "ACTIVO",
+                                                      "PREMIO"                   => "NO",
+                                                      "DESCRIPCIONTIPOPROMOCION" => $strDescrPromocion,
+                                                      "RESTAURANTE_ID"           => $intIdRestaurante));
+                if(empty($arrayPromocion) || !is_array($arrayPromocion))
+                {
+                    $entityPromocion = new InfoPromocion();
+                    $entityPromocion->setRESTAURANTEID($objRestaurante);
+                    $entityPromocion->setDESCRIPCIONTIPOPROMOCION($strDescrPromocion);
+                    $entityPromocion->setIMAGEN($objCupon->getIMAGEN());
+                    $entityPromocion->setPREMIO("NO");
+                    $entityPromocion->setCANTIDADPUNTOS(0);
+                    $entityPromocion->setACEPTAGLOBAL('');
+                    $entityPromocion->setESTADO("ACTIVO");
+                    $entityPromocion->setCODIGO("NO");
+                    $entityPromocion->setUSRCREACION($strUsuarioCreacion);
+                    $entityPromocion->setFECREACION($strDatetimeActual);
+                    $em->persist($entityPromocion);
+                    $em->flush();
+
+                    $entityAdmiParametro = new AdmiParametro();
+                    $entityAdmiParametro->setDESCRIPCION("PROMOCION_ESPECIAL");
+                    $entityAdmiParametro->setVALOR1($entityPromocion->getId());
+                    $entityAdmiParametro->setVALOR2($intIdRestaurante);
+                    $entityAdmiParametro->setVALOR3($strDescrPromocion);
+                    $entityAdmiParametro->setESTADO("ACTIVO");
+                    $entityAdmiParametro->setUSRCREACION($strUsuarioCreacion);
+                    $entityAdmiParametro->setFECREACION($strDatetimeActual);
+                    $em->persist($entityAdmiParametro);
+                    $em->flush();
+                }
+                $entityCuponHistorial = new InfoCuponHistorial();
+                $entityCuponHistorial->setESTADO("PEND-PROMOCION");
+                $entityCuponHistorial->setCUPONID($objCupon);
+                $entityCuponHistorial->setCLIENTEID($objCliente);
+                $entityCuponHistorial->setRESTAURANTEID($objRestaurante);
+                $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponHistorial->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponHistorial);
+                $em->flush();
+                //Envío de notificaciones a Massvision
+                $strAsunto        = "¡CUPÓN CANJEADO!";
+                $strNombreUsuario = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
+                $strMensajeCorreo = '
+                <div class="">Estimados &nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Se notifica que el cliente: '.$strNombreUsuario.', acaba de canjear el cupón: '.$objCupon->getCUPON().', en el restaurante: '.$objRestaurante->getNOMBRECOMERCIAL().'&nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+                <div class="">&nbsp;</div>';
+                $strRemitente     = 'notificaciones@bitte.app';
+                $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                          'strMensajeCorreo' => $strMensajeCorreo,
+                                          'strRemitente'     => $strRemitente,
+                                          'strDestinatario'  => array('bespinel@massvision.tv', 'pchiquito@massvision.ec', 'baquekevin@hotmail.com'));
+                $objController    = new DefaultController();
+                $objController->setContainer($this->container);
+                $objController->enviaCorreo($arrayParametros);
+                //Envío de notificaciones al Restaurante
+                $strMensajeCorreo = '
+                <div class="">Estimados &nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div class="">Estimado restaurante '.$objRestaurante->getNOMBRECOMERCIAL().', un usuario activó un consumo en su restaurante, &nbsp;</div>
+                <div class="">por favor proceda a emitir factura por el valor de: $'.$objCupon->getPRECIO().', a nombre de la empresa IMFAD S.A. Ruc: 0992422718001 &nbsp;</div>
+                <div class="">&nbsp;</div>
+                <div style=\"font-family:Varela Round\"><b>Enjoy your Bitte</b>&nbsp;</div>
+                <div class="">&nbsp;</div>';
+                $arrayParametros  = array('strAsunto'        => $strAsunto,
+                                          'strMensajeCorreo' => $strMensajeCorreo,
+                                          'strRemitente'     => $strRemitente,
+                                          'strDestinatario'  => array('bespinel@massvision.tv', 'pchiquito@massvision.ec', 'baquekevin@hotmail.com'));
+                $objController    = new DefaultController();
+                $objController->setContainer($this->container);
+                $objController->enviaCorreo($arrayParametros);
+                $strMensaje = "Cupón canjeado con éxito, por favor espere 24 horas para acercarse al restaurante y canjear la promoción: 'Consumo del empleado del mes'.";
+            }
             else
             {
                 throw new \Exception("Cupón no válido.");
@@ -3751,7 +3908,7 @@ class ApiMovilController extends FOSRestController
                                       ->findOneBy(array('CLIENTE_ID'     => $objCliente->getId(),
                                                         'RESTAURANTE_ID' => $intIdRestaurante,
                                                         'ESTADO'         => 'ACTIVO'));
-            if(!empty($objInfoCltPunto) && is_object($objInfoCltPunto))
+            if(!empty($objInfoCltPunto) && is_object($objInfoCltPunto) && $intCantPuntos > 0)
             {
                 $intCantidadPuntos = $intCantPuntos + intval($objInfoCltPunto->getCANTIDADPUNTOS());
                 $objInfoCltPunto->setCANTIDADPUNTOS($intCantidadPuntos);
@@ -3760,16 +3917,19 @@ class ApiMovilController extends FOSRestController
             }
             else
             {
-                $intCantidadPuntos = $intCantPuntos;
-                $entityCltPunto = new InfoClientePunto();
-                $entityCltPunto->setCLIENTEID($objCliente);
-                $entityCltPunto->setRESTAURANTEID($objRestaurante);
-                $entityCltPunto->setCANTIDADPUNTOS($intCantPuntos);
-                $entityCltPunto->setESTADO("ACTIVO");
-                $entityCltPunto->setUSRCREACION($strUsuarioCreacion);
-                $entityCltPunto->setFECREACION($strDatetimeActual);
-                $em->persist($entityCltPunto);
-                $em->flush();
+                if($intCantPuntos > 0)
+                {
+                    $intCantidadPuntos = $intCantPuntos;
+                    $entityCltPunto = new InfoClientePunto();
+                    $entityCltPunto->setCLIENTEID($objCliente);
+                    $entityCltPunto->setRESTAURANTEID($objRestaurante);
+                    $entityCltPunto->setCANTIDADPUNTOS($intCantPuntos);
+                    $entityCltPunto->setESTADO("ACTIVO");
+                    $entityCltPunto->setUSRCREACION($strUsuarioCreacion);
+                    $entityCltPunto->setFECREACION($strDatetimeActual);
+                    $em->persist($entityCltPunto);
+                    $em->flush();
+                }
             }
             if ($em->getConnection()->isTransactionActive())
             {
@@ -3781,7 +3941,7 @@ class ApiMovilController extends FOSRestController
         {
             $boolSucces = false;
             $strStatus  = 204;
-            $strMensaje = ($ex->getMessage() != "") ? $ex->getMessage() : "Fallo al realizar la búsqueda, intente nuevamente.\n ". $ex->getMessage();
+            $strMensaje = ($ex->getMessage() != "") ? $ex->getMessage() : "Falló al canjear el cupón";
             if ($em->getConnection()->isTransactionActive())
             {
                 $em->getConnection()->rollback();
@@ -3847,6 +4007,7 @@ class ApiMovilController extends FOSRestController
         }
         $arrayRespuesta['error'] = $strMensajeError;
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'numCalificaciones' => (!empty($arrayContenido["resultados"])) ? count($arrayContenido["resultados"]): 0,
                                                    'resultado' => $arrayRespuesta,
                                                    'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');

@@ -2628,14 +2628,14 @@ class ApiWebController extends FOSRestController
             if($strEstado == 'COMPLETADO' && !empty($objPromocionOro))
             {
                 $boolEnviarCorreo = true;
-                $strAsunto            = '¡CANJEASTE PUNTOS!';
+                $strAsunto            = '¡PROMOCIÓN CANJEADA!';
                 $strNombreUsuario     = $objCliente->getNOMBRE() .' '.$objCliente->getAPELLIDO();
                 $strMensajeCorreo = '
                 <div class="">¡Hola! '.$strNombreUsuario.'.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">FELICITACIONES!!!!&nbsp;</div>
                 <div class="">&nbsp;</div>
-                <div class="">Acabas de canjear '.$objPromocion->getCANTIDADPUNTOS().' puntos en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> esperamos que tu premio est&eacute; delicioso.&nbsp;</div>
+                <div class="">Acabas de canjear la promoción: <strong>'.$objPromocion->getDESCRIPCIONTIPOPROMOCION().'</strong> en el restaurante <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> esperamos que tu premio est&eacute; delicioso.&nbsp;</div>
                 <div class="">&nbsp;</div>
                 <div class="">¡Sigue disfrutando de salir a comer con tus familiares y amigos!&nbsp;</div>
                 <div class="">&nbsp;</div>
@@ -4712,15 +4712,18 @@ class ApiWebController extends FOSRestController
         $strRestaurante         = $arrayData['strRestaurante']     ? $arrayData['strRestaurante']:'';
         $strTipoCupon           = $arrayData['strTipoCupon']       ? $arrayData['strTipoCupon']:'';
         $strValor               = $arrayData['strValor']           ? $arrayData['strValor']:'';
+        $strPrecio              = $arrayData['strPrecio']          ? $arrayData['strPrecio']:'';
+        $strImagen              = $arrayData['strImagen']          ? $arrayData['strImagen']:'';
         $strUsuarioCreacion     = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
+        $strRutaImagen          = "";
         $strStatus              = 200;
         $boolSucces             = true;
         $objResponse            = new Response;
         $em                     = $this->getDoctrine()->getManager();
-        $objController          = new DefaultController();
         $arrayBitacoraDetalle   = array();
+        $objController          = new DefaultController();
         $objController->setContainer($this->container);
         try
         {
@@ -4745,6 +4748,12 @@ class ApiWebController extends FOSRestController
             $entityCupon->setESTADO(strtoupper($strEstado));
             $entityCupon->setVALOR(intval($strValor));
             $entityCupon->setTIPOCUPONID($objTipoCupon);
+            $entityCupon->setPRECIO(intval($strPrecio));
+            if(!empty($strImagen))
+            {
+                $strRutaImagen = $objController->getSubirImgBanner($strImagen,1);
+            }
+            $entityCupon->setIMAGEN($strRutaImagen);
             $entityCupon->setUSRCREACION($strUsuarioCreacion);
             $entityCupon->setFECREACION($strDatetimeActual);
             $em->persist($entityCupon);
@@ -4760,6 +4769,14 @@ class ApiWebController extends FOSRestController
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo de cupón",
                                            'VALOR_ANTERIOR' => "",
                                            'VALOR_ACTUAL'   => str_replace("_"," ",ucwords($objTipoCupon->getDESCRIPCION())),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Puntos",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => intval($strValor),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Precio",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => intval($strPrecio),
                                            'USUARIO_ID'     => $strUsuarioCreacion);
             if($objTipoCupon->getDESCRIPCION() == "GENERAL_RESTAURANTE" || $objTipoCupon->getDESCRIPCION() == "UNICO_RESTAURANTE")
             {
@@ -4836,14 +4853,19 @@ class ApiWebController extends FOSRestController
         $strRestaurante         = $arrayData['strRestaurante']     ? $arrayData['strRestaurante']:'';
         $strTipoCupon           = $arrayData['strTipoCupon']       ? $arrayData['strTipoCupon']:'';
         $strValor               = $arrayData['strValor']           ? $arrayData['strValor']:'';
+        $strPrecio              = $arrayData['strPrecio']          ? $arrayData['strPrecio']:'';
+        $strImagen              = $arrayData['strImagen']          ? $arrayData['strImagen']:'';
         $strUsuarioCreacion     = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
         $strMensajeError        = '';
         $strBitacoraRestaurante = '';
+        $strRutaImagen          = "";
         $strStatus              = 200;
         $boolSucces             = true;
         $objResponse            = new Response;
         $em                     = $this->getDoctrine()->getManager();
+        $objController          = new DefaultController();
+        $objController->setContainer($this->container);
         try
         {
             $objCupon = $this->getDoctrine()
@@ -4873,11 +4895,30 @@ class ApiWebController extends FOSRestController
                                            'VALOR_ANTERIOR' => str_replace("_"," ",ucwords($objCupon->getTIPOCUPONID()->getDESCRIPCION())),
                                            'VALOR_ACTUAL'   => str_replace("_"," ",ucwords($objTipoCupon->getDESCRIPCION())),
                                            'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Puntos",
+                                           'VALOR_ANTERIOR' => $objCupon->getVALOR(),
+                                           'VALOR_ACTUAL'   => intval($strValor),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Precio",
+                                           'VALOR_ANTERIOR' => $objCupon->getPRECIO(),
+                                           'VALOR_ACTUAL'   => intval($strPrecio),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+
             $em->getConnection()->beginTransaction();
             $objCupon->setCUPON(strtolower(str_replace(" ","_",$strDescripcion)));
             $objCupon->setESTADO(strtoupper($strEstado));
             $objCupon->setVALOR(intval($strValor));
             $objCupon->setTIPOCUPONID($objTipoCupon);
+            $objCupon->setPRECIO(intval($strPrecio));
+            if(!empty($objCupon->getIMAGEN()))
+            {
+                $objController->getEliminarImg($objCupon->getIMAGEN());
+            }
+            if(!empty($strImagen))
+            {
+                $strRutaImagen = $objController->subirfichero($strImagen,1);
+            }
+            $objCupon->setIMAGEN($strRutaImagen);
             $objCupon->setUSRMODIFICACION($strUsuarioCreacion);
             $objCupon->setFEMODIFICACION($strDatetimeActual);
             $em->persist($objCupon);
@@ -4976,6 +5017,15 @@ class ApiWebController extends FOSRestController
             if(!empty($arrayRespuesta["error"]))
             {
                 throw new \Exception($arrayRespuesta['error']);
+            }
+            foreach($arrayRespuesta['resultados'] as &$arrayItem)
+            {
+                if(!empty($arrayItem['strImagen']))
+                {
+                    $objController = new DefaultController();
+                    $objController->setContainer($this->container);
+                    $arrayItem['strImagen'] = $objController->getImgBase64($arrayItem['strImagen']);
+                }
             }
         }
         catch(\Exception $ex)

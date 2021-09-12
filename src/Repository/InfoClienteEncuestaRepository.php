@@ -601,49 +601,81 @@ AND IC.EDAD!='SIN EDAD'
      * @author Kevin Baque
      * @version 1.0 14-09-2020
      * 
+     * @author Kevin Baque
+     * @version 1.4 12-09-2021 - Se agrega validaciones por promocion especial canjeando cupón.
+     *
      * @return array  $arrayCltEncuesta
      *
      */
     public function getCantEncRes($arrayParametros)
     {
         $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
-        $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $intIdCliente       = $arrayParametros['intIdCliente']     ? $arrayParametros['intIdCliente']:'';
+        $strDescPromocion   = $arrayParametros['strDescPromocion'] ? $arrayParametros['strDescPromocion']:'';
         $arrayEncuesta      = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         try
         {
-            $strSelect      = "SELECT 
+            if($strDescPromocion == "*Consumo por empleado del mes*")
+            {
+                $strSelect  = "SELECT COUNT(*) AS CANT_CUPON_CANJEADO,
+                               (SELECT 
                                         CASE
-                                            WHEN count(ICE.ID_CLT_ENCUESTA) >= 1 THEN 'SI'
+                                            WHEN count(ICPH.ID_CLIENTE_PUNTO_HISTORIAL) >= 1 THEN 'SI'
                                             ELSE 'NO'
-                                        END AS ES_PERMITIDO,
-                                        (SELECT 
-                                                CASE
-                                                    WHEN count(ICPH.ID_CLIENTE_PUNTO_HISTORIAL) >= 1 THEN 'SI'
-                                                    ELSE 'NO'
-                                                END 
-                                        FROM INFO_CLIENTE_PROMOCION_HISTORIAL ICPH
-                                        WHERE ICPH.PROMOCION_ID IN (SELECT IPO_C.ID_PROMOCION  
-                                                                        FROM INFO_PROMOCION IPO_C
-                                                                        WHERE IPO_C.RESTAURANTE_ID=IRE.ID_RESTAURANTE 
-                                                                        AND IPO_C.DESCRIPCION_TIPO_PROMOCION='Cerveza de Cortesía')
-                                                AND ICPH.CLIENTE_ID=IC.ID_CLIENTE) AS ES_CANJEADO ";
-            $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
-                                    JOIN INFO_CLIENTE      IC  ON IC.ID_CLIENTE      = ICE.CLIENTE_ID
-                                    JOIN INFO_SUCURSAL     ISU ON ISU.ID_SUCURSAL    = ICE.SUCURSAL_ID
-                                    JOIN INFO_RESTAURANTE  IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
-            $strWhere       = " WHERE IRE.ID_RESTAURANTE = :ID_RESTAURANTE
-                                    AND IC.ID_CLIENTE    = :ID_CLIENTE
-                                    AND ICE.ESTADO       IN ('ACTIVO','PENDIENTE') ";
-
+                                        END 
+                                FROM INFO_CLIENTE_PROMOCION_HISTORIAL ICPH
+                                WHERE ICPH.PROMOCION_ID IN (SELECT IPO_C.ID_PROMOCION  
+                                                                FROM INFO_PROMOCION IPO_C
+                                                                WHERE IPO_C.RESTAURANTE_ID=:ID_RESTAURANTE 
+                                                                AND IPO_C.ESTADO='ACTIVO'
+                                                                AND IPO_C.DESCRIPCION_TIPO_PROMOCION = :strDescPromocion)
+                                        AND ICPH.CLIENTE_ID=:ID_CLIENTE) AS ES_CANJEADO ";
+                $strFrom    = " FROM INFO_CUPON ICU
+                                     JOIN INFO_CUPON_HISTORIAL ICUH ON ICUH.CUPON_ID = ICU.ID_CUPON
+                                        AND ICUH.ESTADO='PEND-PROMOCION'
+                                        AND ICUH.RESTAURANTE_ID=:ID_RESTAURANTE
+                                     JOIN ADMI_TIPO_CUPON ATCU ON ATCU.ID_TIPO_CUPON = ICU.TIPO_CUPON_ID
+                                        AND ATCU.DESCRIPCION = 'EMPRESARIAL'
+                                        AND ATCU.ESTADO = 'ACTIVO' ";
+                $strWhere   = " WHERE ICUH.CLIENTE_ID = :ID_CLIENTE
+                                        AND ICU.ESTADO =  'CANJEADO'";
+                $objRsmBuilder->addScalarResult('CANT_CUPON_CANJEADO', 'CANT_CUPON_CANJEADO', 'string');
+            }
+            else
+            {
+                $strSelect      = "SELECT 
+                                            CASE
+                                                WHEN count(ICE.ID_CLT_ENCUESTA) >= 1 THEN 'SI'
+                                                ELSE 'NO'
+                                            END AS ES_PERMITIDO,
+                                            (SELECT 
+                                                    CASE
+                                                        WHEN count(ICPH.ID_CLIENTE_PUNTO_HISTORIAL) >= 1 THEN 'SI'
+                                                        ELSE 'NO'
+                                                    END 
+                                            FROM INFO_CLIENTE_PROMOCION_HISTORIAL ICPH
+                                            WHERE ICPH.PROMOCION_ID IN (SELECT IPO_C.ID_PROMOCION  
+                                                                            FROM INFO_PROMOCION IPO_C
+                                                                            WHERE IPO_C.RESTAURANTE_ID=IRE.ID_RESTAURANTE 
+                                                                            AND IPO_C.DESCRIPCION_TIPO_PROMOCION = :strDescPromocion)
+                                                    AND ICPH.CLIENTE_ID=IC.ID_CLIENTE) AS ES_CANJEADO ";
+                $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE
+                                        JOIN INFO_CLIENTE      IC  ON IC.ID_CLIENTE      = ICE.CLIENTE_ID
+                                        JOIN INFO_SUCURSAL     ISU ON ISU.ID_SUCURSAL    = ICE.SUCURSAL_ID
+                                        JOIN INFO_RESTAURANTE  IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
+                $strWhere       = " WHERE IRE.ID_RESTAURANTE = :ID_RESTAURANTE
+                                        AND IC.ID_CLIENTE    = :ID_CLIENTE
+                                        AND ICE.ESTADO       IN ('ACTIVO','PENDIENTE') ";
+                $objRsmBuilder->addScalarResult('ES_PERMITIDO', 'ES_PERMITIDO', 'string');
+                
+            }
             $objQuery->setParameter("ID_RESTAURANTE",$intIdRestaurante);
             $objQuery->setParameter("ID_CLIENTE",$intIdCliente);
-
-            $objRsmBuilder->addScalarResult('ES_PERMITIDO', 'ES_PERMITIDO', 'string');
+            $objQuery->setParameter("strDescPromocion",$strDescPromocion);
             $objRsmBuilder->addScalarResult('ES_CANJEADO', 'ES_CANJEADO', 'string');
-            error_log($strSql);
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayEncuesta['resultados'] = $objQuery->getResult();
@@ -702,10 +734,17 @@ AND IC.EDAD!='SIN EDAD'
                                                         AND SUB_ISU.RESTAURANTE_ID = IRE.ID_RESTAURANTE
                                                         AND SUB_ICE.CLIENTE_ID=ICE.CLIENTE_ID) AS PRO_ENCUESTAS_CLT,
                                         IRE.ID_RESTAURANTE,
-                                        IRE.ES_AFILIADO ";
+                                        IRE.ES_AFILIADO,
+                                        CASE WHEN IRS.DESCRIPCION != 'NO COMPARTIDO' THEN 
+                                            'SI'
+                                        ELSE 'NO'
+                                        END AS ES_COMPARTIDO ";
             $strFrom        = " FROM INFO_CLIENTE_ENCUESTA ICE 
                                 JOIN INFO_SUCURSAL ISU ON ISU.ID_SUCURSAL       = ICE.SUCURSAL_ID
-                                JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
+                                JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID
+                                JOIN INFO_CONTENIDO_SUBIDO ICS ON ICS.ID_CONTENIDO_SUBIDO = ICE.CONTENIDO_ID
+                                JOIN INFO_REDES_SOCIALES IRS ON IRS.ID_REDES_SOCIALES = ICS.REDES_SOCIALES_ID
+                                    AND IRS.ESTADO='ACTIVO' ";
             $strWhere       = " WHERE ICE.FE_CREACION >= DATE_ADD(NOW(),INTERVAL -:intCantDia DAY) 
                                 AND ICE.ESTADO    != 'ELIMINADO' 
                                 AND ICE.CLIENTE_ID = :intIdCliente ";
@@ -723,6 +762,7 @@ AND IC.EDAD!='SIN EDAD'
             $objRsmBuilder->addScalarResult('PRO_ENCUESTAS_CLT', 'PRO_ENCUESTAS_CLT' , 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE' , 'ID_RESTAURANTE' , 'string');
             $objRsmBuilder->addScalarResult('ES_AFILIADO', 'ES_AFILIADO' , 'string');
+            $objRsmBuilder->addScalarResult('ES_COMPARTIDO' , 'ES_COMPARTIDO' , 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
             $arrayCltEncuesta['resultados'] = $objQuery->getResult();
@@ -766,10 +806,16 @@ AND IC.EDAD!='SIN EDAD'
                                         IRE.NOMBRE_COMERCIAL,
                                         0 AS PRO_ENCUESTAS_CLT,
                                         IRE.ID_RESTAURANTE,
-                                        IRE.ES_AFILIADO ";
+                                        IRE.ES_AFILIADO,
+                                        CASE WHEN IRS.DESCRIPCION != 'NO COMPARTIDO' THEN 
+                                            'SI'
+                                        ELSE 'NO'
+                                        END AS ES_COMPARTIDO ";
             $strFrom        = " FROM INFO_CONTENIDO_SUBIDO ICS
                                     JOIN INFO_SUCURSAL ISU ON ISU.ID_SUCURSAL       = ICS.SUCURSAL_ID
-                                    JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID ";
+                                    JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE = ISU.RESTAURANTE_ID
+                                    JOIN INFO_REDES_SOCIALES IRS ON IRS.ID_REDES_SOCIALES = ICS.REDES_SOCIALES_ID
+                                    AND IRS.ESTADO='ACTIVO' ";
             $strWhere       = " WHERE ICS.FE_CREACION >= DATE_ADD(NOW(),INTERVAL -:intCantDia DAY) 
                                 AND ICS.ESTADO    != 'ELIMINADO' 
                                 AND ICS.CLIENTE_ID = :intIdCliente 
@@ -787,6 +833,7 @@ AND IC.EDAD!='SIN EDAD'
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL' , 'NOMBRE_COMERCIAL' , 'string');
             $objRsmBuilder->addScalarResult('PRO_ENCUESTAS_CLT', 'PRO_ENCUESTAS_CLT' , 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE' , 'ID_RESTAURANTE' , 'string');
+            $objRsmBuilder->addScalarResult('ES_COMPARTIDO' , 'ES_COMPARTIDO' , 'string');
             $objRsmBuilder->addScalarResult('ES_AFILIADO', 'ES_AFILIADO' , 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);

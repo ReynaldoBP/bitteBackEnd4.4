@@ -41,6 +41,8 @@ class InfoCuponRepository extends \Doctrine\ORM\EntityRepository
                             ATC.ID_TIPO_CUPON,
                             CONCAT(UPPER(LEFT(REPLACE(ATC.DESCRIPCION,'_',' '), 1)), LOWER(SUBSTRING(REPLACE(ATC.DESCRIPCION,'_',' '), 2))) AS TIPO_CUPON,
                             IC.VALOR,
+                            IC.PRECIO,
+                            IC.IMAGEN,
                             IC.ESTADO,
                             IFNULL(
                                     (SELECT IRES.NOMBRE_COMERCIAL
@@ -70,6 +72,8 @@ class InfoCuponRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('ID_TIPO_CUPON'  , 'strIdTipoCupon'   , 'string');
             $objRsmBuilder->addScalarResult('TIPO_CUPON'     , 'strTipoCupon'     , 'string');
             $objRsmBuilder->addScalarResult('VALOR'          , 'strValor'         , 'string');
+            $objRsmBuilder->addScalarResult('PRECIO'         , 'strPrecio'        , 'string');
+            $objRsmBuilder->addScalarResult('IMAGEN'         , 'strImagen'        , 'string');
             $objRsmBuilder->addScalarResult('ESTADO'         , 'strEstado'        , 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE' , 'strIdRestaurante' , 'string');
             $objRsmBuilder->addScalarResult('RESTAURANTE'    , 'strRestaurante'   , 'string');
