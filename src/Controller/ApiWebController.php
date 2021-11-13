@@ -39,6 +39,8 @@ use App\Entity\AdmiTipoCupon;
 use App\Entity\InfoCuponHistorial;
 use App\Entity\InfoCuponRestaurante;
 use App\Entity\InfoTipoComidaRestaurante;
+use App\Entity\AdmiTipoPromocion;
+use App\Entity\InfoCuponPromocion;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -151,6 +153,8 @@ class ApiWebController extends FOSRestController
                 case 'getTipoCupon':$arrayRespuesta = $this->getTipoCupon($arrayData);
                 break;
                 case 'getResumenCliente':$arrayRespuesta = $this->getResumenCliente($arrayData);
+                break;
+                case 'getTipoPromocion':$arrayRespuesta  = $this->getTipoPromocion($arrayData);
                 break;
                  $objResponse->setContent(json_encode(array('status'    => 204,
                                                             'resultado' => "No existe método con la descripción enviado por parámetro",
@@ -1182,6 +1186,9 @@ class ApiWebController extends FOSRestController
      *
      * @author Kevin Baque
      * @version 1.3 19-07-2021 - Se agrega lógica para ingresar historial de creación.
+     * 
+     * @author Kevin Baque
+     * @version 1.4 11-11-2021 - Se agrega lógica para ingresar nuevo tipo de promoción.
      *
      * @return array  $objResponse
      */
@@ -1197,6 +1204,8 @@ class ApiWebController extends FOSRestController
         $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
         $strExcel               = $arrayData['excel'] ? $arrayData['excel']:'';
         $strPremio              = $arrayData['premio'] ? $arrayData['premio']:'NO';
+        $intIdTipoPromocion     = $arrayData['idTipoPromocion'] ? $arrayData['idTipoPromocion']:1;
+        $intIdCupon             = $arrayData['idCupon']         ? $arrayData['idCupon']:'';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
         $arrayBitacoraDetalle   = array();
@@ -1228,7 +1237,14 @@ class ApiWebController extends FOSRestController
                 $strStatus = 409;
                 throw new \Exception('El restaurante seleccionado no permite el ingreso de códigos.');
             }
-
+            $objTipoPromocion = $this->getDoctrine()
+                                     ->getRepository(AdmiTipoPromocion::class)
+                                     ->findOneBy(array("id"     =>$intIdTipoPromocion,
+                                                       "ESTADO" =>'ACTIVO'));
+            if(!is_object($objTipoPromocion) || empty($objTipoPromocion))
+            {
+                throw new \Exception('No existe el tipo de promoción enviado por parámetro.');
+            }
             $entityPromocion = new InfoPromocion();
             $entityPromocion->setRESTAURANTEID($objRestaurante);
             $entityPromocion->setDESCRIPCIONTIPOPROMOCION($strDescrPromocion);
@@ -1238,9 +1254,32 @@ class ApiWebController extends FOSRestController
             $entityPromocion->setACEPTAGLOBAL($strAceptaGlobal);
             $entityPromocion->setESTADO(strtoupper($strEstado));
             $entityPromocion->setCODIGO(strtoupper($strCodigo));
+            $entityPromocion->setTIPOPROMOCIONID($objTipoPromocion);
             $entityPromocion->setUSRCREACION($strUsuarioCreacion);
             $entityPromocion->setFECREACION($strDatetimeActual);
-
+            $em->persist($entityPromocion);
+            $em->flush();
+            if($objTipoPromocion->getDESCRIPCION()=="CUPON")
+            {
+                if(!empty($intIdCupon))
+                {
+                    $objCupon = $this->getDoctrine()
+                                     ->getRepository(InfoCupon::class)
+                                     ->findOneBy(array("id"     =>$intIdCupon,
+                                                       "ESTADO" =>'ACTIVO'));
+                    if(is_object($objCupon) && !empty($objCupon))
+                    {
+                        $entityCuponPromocion = new InfoCuponPromocion();
+                        $entityCuponPromocion->setCUPONID($objCupon);
+                        $entityCuponPromocion->setPROMOCIONID($entityPromocion);
+                        $entityCuponPromocion->setESTADO(strtoupper($strEstado));
+                        $entityCuponPromocion->setUSRCREACION($strUsuarioCreacion);
+                        $entityCuponPromocion->setFECREACION($strDatetimeActual);
+                        $em->persist($entityCuponPromocion);
+                        $em->flush();
+                    }
+                }
+            }
             if( (!empty($strRestauranteCodigo) && $strRestauranteCodigo == "SI")&&(!empty($strCodigo) && $strCodigo!="NO") )
             {
                 $objBaseToPhp  = explode(',', $strExcel);
@@ -1267,8 +1306,6 @@ class ApiWebController extends FOSRestController
                     }
                 }
             }
-            $em->persist($entityPromocion);
-            $em->flush();
             if ($em->getConnection()->isTransactionActive())
             {
                 $em->getConnection()->commit();
@@ -1293,6 +1330,10 @@ class ApiWebController extends FOSRestController
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Acepta Puntos Globaless",
                                            'VALOR_ANTERIOR' => "",
                                            'VALOR_ACTUAL'   => $strAceptaGlobal,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $objTipoPromocion->getDESCRIPCION(),
                                            'USUARIO_ID'     => $strUsuarioCreacion);
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
                                            'VALOR_ANTERIOR' => "",
@@ -1355,6 +1396,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.4 19-07-2021 - Se agrega lógica para ingresar historial de modificación.
      *
+     * @author Kevin Baque
+     * @version 1.5 11-11-2021 - Se agrega lógica para ingresar nuevo tipo de promoción.
+     *
      * @return array  $objResponse
      */
     public function editPromocion($arrayData)
@@ -1370,6 +1414,8 @@ class ApiWebController extends FOSRestController
         $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
         $strExcel               = $arrayData['excel'] ? $arrayData['excel']:'';
         $strPremio              = $arrayData['premio'] ? $arrayData['premio']:'NO';
+        $intIdTipoPromocion     = $arrayData['idTipoPromocion'] ? $arrayData['idTipoPromocion']:1;
+        $intIdCupon             = $arrayData['idCupon']         ? $arrayData['idCupon']:'';
         $strUsuarioCreacion     = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strEliminar            = $arrayData['eliminar']        ? $arrayData['eliminar']:'';
         $strDatetimeActual      = new \DateTime('now');
@@ -1401,6 +1447,53 @@ class ApiWebController extends FOSRestController
             else
             {
                 $strRutaImagen = "";
+            }
+            if(!empty($intIdTipoPromocion))
+            {
+                $objTipoPromocion = $this->getDoctrine()
+                                         ->getRepository(AdmiTipoPromocion::class)
+                                         ->findOneBy(array("id"     =>$intIdTipoPromocion,
+                                                           "ESTADO" =>'ACTIVO'));
+                if(!is_object($objTipoPromocion) || empty($objTipoPromocion))
+                {
+                    throw new \Exception('No existe el tipo de promoción enviado por parámetro.');
+                }
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Tipo",
+                                               'VALOR_ANTERIOR' => $objPromocion->getTIPOPROMOCIONID()->getDESCRIPCION(),
+                                               'VALOR_ACTUAL'   => $objTipoPromocion->getDESCRIPCION(),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $objPromocion->setTIPOPROMOCIONID($objTipoPromocion);
+                $arrayCuponPromocion = $this->getDoctrine()
+                                            ->getRepository(InfoCuponPromocion::class)
+                                            ->findBy(array('PROMOCION_ID' => $objPromocion->getId()));
+                if(!empty($arrayCuponPromocion) && is_array($arrayCuponPromocion))
+                {
+                    foreach($arrayCuponPromocion as $objItemCuponPromocion)
+                    {
+                        $em->remove($objItemCuponPromocion);
+                    }
+                }
+                if($objTipoPromocion->getDESCRIPCION()=="CUPON")
+                {
+                    if(!empty($intIdCupon))
+                    {
+                        $objCupon = $this->getDoctrine()
+                                         ->getRepository(InfoCupon::class)
+                                         ->findOneBy(array("id"     =>$intIdCupon,
+                                                           "ESTADO" =>'ACTIVO'));
+                        if(is_object($objCupon) && !empty($objCupon))
+                        {
+                            $entityCuponPromocion = new InfoCuponPromocion();
+                            $entityCuponPromocion->setCUPONID($objCupon);
+                            $entityCuponPromocion->setPROMOCIONID($objPromocion);
+                            $entityCuponPromocion->setESTADO(strtoupper($strEstado));
+                            $entityCuponPromocion->setUSRCREACION($strUsuarioCreacion);
+                            $entityCuponPromocion->setFECREACION($strDatetimeActual);
+                            $em->persist($entityCuponPromocion);
+                            $em->flush();
+                        }
+                    }
+                }
             }
             if(!empty($intIdRestaurante))
             {
@@ -4702,6 +4795,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 21-06-2021
      *
+     * @author Kevin Baque
+     * @version 1.1 11-11-2021 - Se agrega número de días vigentes al cupón de tipo "premio especial".
+     *
      * @return array  $objResponse
      */
     public function createCupon($arrayData)
@@ -4713,6 +4809,7 @@ class ApiWebController extends FOSRestController
         $strTipoCupon           = $arrayData['strTipoCupon']       ? $arrayData['strTipoCupon']:'';
         $strValor               = $arrayData['strValor']           ? $arrayData['strValor']:'';
         $strPrecio              = $arrayData['strPrecio']          ? $arrayData['strPrecio']:'';
+        $strDiaVigente          = $arrayData['strDiaVigente']      ? $arrayData['strDiaVigente']:'';
         $strImagen              = $arrayData['strImagen']          ? $arrayData['strImagen']:'';
         $strUsuarioCreacion     = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
@@ -4749,6 +4846,7 @@ class ApiWebController extends FOSRestController
             $entityCupon->setVALOR(intval($strValor));
             $entityCupon->setTIPOCUPONID($objTipoCupon);
             $entityCupon->setPRECIO(intval($strPrecio));
+            $entityCupon->setDIAVIGENTE(intval($strDiaVigente));
             if(!empty($strImagen))
             {
                 $strRutaImagen = $objController->getSubirImgBanner($strImagen,1);
@@ -4777,6 +4875,10 @@ class ApiWebController extends FOSRestController
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Precio",
                                            'VALOR_ANTERIOR' => "",
                                            'VALOR_ACTUAL'   => intval($strPrecio),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Días vigente",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => intval($strDiaVigente),
                                            'USUARIO_ID'     => $strUsuarioCreacion);
             if($objTipoCupon->getDESCRIPCION() == "GENERAL_RESTAURANTE" || $objTipoCupon->getDESCRIPCION() == "UNICO_RESTAURANTE")
             {
@@ -4842,6 +4944,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 21-06-2021
      *
+     * @author Kevin Baque
+     * @version 1.1 11-11-2021 - Se agrega número de días vigentes al cupón de tipo "premio especial".
+     *
      * @return array  $objResponse
      */
     public function editCupon($arrayData)
@@ -4854,6 +4959,7 @@ class ApiWebController extends FOSRestController
         $strTipoCupon           = $arrayData['strTipoCupon']       ? $arrayData['strTipoCupon']:'';
         $strValor               = $arrayData['strValor']           ? $arrayData['strValor']:'';
         $strPrecio              = $arrayData['strPrecio']          ? $arrayData['strPrecio']:'';
+        $strDiaVigente          = $arrayData['strDiaVigente']      ? $arrayData['strDiaVigente']:'';
         $strImagen              = $arrayData['strImagen']          ? $arrayData['strImagen']:'';
         $strUsuarioCreacion     = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
         $strDatetimeActual      = new \DateTime('now');
@@ -4903,13 +5009,17 @@ class ApiWebController extends FOSRestController
                                            'VALOR_ANTERIOR' => $objCupon->getPRECIO(),
                                            'VALOR_ACTUAL'   => intval($strPrecio),
                                            'USUARIO_ID'     => $strUsuarioCreacion);
-
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Días vigente",
+                                           'VALOR_ANTERIOR' => $objCupon->getDIAVIGENTE(),
+                                           'VALOR_ACTUAL'   => intval($strDiaVigente),
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
             $em->getConnection()->beginTransaction();
             $objCupon->setCUPON(strtolower(str_replace(" ","_",$strDescripcion)));
             $objCupon->setESTADO(strtoupper($strEstado));
             $objCupon->setVALOR(intval($strValor));
             $objCupon->setTIPOCUPONID($objTipoCupon);
             $objCupon->setPRECIO(intval($strPrecio));
+            $objCupon->setDIAVIGENTE(intval($strDiaVigente));
             if(!empty($objCupon->getIMAGEN()))
             {
                 $objController->getEliminarImg($objCupon->getIMAGEN());
@@ -5002,8 +5112,10 @@ class ApiWebController extends FOSRestController
     public function getCupon($arrayData)
     {
         error_reporting( error_reporting() & ~E_NOTICE );
-        $strIdCupon           = $arrayData['strIdCupon'] ? $arrayData['strIdCupon']:'';
-        $strUsuarioCreacion   = $arrayData['strUsuarioCreacion'] ? $arrayData['strUsuarioCreacion']:'';
+        $strIdCupon           = $arrayData['strIdCupon']          ? $arrayData['strIdCupon']:'';
+        $strDescripcionTipo   = $arrayData['strDescripcionTipo']  ? $arrayData['strDescripcionTipo']:'';
+        $strVerCuponAsignado  = $arrayData['strVerCuponAsignado'] ? $arrayData['strVerCuponAsignado']:'';
+        $strUsuarioCreacion   = $arrayData['strUsuarioCreacion']  ? $arrayData['strUsuarioCreacion']:'';
         $arrayRespuesta       = array();
         $strMensajeError      = '';
         $strStatus            = 200;
@@ -5013,7 +5125,9 @@ class ApiWebController extends FOSRestController
         {
             $arrayRespuesta  = $this->getDoctrine()
                                     ->getRepository(InfoCupon::class)
-                                    ->getCupon(array('strIdCupon' => $strIdCupon));
+                                    ->getCupon(array('strIdCupon'          => $strIdCupon,
+                                                     'strVerCuponAsignado' => $strVerCuponAsignado,
+                                                     'strDescripcionTipo'  => $strDescripcionTipo));
             if(!empty($arrayRespuesta["error"]))
             {
                 throw new \Exception($arrayRespuesta['error']);
@@ -5148,4 +5262,46 @@ class ApiWebController extends FOSRestController
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
     }
+
+    /**
+     * Documentación para la función 'getTipoPromocion'
+     *
+     * Método encargado de retornar todos los tipos de promociones según los parámetros enviados.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 11-11-2021
+     * 
+     * @return array  $objResponse
+     */
+    public function getTipoPromocion($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $arrayRespuesta       = array();
+        $strMensajeError      = '';
+        $strStatus            = 200;
+        $objResponse          = new Response;
+        $boolSucces           = true;
+        try
+        {
+            $arrayRespuesta  = $this->getDoctrine()
+                                    ->getRepository(AdmiTipoPromocion::class)
+                                    ->getTipoPromocion($arrayData);
+            if(!empty($arrayRespuesta["error"]))
+            {
+                throw new \Exception($arrayRespuesta['error']);
+            }
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error']      = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
 }

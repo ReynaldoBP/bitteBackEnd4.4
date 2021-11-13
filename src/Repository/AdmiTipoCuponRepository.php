@@ -40,7 +40,7 @@ class AdmiTipoCuponRepository extends \Doctrine\ORM\EntityRepository
             $strSelect  = " SELECT ATC.ID_TIPO_CUPON, CONCAT(UPPER(LEFT(REPLACE(ATC.DESCRIPCION,'_',' '), 1)), LOWER(SUBSTRING(REPLACE(ATC.DESCRIPCION,'_',' '), 2))) AS DESCRIPCION ";
             $strFrom    = " FROM ADMI_TIPO_CUPON ATC ";
             $strWhere   = " WHERE ATC.ESTADO = :strEstadoActivo ";
-            $strOrderBy = " ORDER BY ATC.DESCRIPCION ASC ";
+            $strOrderBy = " ORDER BY ATC.FE_CREACION DESC ";
             $objQuery->setParameter("strEstadoActivo", $strEstadoActivo);
             $objRsmBuilder->addScalarResult('ID_TIPO_CUPON' , 'ID_TIPO_CUPON' , 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION'   , 'DESCRIPCION'   , 'string');

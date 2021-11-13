@@ -23,16 +23,18 @@ class InfoCuponRepository extends \Doctrine\ORM\EntityRepository
      */
     public function getCupon($arrayParametros)
     {
-        $strIdCupon      = $arrayParametros['strIdCupon']  ? $arrayParametros['strIdCupon']:'';
-        $arrayResultado  = array();
-        $objRsmBuilder   = new ResultSetMappingBuilder($this->_em);
-        $objQuery        = $this->_em->createNativeQuery(null, $objRsmBuilder);
-        $strEstadoActivo = 'ACTIVO';
-        $strMensajeError = '';
-        $strSelect       = '';
-        $strFrom         = '';
-        $strWhere        = '';
-        $strOrderBy      = '';
+        $strIdCupon          = $arrayParametros['strIdCupon']          ? $arrayParametros['strIdCupon']:'';
+        $strDescripcionTipo  = $arrayParametros['strDescripcionTipo']  ? $arrayParametros['strDescripcionTipo']:'';
+        $strVerCuponAsignado = $arrayParametros['strVerCuponAsignado'] ? $arrayParametros['strVerCuponAsignado']:'';
+        $arrayResultado      = array();
+        $objRsmBuilder       = new ResultSetMappingBuilder($this->_em);
+        $objQuery            = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $strEstadoActivo     = 'ACTIVO';
+        $strMensajeError     = '';
+        $strSelect           = '';
+        $strFrom             = '';
+        $strWhere            = '';
+        $strOrderBy          = '';
         try
         {
             $strSelect  = " SELECT 
@@ -42,6 +44,7 @@ class InfoCuponRepository extends \Doctrine\ORM\EntityRepository
                             CONCAT(UPPER(LEFT(REPLACE(ATC.DESCRIPCION,'_',' '), 1)), LOWER(SUBSTRING(REPLACE(ATC.DESCRIPCION,'_',' '), 2))) AS TIPO_CUPON,
                             IC.VALOR,
                             IC.PRECIO,
+                            IC.DIA_VIGENTE,
                             IC.IMAGEN,
                             IC.ESTADO,
                             IFNULL(
@@ -64,8 +67,18 @@ class InfoCuponRepository extends \Doctrine\ORM\EntityRepository
             $objQuery->setParameter("strEstadoActivo", $strEstadoActivo);
             if(!empty($strIdCupon))
             {
-                $strWhere .= " AND IC.ID_CUPON = :strIdCupon";
+                $strWhere .= " AND IC.ID_CUPON = :strIdCupon ";
                 $objQuery->setParameter("strIdCupon", $strIdCupon);
+            }
+            if(!empty($strDescripcionTipo))
+            {
+                $strWhere .= " AND lower(ATC.DESCRIPCION) like lower(:strDescripcionTipo) ";
+                $objQuery->setParameter("strDescripcionTipo", '%' . trim($strDescripcionTipo) . '%');
+            }
+            if(!empty($strVerCuponAsignado))
+            {
+                $strWhere .= " AND IC.ID_CUPON NOT IN (SELECT CUPON_ID FROM INFO_CUPON_PROMOCION WHERE ESTADO=:strEstadoActivo) ";
+                $objQuery->setParameter("strEstadoActivo", $strEstadoActivo);
             }
             $objRsmBuilder->addScalarResult('ID_CUPON'       , 'strIdCupon'       , 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION'    , 'strDescripcion'   , 'string');
@@ -73,6 +86,7 @@ class InfoCuponRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('TIPO_CUPON'     , 'strTipoCupon'     , 'string');
             $objRsmBuilder->addScalarResult('VALOR'          , 'strValor'         , 'string');
             $objRsmBuilder->addScalarResult('PRECIO'         , 'strPrecio'        , 'string');
+            $objRsmBuilder->addScalarResult('DIA_VIGENTE'    , 'strDiaVigente'    , 'string');
             $objRsmBuilder->addScalarResult('IMAGEN'         , 'strImagen'        , 'string');
             $objRsmBuilder->addScalarResult('ESTADO'         , 'strEstado'        , 'string');
             $objRsmBuilder->addScalarResult('ID_RESTAURANTE' , 'strIdRestaurante' , 'string');

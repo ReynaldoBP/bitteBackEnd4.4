@@ -47,6 +47,11 @@ class InfoCupon
     private $PRECIO;
 
     /**
+     * @ORM\Column(type="integer", length=11)
+     */
+    private $DIA_VIGENTE;
+
+    /**
      * @ORM\Column(type="string", length=450)
      */
     private $IMAGEN;
@@ -139,6 +144,18 @@ class InfoCupon
     public function getPRECIO(): ?int
     {
         return $this->PRECIO;
+    }
+
+    public function setDIAVIGENTE(int $DIA_VIGENTE): self
+    {
+        $this->DIA_VIGENTE = $DIA_VIGENTE;
+
+        return $this;
+    }
+
+    public function getDIAVIGENTE(): ?int
+    {
+        return $this->DIA_VIGENTE;
     }
 
     public function getIMAGEN(): ?string

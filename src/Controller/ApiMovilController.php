@@ -42,6 +42,9 @@ use App\Entity\InfoPlantilla;
 use App\Entity\InfoUsuarioRes;
 use App\Entity\InfoBanner;
 use App\Entity\InfoTipoComidaRestaurante;
+use App\Entity\AdmiTipoPromocion;
+use App\Entity\InfoCuponPromocion;
+use App\Entity\InfoCuponPromocionClt;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -2421,6 +2424,7 @@ class ApiMovilController extends FOSRestController
             //Recorremos todas las promociones
             foreach($objPromocion as $arrayItem)
             {
+                $strFechaExpiracion = "";
                 $boolContinuar = true;
                 //Validamos las promociones especiales
                 if(!empty($arrayParametro) && is_array($arrayParametro))
@@ -2442,6 +2446,33 @@ class ApiMovilController extends FOSRestController
                         if($arrayItemPromoEspCupon->getVALOR1() == $arrayItem->getId() && $intCantCuponCanjeado == 0)
                         {
                             $boolContinuar = false;
+                        }
+                    }
+                }
+                /**
+                 * Bloque que valida una promocion de tipo Cupón, con las sgte. condiciones:
+                 * Que aparezca solamente cuando: 
+                 *  -No haya consumido esa promocion 
+                 *  -Lo canjió desde un cupón de tipo Premio Especial.
+                 *  -Fecha de vigencia sea valida
+                 */
+                if($arrayItem->getTIPOPROMOCIONID()->getDESCRIPCION() == "CUPON")
+                {
+                    $boolContinuar = false;
+                    $objRelCuponPromocionClt = $this->getDoctrine()
+                                                    ->getRepository(InfoCuponPromocionClt::class)
+                                                    ->findOneBy(array("PROMOCION_ID"   => $arrayItem->getId(),
+                                                                      "CLIENTE_ID"     => $intIdCliente,
+                                                                      "ESTADO"         => "PENDIENTE"));
+                    if(is_object($objRelCuponPromocionClt))
+                    {
+                        $strFechaExpiracion = $objRelCuponPromocionClt->getFEVIGENCIA()->format('d/m/Y H:i');
+                        $objFechaActual     = new \DateTime('now');
+                        $objDiferencia      = $objFechaActual->diff($objRelCuponPromocionClt->getFEVIGENCIA());
+                        if(intval($objDiferencia->format('%R%a'))>0)
+                        {
+                            //error_log(intval($objDiferencia->format('%R%a')));
+                            $boolContinuar = true;
                         }
                     }
                 }
@@ -2477,7 +2508,8 @@ class ApiMovilController extends FOSRestController
                                             'aceptaGlobal'     => $arrayItem->getACEPTAGLOBAL(),
                                             'habilitar'        => (!empty($arraySucursal["resultados"])&& isset($arraySucursal["resultados"])) ? 'SI':'NO',
                                             'estado'           => $arrayItem->getESTADO(),
-                                            'promoEspecial'    => $strPromoEspecial
+                                            'promoEspecial'    => $strPromoEspecial,
+                                            'fechaExpiracion'  => $strFechaExpiracion
                                         );
                 }
             }
@@ -2595,7 +2627,10 @@ class ApiMovilController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.1 17-08-2020 - Se agrega logica para canjear código.
-     * 
+     *
+     * @author Kevin Baque
+     * @version 1.2 11-11-2021 - Se agrega logica para canjear cupón de tipo premio especial.
+     *
      * @return array  $objResponse
      */
     public function createPromocionHistorial($arrayData)
@@ -2674,6 +2709,19 @@ class ApiMovilController extends FOSRestController
                     $objCuponHist->setESTADO("CANJEADO");
                 }
             }
+            //Lógica en caso de que la promoción sea de tipo Cupon.
+            if($objPromocion->getTIPOPROMOCIONID()->getDESCRIPCION() == "CUPON")
+            {
+                $objRelCuponPromocionClt = $this->getDoctrine()
+                                                ->getRepository(InfoCuponPromocionClt::class)
+                                                ->findOneBy(array("PROMOCION_ID"   => $objPromocion->getId(),
+                                                                  "CLIENTE_ID"     => $intIdCliente,
+                                                                  "ESTADO"         => "PENDIENTE"));
+                $objRelCuponPromocionClt->setESTADO("CANJEADO");
+                $em->persist($objRelCuponPromocionClt);
+                $em->flush();
+            }
+
             $intCantPuntospromo = $objPromocion->getCANTIDADPUNTOS();
             //Lógica para canjear promoción normal y con código
             if($intCantPuntospromo<=$intCantidadPuntos)
@@ -3642,6 +3690,9 @@ class ApiMovilController extends FOSRestController
      * @author Kevin Baque
      * @version 1.1 19-06-2021 - Se agrega lógica para tipo de cupon en restaurantes.
      *
+     * @author Kevin Baque
+     * @version 1.2 11-11-2021 - Se agrega lógica para tipo de cupon premio especial.
+     *
      * @return array  $objResponse
      */
     public function canjearCupon($arrayData)
@@ -3897,6 +3948,93 @@ class ApiMovilController extends FOSRestController
                 $objController->enviaCorreo($arrayParametros);
                 $strMensaje = "Cupón canjeado con éxito, por favor espere 24 horas para acercarse al restaurante y canjear la promoción: 'Consumo del empleado del mes'.";
             }
+            else if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "GENERAL_PREMIO_ESPECIAL")
+            {
+                $objCuponHist = $this->getDoctrine()
+                                     ->getRepository(InfoCuponHistorial::class)
+                                     ->findOneBy(array("CUPON_ID"   => $objCupon->getId(),
+                                                       "CLIENTE_ID" => $objCliente->getId(),
+                                                       "ESTADO"     => "CANJEADO"));
+                if(is_object($objCuponHist) && !empty($objCuponHist))
+                {
+                    throw new \Exception("Cupón no válido, ya a sido canjeado.");
+                }
+                $entityCuponHistorial = new InfoCuponHistorial();
+                $entityCuponHistorial->setESTADO("CANJEADO");
+                $entityCuponHistorial->setCUPONID($objCupon);
+                $entityCuponHistorial->setCLIENTEID($objCliente);
+                $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponHistorial->setFECREACION($strDatetimeActual);
+                $objRelCuponPromocion = $this->getDoctrine()
+                                             ->getRepository(InfoCuponPromocion::class)
+                                             ->findOneBy(array("CUPON_ID"   => $objCupon->getId(),
+                                                               "ESTADO"     => "ACTIVO"));
+                if(!is_object($objRelCuponPromocion) || empty($objRelCuponPromocion))
+                {
+                    throw new \Exception("Cupón no válido.");
+                }
+                if($objRelCuponPromocion->getPROMOCIONID()->getRESTAURANTEID()->getid() != $intIdRestaurante)
+                {
+                    throw new \Exception("Cupón no válido, para el restaurante seleccionado.");
+                }
+                $entityCuponPromocionClt = new InfoCuponPromocionClt();
+                $entityCuponPromocionClt->setPROMOCIONID($objRelCuponPromocion->getPROMOCIONID());
+                $entityCuponPromocionClt->setCUPONID($objCupon);
+                $entityCuponPromocionClt->setCLIENTEID($objCliente);
+                $entityCuponPromocionClt->setESTADO("PENDIENTE");
+                $objFechaVigencia     = new \DateTime('now');
+                $objFechaVigencia->add(new \DateInterval("P".intval($objCupon->getDIAVIGENTE())."D"));
+                $entityCuponPromocionClt->setFEVIGENCIA($objFechaVigencia);
+                $entityCuponPromocionClt->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponPromocionClt->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponHistorial);
+                $em->flush();
+                $em->persist($entityCuponPromocionClt);
+                $em->flush();
+                $strMensaje = "Cupón canjeado con éxito, la fecha de vencimiento para canjear la promoción'".
+                               $objRelCuponPromocion->getPROMOCIONID()->getDESCRIPCIONTIPOPROMOCION()."' es:".$objFechaVigencia->format('d/m/Y H:i');
+            }
+            else if($objCupon->getTIPOCUPONID()->getDESCRIPCION() == "UNICO_PREMIO_ESPECIAL")
+            {
+                $objCupon->setESTADO("CANJEADO");
+                $entityCuponHistorial = new InfoCuponHistorial();
+                $entityCuponHistorial->setESTADO("CANJEADO");
+                $entityCuponHistorial->setCUPONID($objCupon);
+                $entityCuponHistorial->setCLIENTEID($objCliente);
+                $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponHistorial->setFECREACION($strDatetimeActual);
+                $objRelCuponPromocion = $this->getDoctrine()
+                                             ->getRepository(InfoCuponPromocion::class)
+                                             ->findOneBy(array("CUPON_ID"   => $objCupon->getId(),
+                                                               "ESTADO"     => "ACTIVO"));
+                if(!is_object($objRelCuponPromocion) || empty($objRelCuponPromocion))
+                {
+                    throw new \Exception("Cupón no válido.");
+                }
+                if($objRelCuponPromocion->getPROMOCIONID()->getRESTAURANTEID()->getid() != $intIdRestaurante)
+                {
+                    throw new \Exception("Cupón no válido, para el restaurante seleccionado.");
+                }
+                $entityCuponPromocionClt = new InfoCuponPromocionClt();
+                $entityCuponPromocionClt->setPROMOCIONID($objRelCuponPromocion->getPROMOCIONID());
+                $entityCuponPromocionClt->setCUPONID($objCupon);
+                $entityCuponPromocionClt->setCLIENTEID($objCliente);
+                $entityCuponPromocionClt->setESTADO("PENDIENTE");
+                $objFechaVigencia     = new \DateTime('now');
+                $objFechaVigencia->add(new \DateInterval("P".intval($objCupon->getDIAVIGENTE())."D"));
+                $entityCuponPromocionClt->setFEVIGENCIA($objFechaVigencia);
+                $entityCuponPromocionClt->setFEVIGENCIA($strDatetimeActual);
+                $entityCuponPromocionClt->setUSRCREACION($strUsuarioCreacion);
+                $entityCuponPromocionClt->setFECREACION($strDatetimeActual);
+                $em->persist($entityCuponHistorial);
+                $em->flush();
+                $em->persist($objCupon);
+                $em->flush();
+                $em->persist($entityCuponPromocionClt);
+                $em->flush();
+                $strMensaje = "Cupón canjeado con éxito, la fecha de vencimiento para canjear la promoción'".
+                               $objRelCuponPromocion->getPROMOCIONID()->getDESCRIPCIONTIPOPROMOCION()."' es:".$objFechaVigencia->format('d/m/Y H:i');
+            }
             else
             {
                 throw new \Exception("Cupón no válido.");
@@ -3931,7 +4069,7 @@ class ApiMovilController extends FOSRestController
                     $em->flush();
                 }
             }
-            if ($em->getConnection()->isTransactionActive())
+            if($em->getConnection()->isTransactionActive())
             {
                 $em->getConnection()->commit();
                 $em->getConnection()->close();

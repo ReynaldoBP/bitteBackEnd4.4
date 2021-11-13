@@ -29,6 +29,16 @@ class InfoPromocion
     private $IMAGEN;
 
     /**
+    * @var AdmiTipoPromocion
+    *
+    * @ORM\ManyToOne(targetEntity="AdmiTipoPromocion")
+    * @ORM\JoinColumns({
+    * @ORM\JoinColumn(name="TIPO_PROMOCION_ID", referencedColumnName="ID_TIPO_PROMOCION")
+    * })
+    */
+    private $TIPOPROMOCIONID;
+
+    /**
     * @var InfoRestaurante
     *
     * @ORM\ManyToOne(targetEntity="InfoRestaurante")
@@ -406,4 +416,29 @@ class InfoPromocion
     {
         return $this->RESTAURANTE_ID;
     }
+
+    /**
+     * Set TIPOPROMOCIONID
+     *
+     * @param \App\Entity\AdmiTipoPromocion $TIPOPROMOCIONID
+     *
+     * @return InfoPromocion
+     */
+    public function setTIPOPROMOCIONID(\App\Entity\AdmiTipoPromocion $TIPOPROMOCIONID = null)
+    {
+        $this->TIPOPROMOCIONID = $TIPOPROMOCIONID;
+
+        return $this;
+    }
+
+    /**
+     * Get TIPOPROMOCIONID
+     *
+     * @return \App\Entity\AdmiTipoPromocion
+     */
+    public function getTIPOPROMOCIONID()
+    {
+        return $this->TIPOPROMOCIONID;
+    }
+
 }
