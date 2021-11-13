@@ -32,6 +32,7 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO','ELIMINADO');
         $arrayPromocion     = array();
         $strMensajeError    = '';
+        $strEstadoActivo    = "ACTIVO";
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
         $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
         $objRsmBuilderCount = new ResultSetMappingBuilder($this->_em);
@@ -40,15 +41,23 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
         {
             $strSelect      = "SELECT PR.ID_PROMOCION,PR.DESCRIPCION_TIPO_PROMOCION, PR.CANTIDAD_PUNTOS, PR.ACEPTA_GLOBAL,
                                PR.CODIGO,PR.ESTADO,PR.USR_CREACION,PR.FE_CREACION,PR.USR_MODIFICACION,PR.FE_MODIFICACION, 
-                               PR.PREMIO,PR.IMAGEN,
+                               PR.PREMIO,PR.IMAGEN,ATP.DESCRIPCION AS TIPO_PROMOCION,ATP.ID_TIPO_PROMOCION,
+                               IC.CUPON,IC.ID_CUPON,
                                IRE.ID_RESTAURANTE,IRE.IDENTIFICACION,IRE.RAZON_SOCIAL,IRE.NOMBRE_COMERCIAL ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM INFO_PROMOCION PR 
-                                JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE=PR.RESTAURANTE_ID ";
+                                JOIN INFO_RESTAURANTE IRE ON IRE.ID_RESTAURANTE=PR.RESTAURANTE_ID 
+                                JOIN ADMI_TIPO_PROMOCION ATP ON ATP.ID_TIPO_PROMOCION = PR.TIPO_PROMOCION_ID
+                                AND ATP.ESTADO=:strEstadoActivo
+                                LEFT JOIN INFO_CUPON_PROMOCION ACP ON ACP.PROMOCION_ID=PR.ID_PROMOCION
+                                AND ACP.ESTADO=:strEstadoActivo
+                                LEFT JOIN INFO_CUPON IC ON ACP.CUPON_ID=IC.ID_CUPON ";
             $strWhere       = "WHERE PR.ESTADO in (:ESTADO) ";
             $strOrder       = " order by PR.DESCRIPCION_TIPO_PROMOCION ASC ";
             $objQuery->setParameter("ESTADO",$strEstado);
             $objQueryCount->setParameter("ESTADO",$strEstado);
+            $objQuery->setParameter("strEstadoActivo",$strEstadoActivo);
+            $objQueryCount->setParameter("strEstadoActivo",$strEstadoActivo);
             if(!empty($intIdPromocion))
             {
                 $strWhere .= " AND PR.ID_PROMOCION =:ID_PROMOCION";
@@ -97,6 +106,8 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             }
             $objRsmBuilder->addScalarResult('ID_PROMOCION', 'ID_PROMOCION', 'string');
             $objRsmBuilder->addScalarResult('DESCRIPCION_TIPO_PROMOCION', 'DESCRIPCION_TIPO_PROMOCION', 'string');
+            $objRsmBuilder->addScalarResult('ID_TIPO_PROMOCION', 'ID_TIPO_PROMOCION', 'string');
+            $objRsmBuilder->addScalarResult('TIPO_PROMOCION', 'TIPO_PROMOCION', 'string');
             $objRsmBuilder->addScalarResult('CANTIDAD_PUNTOS', 'CANTIDAD_PUNTOS', 'string');
             $objRsmBuilder->addScalarResult('ACEPTA_GLOBAL', 'ACEPTA_GLOBAL', 'string');
             $objRsmBuilder->addScalarResult('CODIGO', 'CODIGO', 'string');
@@ -111,6 +122,9 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('IDENTIFICACION', 'IDENTIFICACION', 'string');
             $objRsmBuilder->addScalarResult('RAZON_SOCIAL', 'RAZON_SOCIAL', 'string');
             $objRsmBuilder->addScalarResult('NOMBRE_COMERCIAL', 'NOMBRE_COMERCIAL', 'string');
+            $objRsmBuilder->addScalarResult('ID_CUPON', 'ID_CUPON', 'string');
+            $objRsmBuilder->addScalarResult('CUPON', 'CUPON', 'string');
+            
             $objRsmBuilderCount->addScalarResult('CANTIDAD', 'Cantidad', 'integer');
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrder;
             $objQuery->setSQL($strSql);
