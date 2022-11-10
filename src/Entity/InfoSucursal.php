@@ -32,6 +32,16 @@ class InfoSucursal
     private $RESTAURANTEID;
 
     /**
+    * @var AdmiCentroComercial
+    *
+    * @ORM\ManyToOne(targetEntity="AdmiCentroComercial")
+    * @ORM\JoinColumns({
+    * @ORM\JoinColumn(name="CENTRO_COMERCIAL_ID", referencedColumnName="ID_CENTRO_COMERCIAL")
+    * })
+    */
+    private $CENTRO_COMERCIAL_ID;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="ES_MATRIZ", type="string", length=50)
@@ -985,6 +995,31 @@ class InfoSucursal
     {
         return $this->RESTAURANTEID;
     }
+
+    /**
+     * Set CENTRO_COMERCIAL_ID
+     *
+     * @param \App\Entity\AdmiCentroComercial $CENTRO_COMERCIAL_ID
+     *
+     * @return InfoSucursal
+     */
+    public function setCENTRO_COMERCIAL_ID(\App\Entity\AdmiCentroComercial $CENTRO_COMERCIAL_ID = null)
+    {
+        $this->CENTRO_COMERCIAL_ID = $CENTRO_COMERCIAL_ID;
+
+        return $this;
+    }
+
+    /**
+     * Get CENTRO_COMERCIAL_ID
+     *
+     * @return \App\Entity\AdmiCentroComercial
+     */
+    public function getCENTRO_COMERCIAL_ID()
+    {
+        return $this->CENTRO_COMERCIAL_ID;
+    }
+
 
     /**
      * Set PROVINCIA

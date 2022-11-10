@@ -816,6 +816,7 @@ class ApiMovilController extends FOSRestController
                 {
                     $strAtencion = "N";
                 }
+                $strAtencion        = "S";
                 $arraySucursalRes   = $this->getDoctrine()
                                            ->getRepository(InfoSucursal::class)
                                            ->findOneById($item["ID_SUCURSAL"]);
@@ -1049,7 +1050,7 @@ class ApiMovilController extends FOSRestController
                                                      'PRO_ENCUESTAS_CLT'       =>   $arrayItemRestaurante['PRO_ENCUESTAS_CLT'] ? $arrayItemRestaurante['PRO_ENCUESTAS_CLT']:null,
                                                      'PRO_ENCUESTAS_PRG'       =>   $arrayResultadoProPreg ? $arrayResultadoProPreg:null,
                                                      'ES_PUBLICIDAD'           =>  'N',
-                                                     'ES_AFILIADO'             =>  (!empty($arrayItemRestaurante["ES_AFILIADO"]) && $arrayItemRestaurante["ES_AFILIADO"] == "SI") ? 'S':'N',
+                                                     'ES_AFILIADO'             =>  'S',//(!empty($arrayItemRestaurante["ES_AFILIADO"]) && $arrayItemRestaurante["ES_AFILIADO"] == "SI") ? 'S':'N',
                                                      'IPN'                     =>  round($intIpn),
                                                      'CANT_ENCUESTA'           =>  $intCantEncuesta);
         }
@@ -2469,11 +2470,24 @@ class ApiMovilController extends FOSRestController
                         $strFechaExpiracion = $objRelCuponPromocionClt->getFEVIGENCIA()->format('d/m/Y H:i');
                         $objFechaActual     = new \DateTime('now');
                         $objDiferencia      = $objFechaActual->diff($objRelCuponPromocionClt->getFEVIGENCIA());
-                        if(intval($objDiferencia->format('%R%a'))>0)
+                        //Valido que esté entre el rango del día
+                        if(intval($objDiferencia->format('%R%a'))>=0)
                         {
-                            //error_log(intval($objDiferencia->format('%R%a')));
-                            $boolContinuar = true;
+                            //Valido que esté entre el rango de las horas
+                            if(intval($objDiferencia->format('%R%h'))>=0)
+                            {
+                                //Valido que esté entre el rango de los minutos
+                                if(intval($objDiferencia->format('%R%i'))>0)
+                                {
+                                    $boolContinuar = true;
+                                }
+                            }
                         }
+                        error_log("objFechaActual: ".$objFechaActual->format('d/m/Y H:i'));
+                        error_log("strFechaExpiracion: ".$strFechaExpiracion);
+                        error_log("Diferencia dia : ".intval($objDiferencia->format('%R%a')));
+                        error_log("Diferencia hora: ".intval($objDiferencia->format('%R%h')));
+                        error_log("Diferencia min : ".intval($objDiferencia->format('%R%i')));
                     }
                 }
                 if($boolContinuar)
@@ -4023,7 +4037,6 @@ class ApiMovilController extends FOSRestController
                 $objFechaVigencia     = new \DateTime('now');
                 $objFechaVigencia->add(new \DateInterval("P".intval($objCupon->getDIAVIGENTE())."D"));
                 $entityCuponPromocionClt->setFEVIGENCIA($objFechaVigencia);
-                $entityCuponPromocionClt->setFEVIGENCIA($strDatetimeActual);
                 $entityCuponPromocionClt->setUSRCREACION($strUsuarioCreacion);
                 $entityCuponPromocionClt->setFECREACION($strDatetimeActual);
                 $em->persist($entityCuponHistorial);

@@ -15,6 +15,7 @@ use App\Entity\InfoRespuesta;
 use App\Controller\DefaultController;
 use App\Controller\ApiWebController;
 use App\Entity\InfoBitacora;
+use App\Entity\AdmiCentroComercial;
 use App\Entity\InfoDetalleBitacora;
 use App\Entity\AdmiPais;
 use App\Entity\AdmiProvincia;
@@ -126,6 +127,9 @@ class InfoSucursalController extends Controller
      * @author Kevin Baque
      * @version 1.2 15-07-2021 - Se agrega lógica para ingresar historial de creación.
      *
+     * @author Kevin Baque
+     * @version 1.3 11-11-2022 - Se agrega lógica para ingresar el centro comercial.
+     *
      * @return array  $objResponse
      */
     public function createSucursalAction(Request $request)
@@ -135,6 +139,7 @@ class InfoSucursalController extends Controller
         $strIdentificacionRes           = $request->query->get("identificacionRestaurante")   ? $request->query->get("identificacionRestaurante")   :'';
         $strEsMatriz                    = $request->query->get("esMatriz")                    ? $request->query->get("esMatriz")                    :'';
         $strEnCentroComercial           = $request->query->get("enCentroComercial")           ? $request->query->get("enCentroComercial")           :'';
+        $intIdCentroComercial           = $request->query->get("intIdCentroComercial")        ? $request->query->get("intIdCentroComercial")        :'';
         $strDescripcion                 = $request->query->get("descripcion")                 ? $request->query->get("descripcion")                 :'';
         $strDireccion                   = $request->query->get("direccion")                   ? $request->query->get("direccion")                   :'';
         $strPais                        = $request->query->get("pais")                        ? $request->query->get("pais")                        :'';
@@ -186,11 +191,17 @@ class InfoSucursalController extends Controller
                     throw new \Exception('No existe restaurante con la parámetros enviados.');
                 }
             }
+            $objCentroComercial = $this->getDoctrine()->getRepository(AdmiCentroComercial::class)
+                                       ->find($intIdCentroComercial);
             $entitySucursal = new InfoSucursal();
             $entitySucursal->setRESTAURANTEID($objRestaurante);
             $entitySucursal->setDESCRIPCION($strDescripcion);
             $entitySucursal->setESMATRIZ($strEsMatriz);
             $entitySucursal->setENCENTROCOMERCIAL($strEnCentroComercial);
+            if(!empty($objCentroComercial) && is_object($objCentroComercial))
+            {
+                $entitySucursal->setCENTRO_COMERCIAL_ID($objCentroComercial);
+            }
             $entitySucursal->setDIRECCION($strDireccion);
             $entitySucursal->setNUMEROCONTACTO($strNumeroContacto);
             $entitySucursal->setESTADOFACTURACION(strtoupper($strEstadoFacturacion));
@@ -465,6 +476,9 @@ class InfoSucursalController extends Controller
      * @author Kevin Baque
      * @version 1.3 18-07-2021 - Se agrega lógica para ingresar historial de modificación.
      *
+     * @author Kevin Baque
+     * @version 1.4 11-11-2022 - Se agrega lógica para ingresar el centro comercial.
+     *
      * @return array  $objResponse
      */
     public function editSucursalAction(Request $request)
@@ -475,6 +489,7 @@ class InfoSucursalController extends Controller
         $intIdSucursal                  = $request->query->get("idSucursal")                  ? $request->query->get("idSucursal")                  :'';
         $strEsMatriz                    = $request->query->get("esMatriz")                    ? $request->query->get("esMatriz")                    :'';
         $strEnCentroComercial           = $request->query->get("enCentroComercial")           ? $request->query->get("enCentroComercial")           :'';
+        $intIdCentroComercial           = $request->query->get("intIdCentroComercial")        ? $request->query->get("intIdCentroComercial")        :'';
         $strDescripcion                 = $request->query->get("descripcion")                 ? $request->query->get("descripcion")                 :'';
         $strDireccion                   = $request->query->get("direccion")                   ? $request->query->get("direccion")                   :'';
         $strPais                        = $request->query->get("pais")                        ? $request->query->get("pais")                        :'';
@@ -533,6 +548,18 @@ class InfoSucursalController extends Controller
                                            'VALOR_ACTUAL'   => $objRestaurante->getNOMBRECOMERCIAL(),
                                            'USUARIO_ID'     => $strUsuarioCreacion);
             $entitySucursal->setRESTAURANTEID($objRestaurante);
+
+            $objCentroComercial = $this->getDoctrine()->getRepository(AdmiCentroComercial::class)
+                                       ->find($intIdCentroComercial);
+            if(!empty($objCentroComercial) && is_object($objCentroComercial))
+            {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Centro Comercial",
+                                               'VALOR_ANTERIOR' => $entitySucursal->getCENTRO_COMERCIAL_ID()->getNOMBRE(),
+                                               'VALOR_ACTUAL'   => $objCentroComercial->getNOMBRE(),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $entitySucursal->setCENTRO_COMERCIAL_ID($objCentroComercial);
+            }
+
             if(!empty($strDescripcion))
             {
                 $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
