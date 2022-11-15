@@ -41,6 +41,9 @@ use App\Entity\InfoCuponRestaurante;
 use App\Entity\InfoTipoComidaRestaurante;
 use App\Entity\AdmiTipoPromocion;
 use App\Entity\InfoCuponPromocion;
+use App\Entity\AdmiTipoClientePuntaje;
+use App\Entity\InfoPerfil;
+use App\Entity\InfoModuloAccion;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\View\View;
@@ -155,6 +158,10 @@ class ApiWebController extends FOSRestController
                 case 'getResumenCliente':$arrayRespuesta = $this->getResumenCliente($arrayData);
                 break;
                 case 'getTipoPromocion':$arrayRespuesta  = $this->getTipoPromocion($arrayData);
+                break;
+                case 'getTipoCliente':$arrayRespuesta  = $this->getTipoCliente($arrayData);
+                break;
+                case 'regularizarPerfil':$arrayRespuesta  = $this->regularizarPerfil($arrayData);
                 break;
                  $objResponse->setContent(json_encode(array('status'    => 204,
                                                             'resultado' => "No existe método con la descripción enviado por parámetro",
@@ -5299,6 +5306,106 @@ class ApiWebController extends FOSRestController
         $arrayRespuesta['error']      = $strMensajeError;
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'getTipoCliente'
+     *
+     * Método encargado de retornar todos los tipos de cliente según los parámetros enviados.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 11-11-2022
+     * 
+     * @return array  $objResponse
+     */
+    public function getTipoCliente($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $arrayRespuesta       = array();
+        $strMensajeError      = '';
+        $strStatus            = 200;
+        $objResponse          = new Response;
+        $boolSucces           = true;
+        try
+        {
+            $arrayTipoCliente  = $this->getDoctrine()
+                                      ->getRepository(AdmiTipoClientePuntaje::class)
+                                      ->findBy(array('ESTADO' => 'ACTIVO'));
+            if(!empty($arrayTipoCliente) && is_array($arrayTipoCliente))
+            {
+                foreach($arrayTipoCliente as $arrayItem)
+                {
+                    $arrayRespuesta["tipoCliente"][] = array("intIdTipo" => $arrayItem->getId(),
+                                                             "strTipo"   => $arrayItem->getDESCRIPCION(),
+                                                             "strEstado" => $arrayItem->getESTADO());
+                }
+            }
+
+        }
+        catch(\Exception $ex)
+        {
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error']      = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $arrayRespuesta,
+                                                   'succes'    => $boolSucces)));
+        $objResponse->headers->set('Access-Control-Allow-Origin', '*');
+        return $objResponse;
+    }
+
+    /**
+     * Documentación para la función 'regularizarPerfil'
+     *
+     * Método encargado de regularizar los perfiles.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 11-11-2022
+     * 
+     * @return array  $objResponse
+     */
+    public function regularizarPerfil($arrayData)
+    {
+        error_reporting( error_reporting() & ~E_NOTICE );
+        $arrayRespuesta       = array();
+        $strMensajeError      = 'Perfil regularizado con exito.!';
+        $strStatus            = 200;
+        $objResponse          = new Response;
+        $boolSucces           = true;
+        $em                   = $this->getDoctrine()->getManager();
+        try
+        {
+            $em->getConnection()->beginTransaction();
+            $arrayPerfil       = $this->getDoctrine()
+                                      ->getRepository(InfoPerfil::class)
+                                      ->findBy(array());
+            if(!empty($arrayPerfil) && is_array($arrayPerfil))
+            {
+                foreach($arrayPerfil as $arrayItem)
+                {
+                    $arrayItem->setDESCRIPCION(strval($arrayItem->getMODULOACCIONID()->getId())."-".strval($arrayItem->getUSUARIOID()->getId()));
+                }
+            }
+            $em->persist($arrayItem);
+            $em->flush();
+        }
+        catch(\Exception $ex)
+        {
+            if ($em->getConnection()->isTransactionActive())
+            {
+                $strStatus = 404;
+                $em->getConnection()->rollback();
+            }
+            $boolSucces      = false;
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayRespuesta['error']      = $strMensajeError;
+        $objResponse->setContent(json_encode(array('status'    => $strStatus,
+                                                   'resultado' => $strMensajeError,
                                                    'succes'    => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;

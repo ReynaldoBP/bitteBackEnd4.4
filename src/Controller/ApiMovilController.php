@@ -193,7 +193,7 @@ class ApiMovilController extends FOSRestController
                                      ? $arrayData['genero'] : 'SIN GENERO';
 
         $intIdTipoCLiente   = isset($arrayData['idTipoCLiente']) ? $arrayData['idTipoCLiente']:'';
-        $intIdUsuario       = isset($arrayData['idUsuario']) ? $arrayData['idUsuario']:'';
+        $intIdUsuario       = isset($arrayData['idUsuario']) ? $arrayData['idUsuario']:'1';//1->Bernardo Influencer
         $strContrasenia     = isset($arrayData['contrasenia']) ? $arrayData['contrasenia']:'';
         $strAutenticacionRS = isset($arrayData['autenticacionRS']) ? $arrayData['autenticacionRS']:'';
         $strUsuarioCreacion = isset($arrayData['usuarioCreacion']) ? $arrayData['usuarioCreacion']:'';
@@ -246,8 +246,10 @@ class ApiMovilController extends FOSRestController
                     {
                         throw new \Exception('No existe tipo cliente con la descripción enviada por parámetro.');
                     }
-                    $arrayParametrosUsuario = array('ESTADO' => 'ACTIVO',
-                                                    'id'     => $intIdUsuario);
+                    $objUsuario = $this->getDoctrine()
+                                       ->getRepository(InfoUsuario::class)
+                                       ->findOneBy(array('ESTADO' => 'ACTIVO',
+                                                         'id'     => $intIdUsuario));
                     $entityCliente = new InfoCliente();
                     $entityCliente->setAUTENTICACIONRS($strAutenticacionRS);
                     $entityCliente->setCONTRASENIA(md5($strContrasenia));
@@ -259,7 +261,10 @@ class ApiMovilController extends FOSRestController
                     $entityCliente->setESTADO(strtoupper($strEstado));
                     $entityCliente->setSECTOR($strSector);
                     $entityCliente->setTIPOCLIENTEPUNTAJEID($objTipoCliente);
-                    $entityCliente->setUSUARIOID($objUsuario);
+                    if(is_object($objUsuario) && !empty($objUsuario))
+                    {
+                        $entityCliente->setUSUARIOID($objUsuario);
+                    }
                     $entityCliente->setNOMBRE($strNombre);
                     $entityCliente->setAPELLIDO($strApellido);
                     $entityCliente->setCORREO($strCorreo);
