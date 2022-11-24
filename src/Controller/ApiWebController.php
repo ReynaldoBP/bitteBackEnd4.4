@@ -1206,6 +1206,7 @@ class ApiWebController extends FOSRestController
         $strDescrPromocion      = $arrayData['descrPromocion'] ? $arrayData['descrPromocion']:'';
         $imgBase64              = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
         $intCantPuntos          = ($arrayData['cantPuntos']<0 && $arrayData['cantPuntos'] !="")?0:$arrayData['cantPuntos'];
+        $intcantDiasVigencia    = ($arrayData['cantDiasVigencia']<0 && $arrayData['cantDiasVigencia'] !="")?0:$arrayData['cantDiasVigencia'];
         $strAceptaGlobal        = $arrayData['aceptaGlobal'] ? $arrayData['aceptaGlobal']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
         $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
@@ -1258,6 +1259,7 @@ class ApiWebController extends FOSRestController
             $entityPromocion->setIMAGEN($strRutaImagen);
             $entityPromocion->setPREMIO($strPremio);
             $entityPromocion->setCANTIDADPUNTOS($intCantPuntos);
+            $entityPromocion->setCANTDIASVIGENCIA($intcantDiasVigencia);
             $entityPromocion->setACEPTAGLOBAL($strAceptaGlobal);
             $entityPromocion->setESTADO(strtoupper($strEstado));
             $entityPromocion->setCODIGO(strtoupper($strCodigo));
@@ -1333,6 +1335,10 @@ class ApiWebController extends FOSRestController
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Cant. Puntos",
                                            'VALOR_ANTERIOR' => "",
                                            'VALOR_ACTUAL'   => $intCantPuntos,
+                                           'USUARIO_ID'     => $strUsuarioCreacion);
+            $arrayBitacoraDetalle[]= array('CAMPO'          => "Cant. días de vigencia",
+                                           'VALOR_ANTERIOR' => "",
+                                           'VALOR_ACTUAL'   => $intcantDiasVigencia,
                                            'USUARIO_ID'     => $strUsuarioCreacion);
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Acepta Puntos Globaless",
                                            'VALOR_ANTERIOR' => "",
@@ -1416,6 +1422,7 @@ class ApiWebController extends FOSRestController
         $strDescrPromocion      = $arrayData['descrPromocion'] ? $arrayData['descrPromocion']:'';
         $imgBase64              = $arrayData['rutaImagen'] ? $arrayData['rutaImagen']:'';
         $intCantPuntos          = ($arrayData['cantPuntos']<0 && $arrayData['cantPuntos'] !="")?0:$arrayData['cantPuntos'];
+        $intcantDiasVigencia    = ($arrayData['cantDiasVigencia']<0 && $arrayData['cantDiasVigencia'] !="")?0:$arrayData['cantDiasVigencia'];
         $strAceptaGlobal        = $arrayData['aceptaGlobal'] ? $arrayData['aceptaGlobal']:'';
         $strEstado              = $arrayData['estado'] ? $arrayData['estado']:'';
         $strCodigo              = $arrayData['codigo'] ? $arrayData['codigo']:'NO';
@@ -1608,6 +1615,14 @@ class ApiWebController extends FOSRestController
                 $objPromocion->setCANTIDADPUNTOS($intCantPuntos);
             }
 
+            if($intcantDiasVigencia>=0)
+            {
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Cant. días de vigencia",
+                                               'VALOR_ANTERIOR' => $objPromocion->getCANTDIASVIGENCIA(),
+                                               'VALOR_ACTUAL'   => $intcantDiasVigencia,
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $objPromocion->setCANTDIASVIGENCIA($intcantDiasVigencia);
+            }
             if(!empty($strAceptaGlobal))
             {
                 $arrayBitacoraDetalle[]= array('CAMPO'          => "Acepta Puntos Globales",
@@ -1715,6 +1730,9 @@ class ApiWebController extends FOSRestController
      * @author Kevin Baque
      * @version 1.0 01-08-2019
      * 
+     * @author Kevin Baque
+     * @version 1.0 23-11-2022 - Se agrega bandera para listar los clientes con cupones asignados.
+     *
      * @return array  $objResponse
      */
     public function getCliente($arrayData)
@@ -1729,6 +1747,7 @@ class ApiWebController extends FOSRestController
         $strContador       = $arrayData['strContador'] ? $arrayData['strContador']:'';
         $strCupoDisponible = $arrayData['strCupoDisponible'] ? $arrayData['strCupoDisponible']:'NO';
         $strEstado         = $arrayData['strEstado'] ? $arrayData['strEstado']:'';
+        $strListarCltCupon = $arrayData['strListarCltCupon'] ? $arrayData['strListarCltCupon']:'NO';
         $arrayCliente      = array();
         $strMensajeError   = '';
         $strStatus         = 400;
@@ -1770,11 +1789,21 @@ class ApiWebController extends FOSRestController
                                     'strApellidos'      => $strApellidos,
                                     'strContador'       => $strContador,
                                     'strCupoDisponible' => $strCupoDisponible,
-                                    'strEstado'         => $strEstado
+                                    'strEstado'         => $strEstado,
+                                    'strListarCltCupon' => $strListarCltCupon
                                     );
-            $arrayCliente   = $this->getDoctrine()
-                                   ->getRepository(InfoCliente::class)
-                                   ->getClienteCriterio($arrayParametros);
+            if(!empty($strListarCltCupon) && $strListarCltCupon == "SI")
+            {
+                $arrayCliente = $this->getDoctrine()
+                                     ->getRepository(InfoCliente::class)
+                                     ->getClientePorCuponCriterio($arrayParametros);
+            }
+            else
+            {
+                $arrayCliente = $this->getDoctrine()
+                                     ->getRepository(InfoCliente::class)
+                                     ->getClienteCriterio($arrayParametros);
+            }
             if(isset($arrayCliente['error']) && !empty($arrayCliente['error']))
             {
                 $strStatus  = 404;

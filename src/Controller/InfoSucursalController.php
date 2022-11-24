@@ -16,6 +16,7 @@ use App\Controller\DefaultController;
 use App\Controller\ApiWebController;
 use App\Entity\InfoBitacora;
 use App\Entity\AdmiCentroComercial;
+use App\Entity\InfoCliente;
 use App\Entity\InfoDetalleBitacora;
 use App\Entity\AdmiPais;
 use App\Entity\AdmiProvincia;
@@ -490,6 +491,7 @@ class InfoSucursalController extends Controller
         $strEsMatriz                    = $request->query->get("esMatriz")                    ? $request->query->get("esMatriz")                    :'';
         $strEnCentroComercial           = $request->query->get("enCentroComercial")           ? $request->query->get("enCentroComercial")           :'';
         $intIdCentroComercial           = $request->query->get("intIdCentroComercial")        ? $request->query->get("intIdCentroComercial")        :'';
+        $intIdCliente                   = $request->query->get("intIdCliente")                ? $request->query->get("intIdCliente")        :'';
         $strDescripcion                 = $request->query->get("descripcion")                 ? $request->query->get("descripcion")                 :'';
         $strDireccion                   = $request->query->get("direccion")                   ? $request->query->get("direccion")                   :'';
         $strPais                        = $request->query->get("pais")                        ? $request->query->get("pais")                        :'';
@@ -553,11 +555,48 @@ class InfoSucursalController extends Controller
                                        ->find($intIdCentroComercial);
             if(!empty($objCentroComercial) && is_object($objCentroComercial))
             {
+                $strCCAnterior = (!empty($entitySucursal->getCENTRO_COMERCIAL_ID())) ? 
+                                 $entitySucursal->getCENTRO_COMERCIAL_ID()->getNOMBRE():"";
                 $arrayBitacoraDetalle[]= array('CAMPO'          => "Centro Comercial",
-                                               'VALOR_ANTERIOR' => $entitySucursal->getCENTRO_COMERCIAL_ID()->getNOMBRE(),
+                                               'VALOR_ANTERIOR' => $strCCAnterior,
                                                'VALOR_ACTUAL'   => $objCentroComercial->getNOMBRE(),
                                                'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setCENTRO_COMERCIAL_ID($objCentroComercial);
+            }
+            else
+            {
+                $strCCAnterior = (!empty($entitySucursal->getCENTRO_COMERCIAL_ID())) ? 
+                                 $entitySucursal->getCENTRO_COMERCIAL_ID()->getNOMBRE():"";
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Centro Comercial",
+                                               'VALOR_ANTERIOR' => $strCCAnterior,
+                                               'VALOR_ACTUAL'   => "",
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $entitySucursal->setCENTRO_COMERCIAL_ID($objCentroComercial);
+                $entitySucursal->setCENTRO_COMERCIAL_ID(null);
+            }
+
+            $objCliente = $this->getDoctrine()->getRepository(InfoCliente::class)
+                               ->find($intIdCliente);
+            if(!empty($objCliente) && is_object($objCliente))
+            {
+                $strPromotorAnterior = (!empty($entitySucursal->getCLIENTE_ID())) ? 
+                                       $entitySucursal->getCLIENTE_ID()->getCORREO():"";
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Correo del Promotor",
+                                               'VALOR_ANTERIOR' => $strPromotorAnterior,
+                                               'VALOR_ACTUAL'   => $objCliente->getCORREO(),
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $entitySucursal->setCLIENTE_ID($objCliente);
+            }
+            else
+            {
+                $strPromotorAnterior = (!empty($entitySucursal->getCLIENTE_ID()->getId())) ? 
+                                       $entitySucursal->getCLIENTE_ID()->getCORREO():"";
+                $arrayBitacoraDetalle[]= array('CAMPO'          => "Correo del Promotor",
+                                               'VALOR_ANTERIOR' => $strPromotorAnterior,
+                                               'VALOR_ACTUAL'   => "",
+                                               'USUARIO_ID'     => $strUsuarioCreacion);
+                $entitySucursal->setCLIENTE_ID($objCliente);
+                $entitySucursal->setCLIENTE_ID(null);
             }
 
             if(!empty($strDescripcion))

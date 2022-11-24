@@ -135,6 +135,7 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
         $strContador        = $arrayParametros['strContador'] ? $arrayParametros['strContador']:'NO';
         $strCupoDisponible  = $arrayParametros['strCupoDisponible'] ? $arrayParametros['strCupoDisponible']:'NO';
         $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO');
+        $strListarCltCupon  = $arrayParametros['strListarCltCupon'] ? $arrayParametros['strListarCltCupon']:'NO';
         $arrayCliente       = array();
         $strMensajeError    = '';
         $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
@@ -180,8 +181,8 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
                 }
                 if(!empty($intIdCliente))
                 {
-                $strWhere .= " AND IC.ID_CLIENTE =:intIdCliente";
-                $objQuery->setParameter("intIdCliente", $intIdCliente);
+                    $strWhere .= " AND IC.ID_CLIENTE =:intIdCliente";
+                    $objQuery->setParameter("intIdCliente", $intIdCliente);
                 }
                 if(!empty($intIdRestaurante))
                 {
@@ -230,18 +231,18 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
                 }
                 if(!empty($strNombres))
                 {
-                $strWhere .= " AND lower(IC.NOMBRE) like lower(:NOMBRE)";
-                $objQuery->setParameter("NOMBRE", '%' . trim($strNombres) . '%');
+                    $strWhere .= " AND lower(IC.NOMBRE) like lower(:NOMBRE)";
+                    $objQuery->setParameter("NOMBRE", '%' . trim($strNombres) . '%');
                 }
                 if(!empty($strApellidos))
                 {
-                $strWhere .= " AND lower(IC.APELLIDO) like lower(:APELLIDO)";
-                $objQuery->setParameter("APELLIDO", '%' . trim($strApellidos) . '%');
+                    $strWhere .= " AND lower(IC.APELLIDO) like lower(:APELLIDO)";
+                    $objQuery->setParameter("APELLIDO", '%' . trim($strApellidos) . '%');
                 }
                 if(!empty($strIdentificacion))
                 {
-                $strWhere .= " AND IC.IDENTIFICACION =:IDENTIFICACION";
-                $objQuery->setParameter("IDENTIFICACION", $strIdentificacion);
+                    $strWhere .= " AND IC.IDENTIFICACION =:IDENTIFICACION";
+                    $objQuery->setParameter("IDENTIFICACION", $strIdentificacion);
                 }
                 $objRsmBuilder->addScalarResult('TENEDOR', 'TENEDOR', 'string');
                 $objRsmBuilder->addScalarResult('ID_CLIENTE', 'ID_CLIENTE', 'string');
@@ -335,5 +336,91 @@ class InfoClienteRepository extends \Doctrine\ORM\EntityRepository
         return $arrayRespuesta;
     }
 
-
+    /**
+     * Documentación para la función 'getClientePorCuponCriterio'
+     * 
+     * Método encargado de retornar todos los clientes con cupones canjeados automáticos según los parámetros recibidos.
+     * 
+     * @author Kevin Baque
+     * @version 1.0 20-11-2022
+     *
+     * @return array  $arrayCliente
+     * 
+     */
+    public function getClientePorCuponCriterio($arrayParametros)
+    {
+        $intIdCliente       = $arrayParametros['intIdCliente'] ? $arrayParametros['intIdCliente']:'';
+        $intIdRestaurante   = $arrayParametros['intIdRestaurante'] ? $arrayParametros['intIdRestaurante']:'';
+        $strIdentificacion  = $arrayParametros['strIdentificacion'] ? $arrayParametros['strIdentificacion']:'';
+        $strNombres         = $arrayParametros['strNombres'] ? $arrayParametros['strNombres']:'';
+        $strApellidos       = $arrayParametros['strApellidos'] ? $arrayParametros['strApellidos']:'';
+        $strContador        = $arrayParametros['strContador'] ? $arrayParametros['strContador']:'NO';
+        $strCupoDisponible  = $arrayParametros['strCupoDisponible'] ? $arrayParametros['strCupoDisponible']:'NO';
+        $strEstado          = $arrayParametros['strEstado'] ? $arrayParametros['strEstado']:array('ACTIVO','INACTIVO');
+        $strListarCltCupon  = $arrayParametros['strListarCltCupon'] ? $arrayParametros['strListarCltCupon']:'NO';
+        $arrayCliente       = array();
+        $strMensajeError    = '';
+        $objRsmBuilder      = new ResultSetMappingBuilder($this->_em);
+        $objQuery           = $this->_em->createNativeQuery(null, $objRsmBuilder);
+        $strOrder           = ' ORDER BY ICU.FE_CREACION DESC ';
+        try
+        {
+            $strSelect      = "SELECT IC.ID_CLIENTE,
+                                      ATCP.DESCRIPCION                 AS TIPO_CLIENTE,
+                                      IC.IDENTIFICACION,
+                                      CONCAT(IC.NOMBRE, CONCAT(' ', IC.APELLIDO)) AS NOMBRE_COMPLETO,
+                                      IC.CORREO,
+                                      ICU.CUPON,
+                                      IPR.DESCRIPCION_TIPO_PROMOCION AS PROMOCION,
+                                      ICPH.ESTADO,
+                                      ICU.FE_CREACION,
+                                      DATE_FORMAT(ICPC.FE_VIGENCIA,'%Y-%m-%d') AS FE_VIGENCIA ";
+            $strFrom        = " FROM INFO_CLIENTE IC
+                                    JOIN ADMI_TIPO_CLIENTE_PUNTAJE        ATCP ON ATCP.ID_TIPO_CLIENTE_PUNTAJE = IC.TIPO_CLIENTE_PUNTAJE_ID
+                                                                            AND ATCP.ESTADO = 'ACTIVO'
+                                    JOIN INFO_CUPON_PROMOCION_CLT         ICPC ON ICPC.CLIENTE_ID=IC.ID_CLIENTE
+                                    JOIN INFO_CUPON                       ICU ON ICPC.CUPON_ID = ICU.ID_CUPON
+                                    JOIN ADMI_TIPO_CUPON                  ATC ON ATC.ID_TIPO_CUPON = ICU.TIPO_CUPON_ID
+                                                                AND ATC.ESTADO = 'ACTIVO'
+                                                                AND ATC.DESCRIPCION = 'ENCUESTA'
+                                    JOIN INFO_CUPON_HISTORIAL             ICH ON ICH.CUPON_ID = ICU.ID_CUPON
+                                                                        AND ICH.ESTADO = 'CANJEADO'
+                                    JOIN INFO_PROMOCION                   IPR ON IPR.ID_PROMOCION = ICPC.PROMOCION_ID
+                                                                AND IPR.ESTADO = 'ACTIVO'
+                                    JOIN ADMI_TIPO_PROMOCION              ATP ON ATP.ID_TIPO_PROMOCION = IPR.TIPO_PROMOCION_ID
+                                                                    AND ATP.DESCRIPCION = 'ENCUESTA'
+                                                                    AND ATP.ESTADO = 'ACTIVO'
+                                    JOIN INFO_CLIENTE_PROMOCION_HISTORIAL ICPH ON ICPH.PROMOCION_ID = IPR.ID_PROMOCION
+                                                                                    AND ICPC.CLIENTE_ID = ICPH.CLIENTE_ID ";
+            $strWhere       = " WHERE IC.ESTADO IN ( 'ACTIVO', 'INACTIVO' )
+                                AND ICPC.ESTADO = 'CANJEADO'
+                                AND ICU.ESTADO = 'CANJEADO' ";
+            $strGroup       = " GROUP BY IC.ID_CLIENTE,TIPO_CLIENTE,IC.IDENTIFICACION,NOMBRE_COMPLETO,
+                                IC.CORREO,ICU.CUPON,PROMOCION,ICPH.ESTADO,ICU.FE_CREACION,ICPC.FE_VIGENCIA ";
+            if(!empty($intIdRestaurante))
+            {
+                $strWhere .= " AND ICH.RESTAURANTE_ID = :intIdRestaurante ";
+                $objQuery->setParameter("intIdRestaurante", $intIdRestaurante);
+            }
+            $objRsmBuilder->addScalarResult('ID_CLIENTE', 'ID_CLIENTE', 'string');
+            $objRsmBuilder->addScalarResult('TIPO_CLIENTE', 'TIPO_CLIENTE', 'string');
+            $objRsmBuilder->addScalarResult('IDENTIFICACION', 'IDENTIFICACION', 'string');
+            $objRsmBuilder->addScalarResult('NOMBRE_COMPLETO', 'NOMBRE_COMPLETO', 'string');
+            $objRsmBuilder->addScalarResult('CORREO', 'CORREO', 'string');
+            $objRsmBuilder->addScalarResult('CUPON', 'CUPON', 'string');
+            $objRsmBuilder->addScalarResult('PROMOCION', 'PROMOCION', 'string');
+            $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');
+            $objRsmBuilder->addScalarResult('FE_CREACION', 'FE_CREACION', 'string');
+            $objRsmBuilder->addScalarResult('FE_VIGENCIA', 'FE_VIGENCIA', 'string');
+            $strSql       = $strSelect.$strFrom.$strWhere.$strGroup.$strOrder;
+            $objQuery->setSQL($strSql);
+            $arrayCliente['resultados'] = $objQuery->getResult();
+        }
+        catch(\Exception $ex)
+        {
+            $strMensajeError = $ex->getMessage();
+        }
+        $arrayCliente['error'] = $strMensajeError;
+        return $arrayCliente;
+    }
 }
