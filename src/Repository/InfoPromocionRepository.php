@@ -42,7 +42,7 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             $strSelect      = "SELECT PR.ID_PROMOCION,PR.DESCRIPCION_TIPO_PROMOCION, PR.CANTIDAD_PUNTOS, PR.ACEPTA_GLOBAL,
                                PR.CODIGO,PR.ESTADO,PR.USR_CREACION,PR.FE_CREACION,PR.USR_MODIFICACION,PR.FE_MODIFICACION, 
                                PR.PREMIO,PR.IMAGEN,ATP.DESCRIPCION AS TIPO_PROMOCION,ATP.ID_TIPO_PROMOCION,
-                               IC.CUPON,IC.ID_CUPON,
+                               IC.CUPON,IC.ID_CUPON,PR.CANT_DIAS_VIGENCIA,
                                IRE.ID_RESTAURANTE,IRE.IDENTIFICACION,IRE.RAZON_SOCIAL,IRE.NOMBRE_COMERCIAL ";
             $strSelectCount = "SELECT COUNT(*) AS CANTIDAD ";
             $strFrom        = "FROM INFO_PROMOCION PR 
@@ -109,6 +109,7 @@ class InfoPromocionRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('ID_TIPO_PROMOCION', 'ID_TIPO_PROMOCION', 'string');
             $objRsmBuilder->addScalarResult('TIPO_PROMOCION', 'TIPO_PROMOCION', 'string');
             $objRsmBuilder->addScalarResult('CANTIDAD_PUNTOS', 'CANTIDAD_PUNTOS', 'string');
+            $objRsmBuilder->addScalarResult('CANT_DIAS_VIGENCIA', 'CANT_DIAS_VIGENCIA', 'integer');
             $objRsmBuilder->addScalarResult('ACEPTA_GLOBAL', 'ACEPTA_GLOBAL', 'string');
             $objRsmBuilder->addScalarResult('CODIGO', 'CODIGO', 'string');
             $objRsmBuilder->addScalarResult('ESTADO', 'ESTADO', 'string');

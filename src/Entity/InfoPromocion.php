@@ -70,6 +70,13 @@ class InfoPromocion
     private $CANTIDADPUNTOS;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(name="CANT_DIAS_VIGENCIA", type="integer", nullable=true)
+     */
+    private $CANTDIASVIGENCIA;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="ACEPTA_GLOBAL", type="string", length=50)
@@ -174,6 +181,30 @@ class InfoPromocion
     public function getCANTIDADPUNTOS()
     {
         return $this->CANTIDADPUNTOS;
+    }
+
+    /**
+     * Set CANTDIASVIGENCIA
+     *
+     * @param integer $CANTDIASVIGENCIA
+     *
+     * @return InfoPromocion
+     */
+    public function setCANTDIASVIGENCIA($CANTDIASVIGENCIA)
+    {
+        $this->CANTDIASVIGENCIA = $CANTDIASVIGENCIA;
+
+        return $this;
+    }
+
+    /**
+     * Get CANTDIASVIGENCIA
+     *
+     * @return int
+     */
+    public function getCANTDIASVIGENCIA()
+    {
+        return $this->CANTDIASVIGENCIA;
     }
 
     /**

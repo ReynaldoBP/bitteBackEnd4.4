@@ -46,7 +46,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
         {
             $strSelect      = "SELECT ISUR.ID_SUCURSAL,ISUR.DESCRIPCION,ISUR.ES_MATRIZ,ISUR.EN_CENTRO_COMERCIAL,ISUR.DIRECCION,ISUR.NUMERO_CONTACTO,
                                       IR.IDENTIFICACION,IR.NOMBRE_COMERCIAL, ISUR.RESTAURANTE_ID,ISUR.ESTADO_FACTURACION,ISUR.ESTADO,ISUR.LATITUD,
-                                      ISUR.LONGITUD, ISUR.PAIS,ISUR.PROVINCIA,ISUR.CIUDAD,ISUR.PARROQUIA,ISUR.CENTRO_COMERCIAL_ID,ISUR.CODIGO_DIARIO,
+                                      ISUR.LONGITUD, ISUR.PAIS,ISUR.PROVINCIA,ISUR.CIUDAD,ISUR.PARROQUIA,ISUR.CENTRO_COMERCIAL_ID,CLIENTE_ID,ISUR.CODIGO_DIARIO,
                                       ISUR.HORA_LUNES_INI,ISUR.HORA_LUNES_FIN,ISUR.HORA_MARTES_INI,ISUR.HORA_MARTES_FIN,ISUR.HORA_MIERCOLES_INI,ISUR.HORA_MIERCOLES_FIN,ISUR.HORA_JUEVES_INI,
                                       ISUR.HORA_JUEVES_FIN,ISUR.HORA_VIERNES_INI,ISUR.HORA_VIERNES_FIN,ISUR.HORA_SABADO_INI,ISUR.HORA_SABADO_FIN,ISUR.HORA_DOMINGO_INI,ISUR.HORA_DOMINGO_FIN,
                                       ISUR.USR_CREACION, ISUR.FE_CREACION,ISUR.USR_MODIFICACION,ISUR.FE_MODIFICACION ";
@@ -112,6 +112,7 @@ class InfoSucursalRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('CIUDAD', 'CIUDAD', 'string');
             $objRsmBuilder->addScalarResult('PARROQUIA', 'PARROQUIA', 'string');
             $objRsmBuilder->addScalarResult('CENTRO_COMERCIAL_ID', 'CENTRO_COMERCIAL_ID', 'integer');
+            $objRsmBuilder->addScalarResult('CLIENTE_ID', 'CLIENTE_ID', 'string');
             $objRsmBuilder->addScalarResult('CODIGO_DIARIO', 'CODIGO_DIARIO', 'string');
             $objRsmBuilder->addScalarResult('HORA_LUNES_INI', 'HORA_LUNES_INI', 'string');
             $objRsmBuilder->addScalarResult('HORA_LUNES_FIN', 'HORA_LUNES_FIN', 'string');

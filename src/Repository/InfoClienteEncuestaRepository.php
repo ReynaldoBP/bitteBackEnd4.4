@@ -39,19 +39,22 @@ class InfoClienteEncuestaRepository extends \Doctrine\ORM\EntityRepository
             $strWhere       = "WHERE ice.SUCURSAL_ID = :IDSUCURSAL ".
                                      " AND ice.CLIENTE_ID = :IDCLIENTE ".
                                      " AND ice.ENCUESTA_ID = :IDENCUESTA ".
-                                     " AND ice.CONTENIDO_ID = :IDCONTENIDO ".
                                      " AND ice.ESTADO = :ESTADO ".
                                      " AND DATE(ice.FE_CREACION) = :FECHA ";
             $objQuery->setParameter("IDSUCURSAL", $intSucursalId);
             $objQuery->setParameter("IDCLIENTE", $intClienteId);
             $objQuery->setParameter("IDENCUESTA", $intEncuestaId);
-            $objQuery->setParameter("IDCONTENIDO", $intContenidoId);
+            if(!empty($intContenidoId))
+            {
+                $strWhere .= " AND ice.CONTENIDO_ID = :IDCONTENIDO ";
+                $objQuery->setParameter("IDCONTENIDO", $intContenidoId);
+            }
             $objQuery->setParameter("ESTADO", $strEstado);
             $objQuery->setParameter("FECHA", $strFecha);
             $objRsmBuilder->addScalarResult('ID_CLT_ENCUESTA', 'ID_ENCUESTA', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere;
             $objQuery->setSQL($strSql);
-            $arrayCltEncuesta = $objQuery->getResult();
+            $arrayCltEncuesta['resultados'] = $objQuery->getResult();
         }
         catch(\Exception $ex)
         {

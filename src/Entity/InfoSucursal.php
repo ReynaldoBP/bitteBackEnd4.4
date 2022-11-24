@@ -42,6 +42,16 @@ class InfoSucursal
     private $CENTRO_COMERCIAL_ID;
 
     /**
+    * @var InfoCliente
+    *
+    * @ORM\ManyToOne(targetEntity="InfoCliente")
+    * @ORM\JoinColumns({
+    * @ORM\JoinColumn(name="CLIENTE_ID", referencedColumnName="ID_CLIENTE")
+    * })
+    */
+    private $CLIENTE_ID;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="ES_MATRIZ", type="string", length=50)
@@ -1019,8 +1029,30 @@ class InfoSucursal
     {
         return $this->CENTRO_COMERCIAL_ID;
     }
+    
+    /**
+     * Set CLIENTE_ID
+     *
+     * @param \App\Entity\InfoCliente $CLIENTE_ID
+     *
+     * @return InfoSucursal
+     */
+    public function setCLIENTE_ID(\App\Entity\InfoCliente $CLIENTE_ID = null)
+    {
+        $this->CLIENTE_ID = $CLIENTE_ID;
 
+        return $this;
+    }
 
+    /**
+     * Get CLIENTE_ID
+     *
+     * @return \App\Entity\InfoCliente
+     */
+    public function getCLIENTE_ID()
+    {
+        return $this->CLIENTE_ID;
+    }
     /**
      * Set PROVINCIA
      *
