@@ -329,7 +329,7 @@ class ApiMovilController extends FOSRestController
                     $strNombreClt      = !empty($entityCliente->getNOMBRE()) ? $entityCliente->getNOMBRE():'';
                     $strWelcome        = (!empty($entityCliente->getGENERO()) && $entityCliente->getGENERO() == "MASCULINO") ? "Bienvenido":"Bienvenida";
                     $strDistractor     = substr(md5(time()),0,16);
-                    //$strActivaCltLocal = "http://127.0.0.1/bitteBackEnd/web/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
+                    //$strActivaCltLocal = "http://127.0.0.1/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                     $strActivaCltProd  = "https://bitte.app:8080/editCliente?jklasdqweuiorenm=".$strDistractor.$entityCliente->getId();
                     $strUrlTermCond    ="https://la.bitte.app/privacy-policy/";
                     $strUrlRestaurante ="https://la.bitte.app/listado-restaurantes/";
@@ -1203,6 +1203,7 @@ class ApiMovilController extends FOSRestController
     }
     /**
      * Documentación para la función 'createRespuesta'
+     *
      * Método encargado de crear todas las respuesta según los parámetros recibidos.
      * Adicional crear las relaciones entre clt. y encuestas.
      * 
@@ -1220,6 +1221,9 @@ class ApiMovilController extends FOSRestController
      *                           en caso de que el usuario administrador Restaurante
      *                           tenga configurado que reciba las encuesta.
      *
+     * @author Kevin Baque
+     * @version 1.4 25-11-2022 - Nuevo Fluto con el tipo de cliente Promotor.
+     *
      * @return array  $objResponse
      */
     public function createRespuesta($arrayData)
@@ -1231,13 +1235,13 @@ class ApiMovilController extends FOSRestController
         $intIdEncuesta      = $arrayData['idEncuesta'] ? $arrayData['idEncuesta']:'';
         $intIdPregunta      = $arrayData['idPregunta'] ? $arrayData['idPregunta']:'';
         $intIdContenido     = $arrayData['idContenido'] ? $arrayData['idContenido']:'';
-        $strRespuesta       = $arrayData['respuesta'] ? $arrayData['respuesta']:'';
         $arrayPregunta      = $arrayData['arrayPregunta'] ? $arrayData['arrayPregunta']:'';
         $strEstado          = $arrayData['estado'] ? $arrayData['estado']:'ACTIVO';
+        $strCorreoClt       = $arrayData['correoClt'] ? $arrayData['correoClt']:'';
         $strUsuarioCreacion = $arrayData['usuarioCreacion'] ? $arrayData['usuarioCreacion']:'';
         $strDatetimeActual  = new \DateTime('now');
         $arrayRespuesta     = array();
-        $strEstadoPendiente = 'PENDIENTE';//TODO kbaque: estado original pendiente
+        $strEstadoEncuesta  = 'PENDIENTE';//TODO kbaque: estado original pendiente
         $strMensajeError    = '';
         $strStatus          = 400;
         $objResponse        = new Response;
@@ -1246,6 +1250,8 @@ class ApiMovilController extends FOSRestController
         $strCuerpoCorreo    = "";
         $strResPositiva     = "★";
         $strNegativa        = "☆";
+        $strTipoCliente     = "";
+        $strCupon           =  "";
         try
         {
             $em->getConnection()->beginTransaction();
@@ -1256,6 +1262,7 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe el cliente con la descripción enviada por parámetro.');
             }
+            $strTipoCliente = $objCliente->getTIPOCLIENTEPUNTAJEID()->getDESCRIPCION();
             $objSucursal = $this->getDoctrine()
                                 ->getRepository(InfoSucursal::class)
                                 ->find($intIdSucursal);
@@ -1277,13 +1284,6 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe la Encuesta con la descripción enviada por parámetro.');
             }
-            $objContenido    = $this->getDoctrine()
-                                    ->getRepository(InfoContenidoSubido::class)
-                                    ->find($intIdContenido);
-            if(!is_object($objContenido) || empty($objContenido))
-            {
-                throw new \Exception('No existe el contenido con la descripción enviada por parámetro.');
-            }
             $objParametro    = $this->getDoctrine()
                                     ->getRepository(AdmiParametro::class)
                                     ->findOneBy(array('DESCRIPCION' => 'PUNTOS_ENCUESTA',
@@ -1292,25 +1292,11 @@ class ApiMovilController extends FOSRestController
             {
                 throw new \Exception('No existe puntos de encuesta con la descripción enviada por parámetro.');
             }
-
-            $objCltEncuesta  = $this->getDoctrine()
-                                        ->getRepository(InfoClienteEncuesta::class)
-                                        ->getClienteEncuestaRepetida(array('intClienteId'   => $intIdCliente,
-                                                                           'intSucursalId'  => $intIdSucursal,
-                                                                           'intEncuestaId'  => $intIdEncuesta,
-                                                                           'intContenidoId' => $intIdContenido,
-                                                                           'strFecha'       => date('Y-m-d'),
-                                                                           'strEstado'      => $strEstadoPendiente
-                                                                          ));
-           if(is_object($objCltEncuesta))
-           {  
-               throw new \Exception('Ya existe la encuesta.');
-           }
-
             $intValor = $objParametro->getVALOR1();
             $arrayRestaurantes = $this->getDoctrine()
                                       ->getRepository(InfoRestaurante::class)
                                       ->getRestauranteCriterio(array('intIdRestaurante' => $objRestaurante->getId()));
+            //Validación para los restaurantes afiliados, en caso de no ser afiliado no gana puntos, solo participa para un tenedor de oro.
             if(!empty($arrayRestaurantes) && !empty($arrayRestaurantes['resultados']))
             {
                 $arrayItemRestaurante = $arrayRestaurantes['resultados'][0];
@@ -1320,16 +1306,206 @@ class ApiMovilController extends FOSRestController
                     $intValor = 0;
                 }
             }
+            //Validaciones cuando el tipo es CLIENTE
+            if($strTipoCliente == "CLIENTE")
+            {
+                $objContenido    = $this->getDoctrine()
+                                        ->getRepository(InfoContenidoSubido::class)
+                                        ->find($intIdContenido);
+                if(!is_object($objContenido) || empty($objContenido))
+                {
+                    throw new \Exception('No existe el contenido con la descripción enviada por parámetro.');
+                }
+                $arrayCltEncuesta  = $this->getDoctrine()
+                                          ->getRepository(InfoClienteEncuesta::class)
+                                          ->getClienteEncuestaRepetida(array('intClienteId'   => $intIdCliente,
+                                                                             'intSucursalId'  => $intIdSucursal,
+                                                                             'intEncuestaId'  => $intIdEncuesta,
+                                                                             'intContenidoId' => $intIdContenido,
+                                                                             'strFecha'       => date('Y-m-d'),
+                                                                             'strEstado'      => $strEstadoEncuesta));
+                if(is_array($arrayCltEncuesta) && !empty($arrayCltEncuesta['resultados']))
+                {  
+                    throw new \Exception('Ya existe la encuesta.');
+                }
+            }
+            //Validaciones para el nuevo flujo en caso del tipo sea diferente de "CLIENTE",
+            //podrá realizar n respuesta por encuesta y automáticamente se registrará un cliente.
+            elseif($strTipoCliente == "PROMOTOR")
+            {
+                $objTipoCliente = $this->getDoctrine()
+                                       ->getRepository(AdmiTipoClientePuntaje::class)
+                                       ->findOneBy(array('ESTADO' => 'ACTIVO',
+                                                         'id'     => 1));
+                if(!is_object($objTipoCliente) || empty($objTipoCliente))
+                {
+                    throw new \Exception('No existe tipo cliente con la descripción enviada por parámetro.');
+                }
+                $objUsuario = $this->getDoctrine()
+                                   ->getRepository(InfoUsuario::class)
+                                   ->findOneBy(array('ESTADO' => 'ACTIVO',
+                                                     'id'     => 1));
+                $strEstadoEncuesta = "ACTIVO";
+                $intValor          = 0;
+                //Parametros para crear un cliente
+                $objTipoCliente    = $this->getDoctrine()
+                                          ->getRepository(AdmiTipoClientePuntaje::class)
+                                          ->findOneBy(array("ESTADO"      => "ACTIVO",
+                                                            "DESCRIPCION" => "CLIENTE"));
+                if(!is_object($objTipoCliente) || empty($objTipoCliente))
+                {
+                    throw new \Exception("No existe tipo cliente con la descripción enviada por parámetro.");
+                }
+                $strEdadClt   = (isset($arrayData["edad"]) && !empty($arrayData["edad"])) ? $arrayData["edad"] : "SIN EDAD";
+                $strGeneroClt = (isset($arrayData["genero"]) && !empty($arrayData["genero"])) ? $arrayData["genero"] : "SIN GENERO";
+                //Obtenemos el tipo de promoción Encuesta
+                $objTipoPromocion = $this->getDoctrine()
+                                            ->getRepository(AdmiTipoPromocion::class)
+                                            ->findOneBy(array("DESCRIPCION"     =>"ENCUESTA",
+                                                              "ESTADO" =>'ACTIVO'));
+                if(!is_object($objTipoPromocion) || empty($objTipoPromocion))
+                {
+                    throw new \Exception('No existe el tipo de promoción "Encuesta" enviado por parámetro.');
+                }
+                //Buscamos una promoción de tipo encuesta con el restaurante en sesión
+                $objPromocion = $this->getDoctrine()
+                                        ->getRepository(InfoPromocion::class)
+                                        ->findOneBy(array("ESTADO"          => "ACTIVO",
+                                                          "TIPOPROMOCIONID" => $objTipoPromocion->getId(),
+                                                          "RESTAURANTE_ID"  => $objRestaurante->getId()));
+                //En caso de que la persona encuestada, indique que si desea el cupón el restaurante 
+                //podrá redimir el cupón del encuestado, siempre y cuando el restaurante
+                //tenga una promoción de tipo "Encuesta"
+                if(!empty($strCorreoClt) && is_object($objPromocion))
+                {
+                    //Validamos si existe un cliente con ese correo
+                    $objCliente   = $this->getDoctrine()
+                                         ->getRepository(InfoCliente::class)
+                                         ->findOneBy(array("CORREO" => $strCorreoClt));
+                    //Si no existe se crea
+                    if(empty($objCliente) || !is_object($objCliente))
+                    {
+                        $strNombre = explode('@',$strCorreoClt);
+                        $objCliente = new InfoCliente();
+                        $objCliente->setAUTENTICACIONRS("N");
+                        $objCliente->setNOMBRE($strNombre[0]);
+                        $objCliente->setAPELLIDO("");
+                        $objCliente->setEDAD($strEdadClt);
+                        $objCliente->setGENERO($strGeneroClt);
+                        $objCliente->setESTADO("ACTIVO");
+                        $objCliente->setTIPOCLIENTEPUNTAJEID($objTipoCliente);
+                        if(is_object($objUsuario) && !empty($objUsuario))
+                        {
+                            $objCliente->setUSUARIOID($objUsuario);
+                        }
+                        $objCliente->setCORREO($strCorreoClt);
+                        $objCliente->setUSRCREACION($strUsuarioCreacion);
+                        $objCliente->setFECREACION(new \DateTime('now'));
+                        $em->persist($objCliente);
+                        $em->flush();
+                    }
+                    $arrayCltEncuesta  = $this->getDoctrine()
+                                              ->getRepository(InfoClienteEncuesta::class)
+                                              ->getClienteEncuestaRepetida(array('intClienteId'   => $objCliente->getId(),
+                                                                                 'intSucursalId'  => $intIdSucursal,
+                                                                                 'intEncuestaId'  => $intIdEncuesta,
+                                                                                 'strFecha'       => date('Y-m-d'),
+                                                                                 'strEstado'      => $strEstadoEncuesta));
+                    if(is_array($arrayCltEncuesta) && !empty($arrayCltEncuesta['resultados']))
+                    {
+                        throw new \Exception('Ya existe una encuesta con el mismo correo electrónico.');
+                    }
+                    //Creamos el cupón
+                    $objTipoCupon = $this->getDoctrine()
+                                         ->getRepository(AdmiTipoCupon::class)
+                                         ->findOneBy(array("DESCRIPCION" => "ENCUESTA",
+                                                           "ESTADO"      => "ACTIVO"));
+                    if(!is_object($objTipoCupon) || empty($objTipoCupon))
+                    {
+                        throw new \Exception('No existe el tipo de cupón enviado por parámetro.');
+                    }
+                    $strDescCupon = substr(uniqid(),0,6);
+                    $entityCupon = new InfoCupon();
+                    $entityCupon->setCUPON($strDescCupon);
+                    $entityCupon->setESTADO("CANJEADO");
+                    $entityCupon->setTIPOCUPONID($objTipoCupon);
+                    $entityCupon->setDIAVIGENTE(intval($objPromocion->getCANTDIASVIGENCIA()));
+                    $entityCupon->setUSRCREACION($strUsuarioCreacion);
+                    $entityCupon->setFECREACION(new \DateTime('now'));
+                    $em->persist($entityCupon);
+                    $em->flush();
+                    $strCupon = $entityCupon->getCUPON();
+                    //Ingresamos todos los datos necesarios para poder redimir la promoción desde la web
+                    $entityCuponHistorial = new InfoCuponHistorial();
+                    $entityCuponHistorial->setESTADO("CANJEADO");
+                    $entityCuponHistorial->setCUPONID($entityCupon);
+                    $entityCuponHistorial->setCLIENTEID($objCliente);
+                    $entityCuponHistorial->setRESTAURANTEID($objRestaurante);
+                    $entityCuponHistorial->setUSRCREACION($strUsuarioCreacion);
+                    $entityCuponHistorial->setFECREACION($strDatetimeActual);
+                    $em->persist($entityCuponHistorial);
+                    $em->flush();
+                    $entityCuponPromocionClt = new InfoCuponPromocionClt();
+                    $entityCuponPromocionClt->setPROMOCIONID($objPromocion);
+                    $entityCuponPromocionClt->setCUPONID($entityCupon);
+                    $entityCuponPromocionClt->setCLIENTEID($objCliente);
+                    $entityCuponPromocionClt->setESTADO("CANJEADO");
+                    $objFechaVigencia     = new \DateTime('now');
+                    $objFechaVigencia->add(new \DateInterval("P".intval($entityCupon->getDIAVIGENTE())."D"));
+                    $entityCuponPromocionClt->setFEVIGENCIA($objFechaVigencia);
+                    $entityCuponPromocionClt->setUSRCREACION($strUsuarioCreacion);
+                    $entityCuponPromocionClt->setFECREACION($strDatetimeActual);
+                    $em->persist($entityCuponPromocionClt);
+                    $em->flush();
+                    $entityPromocionHist = new InfoPromocionHistorial();
+                    $entityPromocionHist->setCLIENTEID($objCliente);
+                    $entityPromocionHist->setPROMOCIONID($objPromocion);
+                    $entityPromocionHist->setESTADO("PENDIENTE");
+                    $entityPromocionHist->setUSRCREACION($strUsuarioCreacion);
+                    $entityPromocionHist->setFECREACION($strDatetimeActual);
+                    $em->persist($entityPromocionHist);
+                    $em->flush();
+                }
+                else
+                {
+                    $objCliente   = $this->getDoctrine()
+                                         ->getRepository(InfoCliente::class)
+                                         ->findOneBy(array("CORREO" => $strCorreoClt));
+                    //Si no existe se crea
+                    if(empty($objCliente) || !is_object($objCliente))
+                    {
+                        $objCliente = new InfoCliente();
+                        $objCliente->setAUTENTICACIONRS("N");
+                        $objCliente->setNOMBRE("Encuestado");
+                        $objCliente->setAPELLIDO("Anonimo");
+                        $objCliente->setCORREO("");
+                        $objCliente->setEDAD($strEdadClt);
+                        $objCliente->setGENERO($strGeneroClt);
+                        $objCliente->setESTADO("ACTIVO");
+                        $objCliente->setTIPOCLIENTEPUNTAJEID($objTipoCliente);
+                        if(is_object($objUsuario) && !empty($objUsuario))
+                        {
+                            $objCliente->setUSUARIOID($objUsuario);
+                        }
+                        $objCliente->setUSRCREACION($strUsuarioCreacion);
+                        $objCliente->setFECREACION(new \DateTime('now'));
+                        $em->persist($objCliente);
+                        $em->flush();
+                    }
+                }
+            }
             $entityCltEncuesta = new InfoClienteEncuesta();
             $entityCltEncuesta->setCLIENTEID($objCliente);
             $entityCltEncuesta->setSUCURSALID($objSucursal);
             $entityCltEncuesta->setENCUESTAID($objEncuesta);
-            $entityCltEncuesta->setESTADO(strtoupper($strEstadoPendiente));
-            $entityCltEncuesta->setCONTENIDOID($objContenido);
+            $entityCltEncuesta->setESTADO(strtoupper($strEstadoEncuesta));
+            if(is_object($objContenido))
+            {
+                $entityCltEncuesta->setCONTENIDOID($objContenido);
+            }
             $entityCltEncuesta->setUSRCREACION($strUsuarioCreacion);
             $entityCltEncuesta->setFECREACION($strDatetimeActual);
             $entityCltEncuesta->setCANTIDADPUNTOS($intValor);
-
             $em->persist($entityCltEncuesta);
             $em->flush();
             $intIdCltEncuesta = $entityCltEncuesta->getId();
@@ -1352,6 +1528,7 @@ class ApiMovilController extends FOSRestController
                 {
                     throw new \Exception('No existe la relación cliente encuesta con la descripción enviada por parámetro.');
                 }
+                $boolEnviarCorreo  = false;
                 foreach ($arrayPregunta as $intIdPregunta => $strRespuesta) 
                 {
                     $arrayParametrosPreg = array('ESTADO' => 'ACTIVO',
@@ -1371,6 +1548,10 @@ class ApiMovilController extends FOSRestController
                     {
                         if($objOpcionRespuesta->getTIPORESPUESTA()=="CERRADA")
                         {
+                            if(intval($strRespuesta)<=3)
+                            {
+                                $boolEnviarCorreo = true;
+                            }
                             $strEstrellas      = "";
                             $intTotalEstrellas = intval($objOpcionRespuesta->getVALOR());
                             for($i=0; $i < intval($objOpcionRespuesta->getVALOR()); $i++)
@@ -1420,13 +1601,13 @@ class ApiMovilController extends FOSRestController
                     $entityRespuesta->setPREGUNTAID($objPregunta);
                     $entityRespuesta->setCLTENCUESTAID($objCltEncuesta);
                     $entityRespuesta->setCLIENTEID($objCliente);
-                    $entityRespuesta->setESTADO(strtoupper($strEstado));
+                    $entityRespuesta->setESTADO("ACTIVO");
                     $entityRespuesta->setUSRCREACION($strUsuarioCreacion);
                     $entityRespuesta->setFECREACION($strDatetimeActual);
                     $em->persist($entityRespuesta);
                     $em->flush();
                 }
-                if(!empty($strCuerpoCorreo))
+                if(!empty($strCuerpoCorreo) && $boolEnviarCorreo)
                 {
                     $arrayUsuarioRes = $this->getDoctrine()
                                             ->getRepository(InfoUsuarioRes::class)
@@ -1459,7 +1640,8 @@ class ApiMovilController extends FOSRestController
                                     $arrayParametros    = array('strAsunto'        => $strAsunto,
                                                                 'strMensajeCorreo' => $strMensajeCorreo,
                                                                 'strRemitente'     => $strRemitente,
-                                                                'strDestinatario'  => $arrayItemUsuarioRes->getUSUARIOID()->getCORREO());
+                                                                'strDestinatario'  => "baquekevin@hotmail.com");
+                                                                //'strDestinatario'  => $arrayItemUsuarioRes->getUSUARIOID()->getCORREO());
                                     $objController      = new DefaultController();
                                     $objController->setContainer($this->container);
                                     $objController->enviaCorreo($arrayParametros);
@@ -1467,6 +1649,52 @@ class ApiMovilController extends FOSRestController
                                 }
                             }
                         }
+                    }
+                }
+                if(!empty($strCorreoClt) && $strTipoCliente == "PROMOTOR")
+                {
+                    $objPlantilla   = $this->getDoctrine()
+                                           ->getRepository(InfoPlantilla::class)
+                                           ->findOneBy(array('DESCRIPCION' => "ENCUESTA_CUPON",
+                                                             'ESTADO'      => "ACTIVO"));
+                    if(!empty($objPlantilla) && is_object($objPlantilla))
+                    {
+                        $strMensajeCorreo = stream_get_contents ($objPlantilla->getPLANTILLA());
+                        $strCuerpoCorreo = '
+                        <tr>
+                            <td class="x_p1"
+                                style="direction:ltr; text-align:justify; color:#000000; font-family:\'UberMoveText-Regular\',\'HelveticaNeue\',Helvetica,Arial,sans-serif; font-size:15px; line-height:26px; padding-bottom:20px; padding-top:7px">
+                                <br><b>Presenta este código:
+                                </b><br>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                                style="direction:ltr; text-align:left">
+                                <h2
+                                    style="margin:0; color:#1ea5de; font-family:\'UberMove-Medium\',\'HelveticaNeue\',Helvetica,Arial,sans-serif; font-size:34px; font-weight:normal; line-height:40px; padding:0; padding-bottom:7px; padding-top:7px">
+                                    '.$strCupon.'
+                                </h2>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="x_p1"
+                                style="direction:ltr; text-align:justify; color:#000000; font-family:\'UberMoveText-Regular\',\'HelveticaNeue\',Helvetica,Arial,sans-serif; font-size:15px; line-height:26px; padding-bottom:20px; padding-top:7px">
+                                <br><b>En el restaurante: <strong>'.$objRestaurante->getNOMBRECOMERCIAL().'</strong> y aprovecha la promoción: <strong>'.$objPromocion->getDESCRIPCIONTIPOPROMOCION().'</strong>, hasta el '.date_format($objFechaVigencia,"Y/m/d").'
+                                </b><br>
+                            </td>
+                        </tr>';
+                        $strMensajeCorreo   = str_replace('strCuerpoCorreo',$strCuerpoCorreo,$strMensajeCorreo);
+                        $strAsunto          = 'GANASTE UN CUPON';
+                        $strRemitente       = 'notificaciones@bitte.app';
+                        $arrayParametros    = array('strAsunto'        => $strAsunto,
+                                                    'strMensajeCorreo' => $strMensajeCorreo,
+                                                    'strRemitente'     => $strRemitente,
+                                                    'strDestinatario'  => "baquekevin@hotmail.com");
+                                                    //'strDestinatario'  => $strCorreoClt);
+                        $objController      = new DefaultController();
+                        $objController->setContainer($this->container);
+                        $objController->enviaCorreo($arrayParametros);
                     }
                 }
                 $strMensajeError = 'Respuesta creada con exito.!';
@@ -1493,6 +1721,8 @@ class ApiMovilController extends FOSRestController
         $objResponse->setContent(json_encode(array('status'      => $strStatus,
                                                    'objSucursal' => $objSucursal,
                                                    'resultado'   => $arrayRespuesta,
+                                                   'promocion'   => $objPromocion->getDESCRIPCIONTIPOPROMOCION(),
+                                                   'cupon'       => $strCupon." válido hasta el ".date_format($objFechaVigencia,"Y/m/d"),
                                                    'succes'      => $boolSucces)));
         $objResponse->headers->set('Access-Control-Allow-Origin', '*');
         return $objResponse;
@@ -1508,6 +1738,9 @@ class ApiMovilController extends FOSRestController
      *
      * @author Kevin Baque
      * @version 1.1 08-03-2020 - Se añade mensaje de retorno cuando el usuario aún no activa su cuenta.
+     *
+     * @author Kevin Baque
+     * @version 1.2 23-11-2022 - Se añade arreglo de sucursales relacionadas al promotor.
      *
      */
     public function getLoginMovil($arrayData)
@@ -1547,12 +1780,35 @@ class ApiMovilController extends FOSRestController
                 }
                 else
                 {
+                    $arraySucursalPorClt = $this->getDoctrine()
+                                                ->getRepository(InfoSucursal::class)
+                                                ->findBy(array("CLIENTE_ID"          => $objCliente->getId(),
+                                                               "ESTADO"              => "ACTIVO"),
+                                                         array('DESCRIPCION'         => "ASC"));
+                    if(!empty($arraySucursalPorClt) && is_array($arraySucursalPorClt))
+                    {
+                        foreach($arraySucursalPorClt as $arraySucursalItem)
+                        {
+                            $arraySucursal[] = array("idSucursal"        => $arraySucursalItem->getId(),
+                                                     "sucursal"          => $arraySucursalItem->getDESCRIPCION(),
+                                                     "idRestaurante"     => $arraySucursalItem->getRESTAURANTEID()->getId(),
+                                                     "nombreComercial"   => $arraySucursalItem->getRESTAURANTEID()->getNOMBRECOMERCIAL(),
+                                                     "estado"            => $arraySucursalItem->getESTADO(),
+                                                     "idCentroComercial" => $arraySucursalItem->getCENTRO_COMERCIAL_ID() ? 
+                                                                              $arraySucursalItem->getCENTRO_COMERCIAL_ID()->getId():"",
+                                                     "centroComercial"   => $arraySucursalItem->getCENTRO_COMERCIAL_ID() ?
+                                                                              $arraySucursalItem->getCENTRO_COMERCIAL_ID()->getNOMBRE():"");
+                        }
+                        
+                    }
                     $arrayCliente   = array('idCliente'       => $objCliente->getId(),
                                             'autenticacionRS' => $objCliente->getAUTENTICACIONRS(),
                                             'identificacion'  => $objCliente->getIDENTIFICACION(),
                                             'nombre'          => $objCliente->getNOMBRE(),
                                             'apellido'        => $objCliente->getAPELLIDO(),
                                             'correo'          => $objCliente->getCORREO(),
+                                            'idTipo'          => $objCliente->getTIPOCLIENTEPUNTAJEID()->getId(),
+                                            'tipoCliente'     => $objCliente->getTIPOCLIENTEPUNTAJEID()->getDESCRIPCION(),
                                             'edad'            => $objCliente->getEDAD(),
                                             'genero'          => $objCliente->getGENERO(),
                                             'strEstado'       => $objCliente->getESTADO());
@@ -1568,6 +1824,7 @@ class ApiMovilController extends FOSRestController
         $objResponse->setContent(json_encode(array(
                                             'status'    => $strStatus,
                                             'resultado' => $arrayCliente,
+                                            'sucursal'  => $arraySucursal,
                                             'succes'    => $strSucces
                                             )
                                         ));
@@ -3295,7 +3552,7 @@ class ApiMovilController extends FOSRestController
         {
             $objPlantilla  = $this->getDoctrine()
                                   ->getRepository(InfoPlantilla::class)
-                                  ->findOneBy(array('DESCRIPCION'=>"CALIFICAR_NO_AFILIADO"));
+                                  ->findOneBy(array('DESCRIPCION'=>"ENCUESTA_CUPON"));
             $strAsunto        = 'Prueba Correo';
 /*
             $strMensajeCorreo   = stream_get_contents ($objPlantilla->getPLANTILLA());
@@ -3318,6 +3575,10 @@ class ApiMovilController extends FOSRestController
 
             $strCuerpoCorreo3   = "Además, has ganado un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
             $strMensajeCorreo   = str_replace('strCuerpoCorreo3',$strCuerpoCorreo3,$strMensajeCorreo);
+
+            $strMensajeCorreo = stream_get_contents ($objPlantilla->getPLANTILLA());
+            $strCuerpoCorreo1   = "Acabas de ganar un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";
+            $strMensajeCorreo   = str_replace('strCuerpoCorreo1',$strCuerpoCorreo1,$strMensajeCorreo);
 */
             $strMensajeCorreo = stream_get_contents ($objPlantilla->getPLANTILLA());
             $strCuerpoCorreo1   = "Acabas de ganar un cupón para participar en el sorteo mensual del Tenedor de Oro por comidas gratis de nuestros restaurantes participantes.";

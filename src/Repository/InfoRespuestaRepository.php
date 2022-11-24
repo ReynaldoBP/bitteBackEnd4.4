@@ -58,6 +58,16 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
                                     AND IOR.TIPO_RESPUESTA = 'CERRADA'
                                     AND IOR.VALOR           = '5'
                                 ) AS PROMEDIO,
+                                (
+                                SELECT 'SI' AS ES_MENOR_3
+                                    FROM INFO_RESPUESTA IR
+                                        INNER JOIN INFO_PREGUNTA IP          ON IR.PREGUNTA_ID          = IP.ID_PREGUNTA
+                                        INNER JOIN INFO_OPCION_RESPUESTA IOR ON IOR.ID_OPCION_RESPUESTA = IP.OPCION_RESPUESTA_ID
+                                    WHERE IR.CLT_ENCUESTA_ID=A.ID_CLT_ENCUESTA
+                                        AND IR.RESPUESTA<=3
+                                        AND IOR.TIPO_RESPUESTA = 'CERRADA'
+                                    LIMIT   1
+                                )ES_MENOR_3,
                                 (SELECT IR.RESPUESTA  AS COMENTARIO
                                     FROM INFO_RESPUESTA IR
                                     INNER JOIN INFO_PREGUNTA IP          ON IR.PREGUNTA_ID          = IP.ID_PREGUNTA
@@ -74,9 +84,9 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $strFrom        = "FROM INFO_CLIENTE_ENCUESTA A 
                                     JOIN INFO_SUCURSAL SUB_ISU 
                                     ON SUB_ISU.ID_SUCURSAL = A.SUCURSAL_ID
-                                INNER JOIN INFO_CONTENIDO_SUBIDO B 
+                                LEFT JOIN INFO_CONTENIDO_SUBIDO B 
                                     ON A.CONTENIDO_ID = B.`ID_CONTENIDO_SUBIDO`
-                                INNER JOIN INFO_REDES_SOCIALES C 
+                                LEFT JOIN INFO_REDES_SOCIALES C 
                                     ON C.ID_REDES_SOCIALES = B.REDES_SOCIALES_ID
                                 INNER JOIN INFO_ENCUESTA D 
                                     ON A.ENCUESTA_ID = D.ID_ENCUESTA ";
@@ -110,6 +120,7 @@ class InfoRespuestaRepository extends \Doctrine\ORM\EntityRepository
             $objRsmBuilder->addScalarResult('PROMEDIO', 'PROMEDIO', 'string');
             $objRsmBuilder->addScalarResult('COMENTARIO', 'COMENTARIO', 'string');
             $objRsmBuilder->addScalarResult('VISTO', 'VISTO', 'string');
+            $objRsmBuilder->addScalarResult('ES_MENOR_3', 'ES_MENOR_3', 'string');
             $strSql       = $strSelect.$strFrom.$strWhere.$strOrderBy;
             $objQuery->setSQL($strSql);
             $arrayRespuesta['resultados'] = $objQuery->getResult();
