@@ -574,7 +574,6 @@ class InfoSucursalController extends Controller
                 $entitySucursal->setCENTRO_COMERCIAL_ID($objCentroComercial);
                 $entitySucursal->setCENTRO_COMERCIAL_ID(null);
             }
-
             $objCliente = $this->getDoctrine()->getRepository(InfoCliente::class)
                                ->find($intIdCliente);
             if(!empty($objCliente) && is_object($objCliente))
@@ -587,18 +586,6 @@ class InfoSucursalController extends Controller
                                                'USUARIO_ID'     => $strUsuarioCreacion);
                 $entitySucursal->setCLIENTE_ID($objCliente);
             }
-            else
-            {
-                $strPromotorAnterior = (!empty($entitySucursal->getCLIENTE_ID()->getId())) ? 
-                                       $entitySucursal->getCLIENTE_ID()->getCORREO():"";
-                $arrayBitacoraDetalle[]= array('CAMPO'          => "Correo del Promotor",
-                                               'VALOR_ANTERIOR' => $strPromotorAnterior,
-                                               'VALOR_ACTUAL'   => "",
-                                               'USUARIO_ID'     => $strUsuarioCreacion);
-                $entitySucursal->setCLIENTE_ID($objCliente);
-                $entitySucursal->setCLIENTE_ID(null);
-            }
-
             if(!empty($strDescripcion))
             {
                 $arrayBitacoraDetalle[]= array('CAMPO'          => "Descripción",
@@ -884,15 +871,18 @@ class InfoSucursalController extends Controller
                 {
                     foreach($arrayInfoCltEncuesta as $objItem)
                     {
-                        $arrayContenido = $this->getDoctrine()
-                                               ->getRepository(InfoContenidoSubido::class)
-                                               ->findBy(array('id' => $objItem->getCONTENIDOID()));
-                        if(!empty($arrayContenido) && is_array($arrayContenido))
+                        if(!empty($objItem->getCONTENIDOID()) && $objItem->getCONTENIDOID()!=null)
                         {
-                            foreach($arrayContenido as $objItemContenido)
+                            $arrayContenido = $this->getDoctrine()
+                                                   ->getRepository(InfoContenidoSubido::class)
+                                                   ->findBy(array('id' => $objItem->getCONTENIDOID()->getID()));
+                            if(!empty($arrayContenido) && is_array($arrayContenido))
                             {
-                                $objController->getEliminarImg($objItemContenido->getIMAGEN());
-                                $em->remove($objItemContenido);
+                                foreach($arrayContenido as $objItemContenido)
+                                {
+                                    $objController->getEliminarImg($objItemContenido->getIMAGEN());
+                                    $em->remove($objItemContenido);
+                                }
                             }
                         }
                         $arrayRespuesta = $this->getDoctrine()
