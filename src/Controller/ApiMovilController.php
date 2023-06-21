@@ -4721,6 +4721,10 @@ class ApiMovilController extends FOSRestController
      * 
      * @return array  $objResponse
      *
+     * @author Kevin Baque
+     * @version 1.1 20-06-2023 - De acuerdo a lo solicitado por el cliente, en el móvil se debe presentar el nombre de sucursal
+     *                           y para ello se realiza el cambio de nombre comercial que retorne el nombre de la sucursal
+     * 
      */
     public function getSucursalPorUsuario($arrayData)
     {
@@ -4758,10 +4762,15 @@ class ApiMovilController extends FOSRestController
                                                            "RESTAURANTE_ID"  => $arraySucursalItem->getRESTAURANTEID()->getId()));
                     $strDescripcionPromocion = (!empty($objPromocion) && is_object($objPromocion)) ?$objPromocion->getDESCRIPCIONTIPOPROMOCION():"";
                     $strMensajeMovil         = "Ingrese su correo electrónico para obtener un cupón";
+                    /**
+                     * El cliente solicitó que en el móvil se debe presentar el nombre de la sucursal por ende se realiza el sgte. cambio:
+                     * Sucursal retorna el nombre comercial
+                     * Nombre Comercial retorna el nombre de la sucursal
+                     */
                     $arraySucursal[] = array("idSucursal"        => $arraySucursalItem->getId(),
-                                             "sucursal"          => $arraySucursalItem->getDESCRIPCION(),
+                                             "sucursal"          => $arraySucursalItem->getRESTAURANTEID()->getNOMBRECOMERCIAL(),
                                              "idRestaurante"     => $arraySucursalItem->getRESTAURANTEID()->getId(),
-                                             "nombreComercial"   => $arraySucursalItem->getRESTAURANTEID()->getNOMBRECOMERCIAL(),
+                                             "nombreComercial"   => $arraySucursalItem->getDESCRIPCION(),
                                              "estado"            => $arraySucursalItem->getESTADO(),
                                              "idCentroComercial" => $arraySucursalItem->getCENTRO_COMERCIAL_ID() ? 
                                                                     $arraySucursalItem->getCENTRO_COMERCIAL_ID()->getId():"",
