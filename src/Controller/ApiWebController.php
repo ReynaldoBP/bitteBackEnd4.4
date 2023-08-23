@@ -2583,6 +2583,9 @@ class ApiWebController extends FOSRestController
      * 
      * @author Kevin Baque
      * @version 1.0 05-08-2021
+     * 
+     * @author Kevin Baque
+     * @version 1.1 22-08-2023 - Cambio de estado en la edición debido a que ahora la función permitirá eliminar las encuestas.
      *
      * @return array  $objResponse
      */
@@ -2607,7 +2610,7 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception('Encuesta del cliente no existe.');
             }
-            $objClienteEncuesta->setESTADO(strtoupper("ACTIVO"));
+            $objClienteEncuesta->setESTADO(strtoupper("ELIMINADO"));
             $objClienteEncuesta->setUSRMODIFICACION($strUsuarioCreacion);
             $objClienteEncuesta->setFEMODIFICACION($strDatetimeActual);
             $em->persist($objClienteEncuesta);
@@ -2619,27 +2622,27 @@ class ApiWebController extends FOSRestController
             {
                 throw new \Exception('No existe la sucursal con la descripción enviada por parámetro.');
             }
-            $objContenido    = $this->getDoctrine()
+            /*$objContenido    = $this->getDoctrine()
                                     ->getRepository(InfoContenidoSubido::class)
                                     ->find($objClienteEncuesta->getCONTENIDOID());
             if(!is_object($objContenido) || empty($objContenido))
             {
                 throw new \Exception('No existe el contenido con la descripción enviada por parámetro.');
             }
-            $objContenido->setESTADO(strtoupper("ACTIVO"));
+            $objContenido->setESTADO(strtoupper("ELIMINADO"));
             $objContenido->setUSRMODIFICACION($strUsuarioCreacion);
             $objContenido->setFEMODIFICACION($strDatetimeActual);
             $em->persist($objContenido);
-            $em->flush();
+            $em->flush();*/
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Estado",
-                                           'VALOR_ANTERIOR' => "Eliminado",
-                                           'VALOR_ACTUAL'   => "Activo",
+                                           'VALOR_ANTERIOR' => "Activo",
+                                           'VALOR_ACTUAL'   => "Eliminado",
                                            'USUARIO_ID'     => $strUsuarioCreacion);
-            $strNombreImagen  = $objContenido->getIMAGEN();
+            /*$strNombreImagen  = $objContenido->getIMAGEN();
             $arrayBitacoraDetalle[]= array('CAMPO'          => "Foto",
                                            'VALOR_ANTERIOR' => $strNombreImagen,
                                            'VALOR_ACTUAL'   => $strNombreImagen,
-                                           'USUARIO_ID'     => $strUsuarioCreacion);
+                                           'USUARIO_ID'     => $strUsuarioCreacion);*/
             if(!empty($arrayBitacoraDetalle))
             {
                 $this->createBitacora(array("strAccion"            => "Modificación",
@@ -2654,7 +2657,7 @@ class ApiWebController extends FOSRestController
                 $em->getConnection()->commit();
                 $em->getConnection()->close();
             }
-            $strMensajeError = 'Encuesta del cliente y contenido editado con exito.!';
+            $strMensajeError = '¡Encuesta del cliente editado con éxito!';
         }
         catch(\Exception $ex)
         {
@@ -2663,7 +2666,7 @@ class ApiWebController extends FOSRestController
                 $strStatus = 204;
                 $em->getConnection()->rollback();
             }
-            $strMensajeError = "Fallo al editar Encuesta del cliente y contenido, intente nuevamente.\n ". $ex->getMessage();
+            $strMensajeError = $ex->getMessage();
         }
         $objResponse->setContent(json_encode(array('status'    => $strStatus,
                                                    'resultado' => $strMensajeError,
